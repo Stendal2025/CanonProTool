@@ -4,6 +4,16 @@ import math
 import pandas as pd
 from datetime import datetime, timedelta
 # ═══════════════════════════════════════════
+#  IMPORTS FÜR MOND-TOOL
+# ═══════════════════════════════════════════
+try:
+    from astral import LocationInfo
+    from astral.sun import sun, moon
+    import pytz
+except Exception as e:
+    st.error(f"⚠️ Import-Fehler: {type(e).__name__}: {e}")
+    st.stop()
+# ═══════════════════════════════════════════
 # HILFSFUNKTIONEN FÜR MOND & MILCHSTRAßE
 # ═══════════════════════════════════════════
 def calculate_moon_phase(year, month, day):
@@ -67,15 +77,6 @@ def get_astro_recommendation(score, moon_illum):
         return "🟠 **Mäßig.** Geht, aber warte auf dunklere Mondphase für bessere Ergebnisse."
     else:
         return "🔴 **Schlecht.** Zu hell oder falsche Jahreszeit. Besseres Datum suchen."
-def get_astro_recommendation(score, moon_illum):
-    if score >= 80:
-        return "🟢 **Perfekt!** Ideales Datum für Astrofotografie. Pack die Kamera ein!"
-    elif score >= 60:
-        return "🟡 **Gut!** Gute Bedingungen. Milchstraße sichtbar."
-    elif score >= 40:
-        return "🟠 **Mäßig.** Geht, aber warte auf dunklere Mondphase für bessere Ergebnisse."
-    else:
-        return "🔴 **Schlecht.** Zu hell oder falsche Jahreszeit. Besseres Datum suchen."
 def get_moon_phase_name(phase):
     """Wandelt Mondphase in Text um (astral-kompatibel)"""
     if phase < 1 or phase > 28:
@@ -112,7 +113,7 @@ def get_best_photo_times(now, sun_data, moon_phase):
     if moon_phase < 4 or moon_phase > 24:
         times.append("🌌 Milchstraße: 23:00 - 04:00 (dunkle Nacht)")
     
-    return "\n".join(times)
+    return "\n".join(times)   
 
 # ═══════════════════════════════════════════
 #  MOBILE OPTIMIZATION
@@ -224,7 +225,7 @@ def calculate_star(focal):
 #  HEADER
 # ═══════════════════════════════════════════
 st.title("📷 CANON EOS R – PRO TOOL")
-st.markdown("**Web Version** | 26 Photography Tools")
+st.markdown("**Web Version** | 23 Photography Tools")
 st.divider()
 
 # ═══════════════════════════════════════════
@@ -240,6 +241,7 @@ tool = st.sidebar.radio(
         "📊 Belichtung",
         "🌅 Golden Hour",
         "🔦 Blitz",
+        "🌙 Sternspuren",
         "🤖 KI",
         "🌡️ Weißabgleich",
         "📋 Cheat Sheets",
@@ -255,9 +257,9 @@ tool = st.sidebar.radio(
         "🗺️ Spots",
         "☁️ Wetter",
         "📈 Histogramm",
-        "🎨 Filter-Sim",
+        "🎨 Filter-Sim"
+        "🌙 Mond & Milchstraße"
         "🌠 Sternspuren",
-        "🌙 Mond & Milchstraße",
         "🎨 Bearbeitung",
         "🌙 Aktuelle Mond-Daten"
     ],
@@ -426,7 +428,26 @@ elif tool == "🔦 Blitz":
                     for f in [2.8, 4.0, 5.6, 8.0, 11, 16]]
             st.dataframe(pd.DataFrame(rows), use_container_width=True)
 
+# ═══════════════════════════════════════════
+#  STERNSPUREN
+# ═══════════════════════════════════════════
+elif tool == "🌙 Sternspuren":
+    st.header("🌙 Sternspuren & Astro")
+    col1, col2 = st.columns(2)
+    with col1: focal = st.number_input("Brennweite (mm)", 14, 400, 24)
+    with col2: rule  = st.selectbox("Regel", ["500er Regel (Vollformat)", "300er Regel (APS-C)"])
 
+    if st.button("✅ Berechnen", type="primary"):
+        divisor = 500 if "500" in rule else 300
+        max_exp = round(divisor / focal, 1)
+        frames  = int(1800 / max_exp)
+        st.success(f"""
+        ### Ergebnis:
+        - **Max. Belichtungszeit:** {max_exp}s
+        - **Bilder pro 30 Min:** ~{frames}
+        - **Brennweite:** {focal}mm
+        """)
+        st.info("💡 Neumond | ISO 3200-6400 | f/1.4-2.8 | MF auf ∞")
 
 # ═══════════════════════════════════════════
 #  KI-ASSISTENT
@@ -1801,7 +1822,6 @@ elif tool == "🎨 Bearbeitung":
         - 🎨 **Photoshop** (Compositing, Retusche)
         - 🌟 **Luminar Neo** (KI-gestützt, einfach)
         """)
-        
 # ═══════════════════════════════════════════
 # 🌙 AKTUELLE MOND-DATEN (Live)
 # ═══════════════════════════════════════════
@@ -1813,61 +1833,32 @@ elif tool == "🌙 Aktuelle Mond-Daten":
     
     if st.button("🔄 Daten aktualisieren", type="primary"):
         try:
-            from astral import LocationInfo
-            from astral.sun import sun, moon
-            import pytz
+            city = st.text_input("📍 Standort (Stadt)", value="Berlin")
             
-            # Standort ermitteln (vereinfacht – für echte Geocoding API nötig)
-            # Koordinaten für Berlin als Fallback
             coords = {
-                "Berlin": (52.52, 13.405),
-                "München": (48.1351, 11.5820),
-                "Hamburg": (53.5511, 9.9937),
-                "Köln": (50.9375, 6.9603),
-                "Frankfurt": (50.1109, 8.6821),
+                "Berlin": (52.52, 13.405), "München": (48.1351, 11.5820),
+                "Hamburg": (53.5511, 9.9937), "Köln": (50.9375, 6.9603), "Frankfurt": (50.1109, 8.6821),
             }
-            lat, lon = coords.get(city, (52.52, 13.405))  # Default: Berlin
+            lat, lon = coords.get(city, (52.52, 13.405))
             
             city_info = LocationInfo(city, "Germany", "Europe/Berlin", lat, lon)
-            
             now = datetime.now(pytz.timezone("Europe/Berlin"))
             
-            # Sonnen-Daten
             s = sun(city_info.observer, date=now.date(), tzinfo=now.tzinfo)
-            
-            # Mond-Daten
             m = moon(city_info.observer, date=now.date(), tzinfo=now.tzinfo)
-            
-            # Mondphase (astral gibt Phase als float 0-29.53 zurück)
             from astral import moon as moon_module
             moon_phase = moon_module.phase(now.date())
             
             st.success(f"""
             ### 📅 {now.strftime("%d.%m.%Y %H:%M")}
-            
-            **🌞 Sonne:**
-            - Aufgang: {s['sunrise'].strftime('%H:%M')}
-            - Untergang: {s['sunset'].strftime('%H:%M')}
-            - Golden Hour Morgen: {(s['sunrise'] - timedelta(minutes=30)).strftime('%H:%M')} - {s['sunrise'].strftime('%H:%M')}
-            - Golden Hour Abend: {(s['sunset'] - timedelta(minutes=30)).strftime('%H:%M')} - {(s['sunset'] + timedelta(minutes=30)).strftime('%H:%M')}
-            
-            **🌙 Mond:**
-            - Phase: {get_moon_phase_name(moon_phase)} ({moon_phase:.1f} Tage)
-            - Aufgang: {m['moonrise'].strftime('%H:%M') if m['moonrise'] else '--:--'}
-            - Untergang: {m['moonset'].strftime('%H:%M') if m['moonset'] else '--:--'}
-            - Beleuchtung: {(moon_phase / 29.53 * 100):.0f}%
-            
-            ### 📸 Beste Foto-Zeiten heute:
-            {get_best_photo_times(now, s, moon_phase)}
+            **🌞 Sonne:** Aufgang {s['sunrise'].strftime('%H:%M')} | Untergang {s['sunset'].strftime('%H:%M')}
+            **🌙 Mond:** Phase {get_moon_phase_name(moon_phase)} | Beleuchtung {(moon_phase/29.53*100):.0f}%
+            **📸 Foto-Zeiten:** {get_best_photo_times(now, s, moon_phase)}
             """)
-            
-        except ImportError:
-            st.error("❌ Bibliothek 'astral' nicht installiert. Bitte requirements.txt prüfen.")
         except Exception as e:
-            st.error(f"Fehler: {e}")
-            st.info("💡 Tipp: Stadtname prüfen oder Koordinaten manuell eingeben")
-
-# Trigger rebuild for astral
+            st.error(f"❌ Laufzeitfehler: {type(e).__name__}\n{e}")
+            st.info("💡 Prüfe Stadtname oder Koordinaten")
+        
                 
 
 
@@ -1878,7 +1869,7 @@ elif tool == "🌙 Aktuelle Mond-Daten":
 st.divider()
 st.markdown("""
 <div style='text-align:center; color:#8B949E; font-size:0.85em;'>
-    📷 Canon EOS R – Pro Tool v6.0 | Web Version | 26 Tools<br>
+    📷 Canon EOS R – Pro Tool v6.0 | Web Version | 23 Tools<br>
     Alle Berechnungen sind Richtwerte – Praxistests empfohlen.
 </div>
 """, unsafe_allow_html=True)

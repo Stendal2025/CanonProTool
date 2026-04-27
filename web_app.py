@@ -224,7 +224,7 @@ if tool == "🏠 Home":
     st.header("Willkommen beim Canon EOS R Pro Tool!")
     st.markdown("""
     ### 📸 Was kann diese App?
-    - **23 professionelle Rechner** für Fotografie
+    - **26 professionelle Rechner** für Fotografie
     - **Belichtungsdreieck** optimieren
     - **Schärfentiefe** berechnen
     - **Goldene Stunde** planen

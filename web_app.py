@@ -3,6 +3,17 @@ import streamlit as st
 import math
 import pandas as pd
 from datetime import datetime, timedelta
+
+# ═══════════════════════════════════════════
+#  IMPORTS FÜR LIVE-TOOL
+# ═══════════════════════════════════════════
+try:
+    from astral import LocationInfo
+    from astral.sun import sun
+    import pytz
+except Exception as e:
+    st.error(f"⚠️ Import-Fehler: {type(e).__name__}: {e}")
+    st.stop()
 # ═══════════════════════════════════════════
 # HILFSFUNKTIONEN FÜR MOND & MILCHSTRAßE
 # ═══════════════════════════════════════════
@@ -1813,69 +1824,52 @@ elif tool == "🎨 Bearbeitung":
         - 🌟 **Luminar Neo** (KI-gestützt, einfach)
         """)
 # ═══════════════════════════════════════════
-# 🌙 AKTUELLE MOND-DATEN (Live)
+# 🌙 AKTUELLE MOND- & SONNEN-DATEN (Live)
 # ═══════════════════════════════════════════
 elif tool == "🌙 Aktuelle Mond-Daten":
-    st.header("🌙 Live-Mondinformationen")
-    st.markdown("Aktuelle Mondphase, Auf-/Untergang & Position")
+    st.header("🌙 Live-Sonnen- & Mond-Daten")
+    st.markdown("Präzise Zeiten basierend auf deinem Standort")
     
-    city = st.text_input("📍 Standort (Stadt)", value="Berlin")
+    city = st.text_input("📍 Standort", value="Berlin", help="Berlin, München, Hamburg, Köln, Frankfurt, Wien, Zürich")
     
-    if st.button("🔄 Daten aktualisieren", type="primary"):
+    if st.button("🔄 Jetzt berechnen", type="primary"):
         try:
-            from astral import LocationInfo
-            from astral.sun import sun, moon
-            import pytz
-            
-            # Standort ermitteln (vereinfacht – für echte Geocoding API nötig)
-            # Koordinaten für Berlin als Fallback
             coords = {
-                "Berlin": (52.52, 13.405),
-                "München": (48.1351, 11.5820),
-                "Hamburg": (53.5511, 9.9937),
-                "Köln": (50.9375, 6.9603),
-                "Frankfurt": (50.1109, 8.6821),
+                "Berlin": (52.52, 13.405), "München": (48.1351, 11.5820),
+                "Hamburg": (53.5511, 9.9937), "Köln": (50.9375, 6.9603),
+                "Frankfurt": (50.1109, 8.6821), "Wien": (48.2082, 16.3738), "Zürich": (47.3769, 8.5417)
             }
-            lat, lon = coords.get(city, (52.52, 13.405))  # Default: Berlin
+            lat, lon = coords.get(city.strip(), (52.52, 13.405))
             
-            city_info = LocationInfo(city, "Germany", "Europe/Berlin", lat, lon)
-            
+            city_info = LocationInfo(city, "DE", "Europe/Berlin", lat, lon)
             now = datetime.now(pytz.timezone("Europe/Berlin"))
             
-            # Sonnen-Daten
+            # ☀️ Sonne (astral v3 kompatibel)
             s = sun(city_info.observer, date=now.date(), tzinfo=now.tzinfo)
             
-            # Mond-Daten
-            m = moon(city_info.observer, date=now.date(), tzinfo=now.tzinfo)
-            
-            # Mondphase (astral gibt Phase als float 0-29.53 zurück)
-            from astral import moon as moon_module
-            moon_phase = moon_module.phase(now.date())
+            # 🌙 Mond (eigene Funktion, da astral v3 'moon' entfernt hat)
+            m_phase = calculate_moon_phase(now.year, now.month, now.day)
+            m_name, m_illum, _ = get_moon_phase_info(m_phase)
             
             st.success(f"""
-            ### 📅 {now.strftime("%d.%m.%Y %H:%M")}
+            ### 📅 {now.strftime('%d.%m.%Y %H:%M')}
             
-            **🌞 Sonne:**
-            - Aufgang: {s['sunrise'].strftime('%H:%M')}
-            - Untergang: {s['sunset'].strftime('%H:%M')}
-            - Golden Hour Morgen: {(s['sunrise'] - timedelta(minutes=30)).strftime('%H:%M')} - {s['sunrise'].strftime('%H:%M')}
-            - Golden Hour Abend: {(s['sunset'] - timedelta(minutes=30)).strftime('%H:%M')} - {(s['sunset'] + timedelta(minutes=30)).strftime('%H:%M')}
+            **🌞 Sonne**
+            • Aufgang: `{s['sunrise'].strftime('%H:%M')}`
+            • Untergang: `{s['sunset'].strftime('%H:%M')}`
+            • Goldene Stunde: `{(s['sunrise']-timedelta(minutes=30)).strftime('%H:%M')} – {s['sunrise'].strftime('%H:%M')}`
             
-            **🌙 Mond:**
-            - Phase: {get_moon_phase_name(moon_phase)} ({moon_phase:.1f} Tage)
-            - Aufgang: {m['moonrise'].strftime('%H:%M') if m['moonrise'] else '--:--'}
-            - Untergang: {m['moonset'].strftime('%H:%M') if m['moonset'] else '--:--'}
-            - Beleuchtung: {(moon_phase / 29.53 * 100):.0f}%
+            **🌙 Mond**
+            • Phase: `{m_name}`
+            • Beleuchtung: `{m_illum:.0f}%`
             
-            ### 📸 Beste Foto-Zeiten heute:
-            {get_best_photo_times(now, s, moon_phase)}
+            **📸 Foto-Empfehlung**
+            {get_best_photo_times(now, s, m_phase * 29.53)}
             """)
-            
-        except ImportError:
-            st.error("❌ Bibliothek 'astral' nicht installiert. Bitte requirements.txt prüfen.")
         except Exception as e:
-            st.error(f"Fehler: {e}")
-            st.info("💡 Tipp: Stadtname prüfen oder Koordinaten manuell eingeben")
+            st.error(f"❌ {type(e).__name__}: {e}")
+            st.info("💡 Tipp: Prüfe den Stadtnamen oder nutze Koordinaten")
+        
                 
 
 

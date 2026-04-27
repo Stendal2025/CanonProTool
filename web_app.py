@@ -1866,6 +1866,8 @@ elif tool == "🌙 Aktuelle Mond-Daten":
         except Exception as e:
             st.error(f"Fehler: {e}")
             st.info("💡 Tipp: Stadtname prüfen oder Koordinaten manuell eingeben")
+
+# Trigger rebuild for astral
                 
 
 

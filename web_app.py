@@ -225,7 +225,7 @@ def calculate_star(focal):
 #  HEADER
 # ═══════════════════════════════════════════
 st.title("📷 CANON EOS R – PRO TOOL")
-st.markdown("**Web Version** | 23 Photography Tools")
+st.markdown("**Web Version** | 26 Photography Tools")
 st.divider()
 
 # ═══════════════════════════════════════════
@@ -241,7 +241,6 @@ tool = st.sidebar.radio(
         "📊 Belichtung",
         "🌅 Golden Hour",
         "🔦 Blitz",
-        "🌙 Sternspuren",
         "🤖 KI",
         "🌡️ Weißabgleich",
         "📋 Cheat Sheets",
@@ -257,8 +256,8 @@ tool = st.sidebar.radio(
         "🗺️ Spots",
         "☁️ Wetter",
         "📈 Histogramm",
-        "🎨 Filter-Sim"
-        "🌙 Mond & Milchstraße"
+        "🎨 Filter-Sim",
+        "🌙 Mond & Milchstraße",
         "🌠 Sternspuren",
         "🎨 Bearbeitung",
         "🌙 Aktuelle Mond-Daten"
@@ -428,26 +427,6 @@ elif tool == "🔦 Blitz":
                     for f in [2.8, 4.0, 5.6, 8.0, 11, 16]]
             st.dataframe(pd.DataFrame(rows), use_container_width=True)
 
-# ═══════════════════════════════════════════
-#  STERNSPUREN
-# ═══════════════════════════════════════════
-elif tool == "🌙 Sternspuren":
-    st.header("🌙 Sternspuren & Astro")
-    col1, col2 = st.columns(2)
-    with col1: focal = st.number_input("Brennweite (mm)", 14, 400, 24)
-    with col2: rule  = st.selectbox("Regel", ["500er Regel (Vollformat)", "300er Regel (APS-C)"])
-
-    if st.button("✅ Berechnen", type="primary"):
-        divisor = 500 if "500" in rule else 300
-        max_exp = round(divisor / focal, 1)
-        frames  = int(1800 / max_exp)
-        st.success(f"""
-        ### Ergebnis:
-        - **Max. Belichtungszeit:** {max_exp}s
-        - **Bilder pro 30 Min:** ~{frames}
-        - **Brennweite:** {focal}mm
-        """)
-        st.info("💡 Neumond | ISO 3200-6400 | f/1.4-2.8 | MF auf ∞")
 
 # ═══════════════════════════════════════════
 #  KI-ASSISTENT
@@ -1879,7 +1858,7 @@ elif tool == "🌙 Aktuelle Mond-Daten":
 st.divider()
 st.markdown("""
 <div style='text-align:center; color:#8B949E; font-size:0.85em;'>
-    📷 Canon EOS R – Pro Tool v6.0 | Web Version | 23 Tools<br>
+    📷 Canon EOS R – Pro Tool v6.0 | Web Version | 26 Tools<br>
     Alle Berechnungen sind Richtwerte – Praxistests empfohlen.
 </div>
 """, unsafe_allow_html=True)

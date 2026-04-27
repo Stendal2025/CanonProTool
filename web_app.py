@@ -3,6 +3,60 @@ import streamlit as st
 import math
 import pandas as pd
 from datetime import datetime, timedelta
+# ═══════════════════════════════════════════
+# HILFSFUNKTIONEN: MOND & MILCHSTRAßE
+# ═══════════════════════════════════════════
+def calculate_moon_phase(year, month, day):
+    """Berechnet die Mondphase (0-1) für ein gegebenes Datum"""
+    diff = year - 1900
+    ref = diff % 19
+    ref = ref if ref <= 9 else ref - 19
+    days = (ref * 11) % 30
+    days += month - 1
+    days += day
+    if month < 3:
+        days += 1
+    days = days % 30
+    return days / 29.53
+
+def get_moon_phase_info(phase):
+    """Gibt Informationen zur Mondphase zurück"""
+    if phase < 0.03 or phase > 0.97:
+        return "🌑 Neumond", 0, "Perfekt für Milchstraße & Deep Sky!"
+    elif phase < 0.22:
+        return "🌒 Zunehmende Sichel", phase * 100, "Gut für frühe Abendfotos"
+    elif phase < 0.28:
+        return "🌓 Erstes Viertel", 50, "Interessante Schatten am Mond"
+    elif phase < 0.47:
+        return "🌔 Zunehmender Mond", phase * 100, "Zu hell für Milchstraße"
+    elif phase < 0.53:
+        return "🌕 Vollmond", 100, "Perfekt für Mondlandschaften"
+    elif phase < 0.72:
+        return "🌖 Abnehmender Mond", (1-phase) * 100, "Gut für späte Nacht"
+    elif phase < 0.78:
+        return "🌗 Letztes Viertel", 50, "Mond geht spät auf"
+    else:
+        return "🌘 Abnehmende Sichel", (1-phase) * 100, "Gut für Morgenaufnahmen"
+
+def get_milky_way_recommendation(score, moon_phase):
+    """Gibt Empfehlungen für Milchstraßen-Fotografie"""
+    if score >= 85:
+        return "🟢 Hervorragend! Perfekte Bedingungen für Milchstraße."
+    elif score >= 65:
+        return "🟡 Gut! Milchstraße sichtbar, leichte Einschränkungen."
+    elif score >= 40:
+        return "🟠 Mäßig. Warte auf dunklere Mondphase oder bessere Saison."
+    else:
+        return "🔴 Schlecht. Zu hell oder falsche Jahreszeit."
+
+def get_moon_recommendation(phase):
+    """Gibt Empfehlungen für Mondfotografie"""
+    if 0.45 <= phase <= 0.55:
+        return "🌕 Perfekt für Vollmond-Aufnahmen!"
+    elif 0.20 <= phase <= 0.30 or 0.70 <= phase <= 0.80:
+        return "🌓 Ideal für Halbmond mit schönen Schatten."
+    else:
+        return "🌙 Interessante Sichel-Phase für kreative Aufnahmen."
 
 # ═══════════════════════════════════════════
 #  MOBILE OPTIMIZATION
@@ -146,7 +200,7 @@ tool = st.sidebar.radio(
         "🗺️ Spots",
         "☁️ Wetter",
         "📈 Histogramm",
-        "🎨 Filter-Sim"
+        "🎨 Filter-Sim",
         "🌙 Mond & Milchstraße"
     ],
     index=0
@@ -1195,61 +1249,7 @@ elif tool == "🌙 Mond & Milchstraße":
         except Exception as e:
             st.error(f"⚠️ Ungültiges Datum. Bitte im Format TT.MM.JJJJ eingeben (z.B. 15.08.2025)\nFehler: {e}")
 
-# ═══════════════════════════════════════════
-# HILFSFUNKTIONEN FÜR MOND & MILCHSTRAßE
-# ═══════════════════════════════════════════
-def calculate_moon_phase(year, month, day):
-    """Berechnet die Mondphase (0-1) für ein gegebenes Datum"""
-    import math
-    diff = year - 1900
-    ref = diff % 19
-    ref = ref if ref <= 9 else ref - 19
-    days = (ref * 11) % 30
-    days += month - 1
-    days += day
-    if month < 3:
-        days += 1
-    days = days % 30
-    return days / 29.53
 
-def get_moon_phase_info(phase):
-    """Gibt Informationen zur Mondphase zurück"""
-    if phase < 0.03 or phase > 0.97:
-        return "🌑 Neumond", 0, "Perfekt für Milchstraße & Deep Sky!"
-    elif phase < 0.22:
-        return "🌒 Zunehmende Sichel", phase * 100, "Gut für frühe Abendfotos"
-    elif phase < 0.28:
-        return "🌓 Erstes Viertel", 50, "Interessante Schatten am Mond"
-    elif phase < 0.47:
-        return "🌔 Zunehmender Mond", phase * 100, "Zu hell für Milchstraße"
-    elif phase < 0.53:
-        return "🌕 Vollmond", 100, "Perfekt für Mondlandschaften"
-    elif phase < 0.72:
-        return "🌖 Abnehmender Mond", (1-phase) * 100, "Gut für späte Nacht"
-    elif phase < 0.78:
-        return "🌗 Letztes Viertel", 50, "Mond geht spät auf"
-    else:
-        return "🌘 Abnehmende Sichel", (1-phase) * 100, "Gut für Morgenaufnahmen"
-
-def get_milky_way_recommendation(score, moon_phase):
-    """Gibt Empfehlungen für Milchstraßen-Fotografie"""
-    if score >= 85:
-        return "🟢 Hervorragend! Perfekte Bedingungen für Milchstraße."
-    elif score >= 65:
-        return "🟡 Gut! Milchstraße sichtbar, leichte Einschränkungen."
-    elif score >= 40:
-        return "🟠 Mäßig. Warte auf dunklere Mondphase oder bessere Saison."
-    else:
-        return "🔴 Schlecht. Zu hell oder falsche Jahreszeit."
-
-def get_moon_recommendation(phase):
-    """Gibt Empfehlungen für Mondfotografie"""
-    if 0.45 <= phase <= 0.55:
-        return "🌕 Perfekt für Vollmond-Aufnahmen!"
-    elif 0.20 <= phase <= 0.30 or 0.70 <= phase <= 0.80:
-        return "🌓 Ideal für Halbmond mit schönen Schatten."
-    else:
-        return "🌙 Interessante Sichel-Phase für kreative Aufnahmen."
 
 # ═══════════════════════════════════════════
 #  FOOTER

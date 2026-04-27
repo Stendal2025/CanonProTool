@@ -3,6 +3,107 @@ import streamlit as st
 import math
 import pandas as pd
 from datetime import datetime, timedelta
+# ═══════════════════════════════════════════
+# HILFSFUNKTIONEN FÜR MOND & MILCHSTRAßE
+# ═══════════════════════════════════════════
+def calculate_moon_phase(year, month, day):
+    """Berechnet die Mondphase (0-1) für ein gegebenes Datum"""
+    import math
+    diff = year - 1900
+    ref = diff % 19
+    ref = ref if ref <= 9 else ref - 19
+    days = (ref * 11) % 30
+    days += month - 1
+    days += day
+    if month < 3:
+        days += 1
+    days = days % 30
+    return days / 29.53
+
+def get_moon_phase_info(phase):
+    """Gibt Informationen zur Mondphase zurück"""
+    if phase < 0.03 or phase > 0.97:
+        return "🌑 Neumond", 0, "Perfekt für Milchstraße & Deep Sky!"
+    elif phase < 0.22:
+        return "🌒 Zunehmende Sichel", phase * 100, "Gut für frühe Abendfotos"
+    elif phase < 0.28:
+        return "🌓 Erstes Viertel", 50, "Interessante Schatten am Mond"
+    elif phase < 0.47:
+        return "🌔 Zunehmender Mond", phase * 100, "Zu hell für Milchstraße"
+    elif phase < 0.53:
+        return "🌕 Vollmond", 100, "Perfekt für Mondlandschaften"
+    elif phase < 0.72:
+        return "🌖 Abnehmender Mond", (1-phase) * 100, "Gut für späte Nacht"
+    elif phase < 0.78:
+        return "🌗 Letztes Viertel", 50, "Mond geht spät auf"
+    else:
+        return "🌘 Abnehmende Sichel", (1-phase) * 100, "Gut für Morgenaufnahmen"
+
+def get_milky_way_recommendation(score, moon_phase):
+    """Gibt Empfehlungen für Milchstraßen-Fotografie"""
+    if score >= 85:
+        return "🟢 Hervorragend! Perfekte Bedingungen für Milchstraße."
+    elif score >= 65:
+        return "🟡 Gut! Milchstraße sichtbar, leichte Einschränkungen."
+    elif score >= 40:
+        return "🟠 Mäßig. Warte auf dunklere Mondphase oder bessere Saison."
+    else:
+        return "🔴 Schlecht. Zu hell oder falsche Jahreszeit."
+
+def get_moon_recommendation(phase):
+    """Gibt Empfehlungen für Mondfotografie"""
+    if 0.45 <= phase <= 0.55:
+        return "🌕 Perfekt für Vollmond-Aufnahmen!"
+    elif 0.20 <= phase <= 0.30 or 0.70 <= phase <= 0.80:
+        return "🌓 Ideal für Halbmond mit schönen Schatten."
+    else:
+        return "🌙 Interessante Sichel-Phase für kreative Aufnahmen."
+def get_astro_recommendation(score, moon_illum):
+    if score >= 80:
+        return "🟢 **Perfekt!** Ideales Datum für Astrofotografie. Pack die Kamera ein!"
+    elif score >= 60:
+        return "🟡 **Gut!** Gute Bedingungen. Milchstraße sichtbar."
+    elif score >= 40:
+        return "🟠 **Mäßig.** Geht, aber warte auf dunklere Mondphase für bessere Ergebnisse."
+    else:
+        return "🔴 **Schlecht.** Zu hell oder falsche Jahreszeit. Besseres Datum suchen."
+def get_moon_phase_name(phase):
+    """Wandelt Mondphase in Text um (astral-kompatibel)"""
+    if phase < 1 or phase > 28:
+        return "🌑 Neumond"
+    elif phase < 6:
+        return "🌒 Zunehmende Sichel"
+    elif phase < 8:
+        return "🌓 Erstes Viertel"
+    elif phase < 13:
+        return "🌔 Zunehmender Mond"
+    elif phase < 15:
+        return "🌕 Vollmond"
+    elif phase < 20:
+        return "🌖 Abnehmender Mond"
+    elif phase < 22:
+        return "🌗 Letztes Viertel"
+    else:
+        return "🌘 Abnehmende Sichel"
+
+def get_best_photo_times(now, sun_data, moon_phase):
+    """Empfiehlt beste Foto-Zeiten basierend auf Sonne & Mond"""
+    times = []
+    
+    # Goldene Stunde
+    sunrise = sun_data['sunrise']
+    sunset = sun_data['sunset']
+    times.append(f"🌅 Morgen: {(sunrise - timedelta(minutes=30)).strftime('%H:%M')} - {(sunrise + timedelta(minutes=30)).strftime('%H:%M')}")
+    times.append(f"🌆 Abend: {(sunset - timedelta(minutes=30)).strftime('%H:%M')} - {(sunset + timedelta(minutes=30)).strftime('%H:%M')}")
+    
+    # Blaue Stunde
+    times.append(f"🌄 Blaue Stunde: {(sunrise - timedelta(minutes=45)).strftime('%H:%M')} - {sunrise.strftime('%H:%M')}")
+    
+    # Astro (wenn Mond dunkel = Phase < 4 oder > 24)
+    if moon_phase < 4 or moon_phase > 24:
+        times.append("🌌 Milchstraße: 23:00 - 04:00 (dunkle Nacht)")
+    
+    return "\n".join(times)   
 
 # ═══════════════════════════════════════════
 #  MOBILE OPTIMIZATION
@@ -148,6 +249,9 @@ tool = st.sidebar.radio(
         "📈 Histogramm",
         "🎨 Filter-Sim"
         "🌙 Mond & Milchstraße"
+        "🌠 Sternspuren",
+        "🎨 Bearbeitung",
+        "🌙 Aktuelle Mond-Daten"
     ],
     index=0
 )
@@ -159,7 +263,7 @@ if tool == "🏠 Home":
     st.header("Willkommen beim Canon EOS R Pro Tool!")
     st.markdown("""
     ### 📸 Was kann diese App?
-    - **23 professionelle Rechner** für Fotografie
+    - **26 professionelle Rechner** für Fotografie
     - **Belichtungsdreieck** optimieren
     - **Schärfentiefe** berechnen
     - **Goldene Stunde** planen
@@ -1106,7 +1210,7 @@ elif tool == "🎨 Filter-Sim":
         - 🌫️ Soft-Focus – Verträumter Glow
         - 🔵 Vignette – Dunkle Ecken
         """)
-        # ═══════════════════════════════════════════
+# ═══════════════════════════════════════════
 # 🌙 MOND & MILCHSTRAßE
 # ═══════════════════════════════════════════
 elif tool == "🌙 Mond & Milchstraße":
@@ -1194,62 +1298,587 @@ elif tool == "🌙 Mond & Milchstraße":
             
         except Exception as e:
             st.error(f"⚠️ Ungültiges Datum. Bitte im Format TT.MM.JJJJ eingeben (z.B. 15.08.2025)\nFehler: {e}")
-
 # ═══════════════════════════════════════════
-# HILFSFUNKTIONEN FÜR MOND & MILCHSTRAßE
+# 🌠 STERNPUREN (Ausführlich)
 # ═══════════════════════════════════════════
-def calculate_moon_phase(year, month, day):
-    """Berechnet die Mondphase (0-1) für ein gegebenes Datum"""
-    import math
-    diff = year - 1900
-    ref = diff % 19
-    ref = ref if ref <= 9 else ref - 19
-    days = (ref * 11) % 30
-    days += month - 1
-    days += day
-    if month < 3:
-        days += 1
-    days = days % 30
-    return days / 29.53
+elif tool == "🌠 Sternspuren":
+    st.header("🌠 Sternspuren & Astrofotografie")
+    st.markdown("""
+    **Berechne perfekte Einstellungen für atemberaubende Nachtaufnahmen**
+    
+    Von scharfen Sternen bis zu dramatischen Sternspuren – hier findest du alle Werkzeuge.
+    """)
+    
+    tab1, tab2, tab3, tab4 = st.tabs(["🎯 Sternspuren", "⭐ Scharfe Sterne", "📐 Planung", "📚 Tipps"])
+    
+    with tab1:
+        st.subheader("🌌 Sternspuren berechnen")
+        st.markdown("Erzeuge dramatische Kreisbahnen der Sterne um den Polarstern")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            total_time = st.number_input("Gesamtzeit (Minuten)", min_value=10, max_value=480, value=60)
+            interval = st.number_input("Intervall zwischen Bildern (Sekunden)", min_value=1, max_value=30, value=5)
+        with col2:
+            shutter = st.selectbox("Belichtungszeit pro Bild", 
+                                  ["10s", "15s", "20s", "25s", "30s"], index=2)
+            iso = st.selectbox("ISO", [400, 800, 1600, 3200], index=2)
+        
+        if st.button(" Berechnen", type="primary"):
+            shutter_sec = int(shutter.replace("s", ""))
+            total_seconds = total_time * 60
+            num_frames = total_seconds // (shutter_sec + interval)
+            trail_length = (total_time / 4) * 15  # Grad
+            
+            st.success(f"""
+            ### 📈 Ergebnis:
+            - **Anzahl Bilder:** {num_frames:,}
+            - **Gesamtzeit:** {total_time} Minuten ({total_seconds/60:.1f} Stunden)
+            - **Sternspur-Länge:** {trail_length:.1f}° am Himmel
+            - **Speicherbedarf:** ~{num_frames * 30 / 1024:.1f} GB (RAW)
+            
+            ### ⚙️ Empfohlene Settings:
+            - Verschluss: {shutter}
+            - ISO: {iso}
+            - Blende: f/2.8 oder offener
+            - Fokus: Manuell auf ∞
+            """)
+            
+            st.info("""
+            💡 **Stacking-Software:**
+            - Windows: StarStaX (kostenlos)
+            - Mac/Linux: Starry Landscape Stacker
+            - Online: Sequator (einfach & schnell)
+            """)
+    
+    with tab2:
+        st.subheader("⭐ Scharfe Sterne (ohne Spuren)")
+        st.markdown("Perfekt für Milchstraße & Deep-Sky-Fotografie")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            focal_sharp = st.number_input("Brennweite (mm)", min_value=14, max_value=400, value=24)
+            sensor_type = st.selectbox("Sensor-Typ", 
+                                      ["Vollformat", "APS-C (Canon 1.6x)", "APS-C (Nikon 1.5x)", "Micro 4/3 (2x)"])
+        with col2:
+            aperture_sharp = st.selectbox("Blende", [1.2, 1.4, 1.8, 2.0, 2.8, 4.0], index=3)
+        
+        # Crop-Faktor
+        crop_map = {"Vollformat": 1.0, "APS-C (Canon 1.6x)": 1.6, 
+                   "APS-C (Nikon 1.5x)": 1.5, "Micro 4/3 (2x)": 2.0}
+        crop = crop_map[sensor_type]
+        
+        # 500er Regel
+        max_exp_500 = 500 / (focal_sharp * crop)
+        max_exp_npf = (35 * aperture_sharp + 30) / (focal_sharp * crop)
+        
+        st.success(f"""
+        ### 📐 Maximale Belichtungszeit:
+        
+        **500er Regel (einfach):** {max_exp_500:.1f} Sekunden
+        
+        **NPF Regel (präzise):** {max_exp_npf:.1f} Sekunden
+        
+        ### 🎯 Empfohlene Einstellungen:
+        - **Belichtung:** {max_exp_npf:.0f} Sekunden
+        - **ISO:** 1600-3200 (je nach Licht)
+        - **Blende:** f/{aperture_sharp} oder weiter öffnen
+        - **Fokus:** Manuell auf hellsten Stern
+        
+        **Tipp:** Bei {max_exp_npf:.0f}s bleiben Sterne punktförmig!
+        """)
+        
+        st.info("""
+        📊 **NPF vs. 500er Regel:**
+        - NPF ist genauer (berücksichtigt Blende & Sensor)
+        - 500er Regel ist konservativer (längere Belichtung)
+        - Für 100% scharfe Sterne: NPF verwenden
+        - Für Web/Social Media: 500er Regel reicht
+        """)
+    
+    with tab3:
+        st.subheader("📅 Astro-Planung")
+        st.markdown("Beste Bedingungen für Nachtaufnahmen")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            date_plan = st.text_input("Datum (TT.MM.JJJJ)", value=datetime.now().strftime("%d.%m.%Y"))
+            location = st.text_input("Ort", value="Deutschland")
+        with col2:
+            light_pollution = st.selectbox("Lichtverschmutzung", 
+                                          ["Bortle 1-2 (Sehr dunkel)", 
+                                           "Bortle 3-4 (Dunkel)", 
+                                           "Bortle 5-6 (Vorstadt)", 
+                                           "Bortle 7-9 (Stadt)"])
+        
+        if st.button("🔍 Bedingungen prüfen"):
+            try:
+                day, month, year = map(int, date_plan.split("."))
+                moon_phase = calculate_moon_phase(year, month, day)
+                _, moon_illum, _ = get_moon_phase_info(moon_phase)
+                
+                # Saison
+                season = "🌌 Hauptsaison (März-Oktober)" if 3 <= month <= 10 else "🌨️ Nebensaison"
+                season_score = 1.0 if 3 <= month <= 10 else 0.4
+                
+                # Bewertung
+                darkness_score = (100 - moon_illum) / 100
+                bortle_map = {"Bortle 1-2 (Sehr dunkel)": 1.0, "Bortle 3-4 (Dunkel)": 0.7,
+                             "Bortle 5-6 (Vorstadt)": 0.4, "Bortle 7-9 (Stadt)": 0.1}
+                light_score = bortle_map[light_pollution]
+                
+                total_score = (darkness_score * 0.4 + season_score * 0.3 + light_score * 0.3) * 100
+                
+                st.success(f"""
+                ### 📊 Bewertung für {date_plan}:
+                
+                **🌙 Mond:** {moon_illum:.0f}% beleuchtet  
+                **{season}**  
+                **💡 Lichtverschmutzung:** {light_pollution}
+                
+                ### ⭐ Gesamtscore: {total_score:.0f}/100
+                
+                {get_astro_recommendation(total_score, moon_illum)}
+                """)
+                
+            except:
+                st.error("⚠️ Ungültiges Datum. Bitte TT.MM.JJJJ Format.")
+    
+    with tab4:
+        st.markdown("""
+        ### 📚 Kompletter Guide: Sternspuren & Astrofotografie
+        
+        #### 🎒 Equipment-Checkliste:
+        - ✅ Stativ (stabil, windfest)
+        - ✅ Fernauslöser/Intervalometer
+        - ✅ Stirnlampe (Rotlicht-Modus)
+        - ✅ Ersatzakkus (Kälte verkürzt Laufzeit!)
+        - ✅ Speicherkarten (mind. 64 GB)
+        - ✅ Warme Kleidung (auch im Sommer!)
+        
+        #### ⚙️ Kamera-Einstellungen:
+        **Sternspuren:**
+        - Modus: Manuell (M)
+        - Format: RAW (mehr Spielraum in Post)
+        - Weißabgleich: 3500-4000K (oder Auto)
+        - Rauschreduzierung: AUS (dauert zu lang)
+        - Bildstabilisator: AUS
+        
+        **Scharfe Sterne:**
+        - Fokus: Manuell auf hellsten Stern (Live View 10x)
+        - Belichtung: NPF-Regel (siehe Tab 2)
+        - ISO: 1600-6400 (je nach Kamera)
+        - Blende: So weit wie möglich (f/1.4-f/2.8)
+        
+        #### 📍 Location finden:
+        - **Dark Sky Finder:** darksitefinder.com
+        - **Light Pollution Map:** lightpollutionmap.info
+        - **Milchstraße-Sichtbarkeit:** timeanddate.com/astronomy
+        
+        #### 🎨 Nachbearbeitung:
+        1. **Stacking:** Sequator (Windows) oder Starry Landscape Stacker (Mac)
+        2. **Lightroom:** 
+           - Belichtung +0.5 bis +1.0
+           - Kontrast +20
+           - Tiefen +40
+           - Klarheit +30
+           - Vibrance +25
+        3. **Farben:** 
+           - Milchstraße: Blau/Lila-Töne betonen
+           - Sterne: Natürliche Farben erhalten
+        
+        #### ⚠️ Häufige Fehler:
+        - ❌ Zu kurze Gesamtzeit (<30 Min.)
+        - ❌ Falscher Fokus (nicht auf ∞!)
+        - ❌ Wind (Stativ wackelt)
+        - ❌ Kondensation (Objektiv beschlägt)
+        - ❌ Lichtverschmutzung (zu nah an Städten)
+        
+        #### 🌟 Profi-Tipps:
+        -  Apps: PhotoPills, Stellarium Mobile, Sky Guide
+        - 🌡️ Tau-Kappe verhindert Beschlag
+        - 🔋 Akkus warm halten (Innentasche)
+        - 📸 Testaufnahme bei ISO 6400 (Fokus prüfen)
+        - 🌙 Neumond = dunkelster Himmel
+        """)
+# ═══════════════════════════════════════════
+# 🎨 BEARBEITUNG (Ausführlich)
+# ═══════════════════════════════════════════
+elif tool == "🎨 Bearbeitung":
+    st.header("🎨 Fotobearbeitung & Post-Processing")
+    st.markdown("""
+    **Vom RAW zum Meisterwerk – Professionelle Bearbeitungsschritte**
+    
+    Kompletter Workflow für Lightroom, Photoshop & Co.
+    """)
+    
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+        "📊 Grundbearbeitung", "🌈 Farben", "✨ Effekte", 
+        "🌙 Astro-Bearbeitung", "📚 Workflows"
+    ])
+    
+    with tab1:
+        st.subheader("📊 Basis-Korrektur (Lightroom/Camera Raw)")
+        st.markdown("Der fundamentale Workflow für jedes Foto")
+        
+        st.markdown("""
+        #### 1️⃣ **Objektivkorrektur** (IMMER zuerst!)
+        - ✅ Profil-Korrektur aktivieren
+        - ✅ Chromatische Aberration entfernen
+        - ✅ Transformieren (gerade Linien)
+        
+        #### 2️⃣ **Weißabgleich**
+        - Temperatur: 5000-5500K (Tageslicht)
+        - Tönung: Leicht ins Magenta (+5 bis +10)
+        - Oder: Pipette auf neutrales Grau
+        
+        #### 3️⃣ **Belichtung anpassen**
+        """)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            exp_val = st.slider("Belichtung", -2.0, 2.0, 0.0, 0.1)
+            contrast = st.slider("Kontrast", -50, 100, 20)
+            highlights = st.slider("Lichter", -100, 100, -40)
+        with col2:
+            shadows = st.slider("Tiefen", -100, 100, 40)
+            whites = st.slider("Weiß", -100, 100, 10)
+            blacks = st.slider("Schwarz", -100, 100, -10)
+        
+        st.success(f"""
+        ### 📋 Deine Einstellungen:
+        - Belichtung: {exp_val:+.1f}
+        - Kontrast: {contrast:+d}
+        - Lichter: {highlights:+d} | Tiefen: {shadows:+d}
+        - Weiß: {whites:+d} | Schwarz: {blacks:+d}
+        
+        💡 **Tipp:** Histogramm im Auge behalten – keine Clipping-Warnungen!
+        """)
+        
+        st.markdown("""
+        #### 4️⃣ **Tonwertkurve** (optional)
+        - Leichte S-Kurve für mehr Kontrast
+        - Tiefen leicht anheben (nicht zu viel!)
+        - Lichter sanft absenken
+        
+        #### 5️⃣ **Schärfen & Rauschreduzierung**
+        - Schärfen: 40-60
+        - Radius: 0.8-1.2
+        - Detail: 25-50
+        - Rauschreduzierung: 20-40 (bei hohem ISO)
+        """)
+    
+    with tab2:
+        st.subheader("🌈 Farbkorrektur & Stimmung")
+        
+        st.markdown("""
+        #### 🎨 **HSL / Farbe** (Hue, Saturation, Luminance)
+        
+        **Häufige Anpassungen:**
+        """)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("**🔵 Blau (Himmel):**")
+            blue_sat = st.slider("Sättigung", -100, 100, 20, key="blue_sat")
+            blue_lum = st.slider("Helligkeit", -100, 100, -20, key="blue_lum")
+            
+            st.markdown("**🟢 Grün (Natur):**")
+            green_hue = st.slider("Farbton", -100, 100, -10, key="green_hue")
+            green_sat = st.slider("Sättigung", -100, 100, -15, key="green_sat")
+        
+        with col2:
+            st.markdown("**🟠 Orange (Haut/Sunset):**")
+            orange_sat = st.slider("Sättigung", -100, 100, 10, key="orange_sat")
+            orange_lum = st.slider("Helligkeit", -100, 100, 5, key="orange_lum")
+            
+            st.markdown("**🟣 Lila (Milchstraße):**")
+            purple_sat = st.slider("Sättigung", -100, 100, 30, key="purple_sat")
+        
+        st.info("""
+        #### 🎭 **Farbtonkurve** (Advanced)
+        - RGB-Kanal: Leichte S-Kurve
+        - Rot: Tiefen leicht anheben (+5)
+        - Blau: Lichter leicht absenken (-5)
+        - Grün: Meist neutral lassen
+        
+        #### 🌟 **Split Toning**
+        - Lichter: Warm (Orange/Gold, Sättigung 10-20)
+        - Tiefen: Kühl (Blau, Sättigung 5-15)
+        - Balance: 60-70 (mehr Lichter)
+        """)
+    
+    with tab3:
+        st.subheader("✨ Kreative Effekte")
+        
+        st.markdown("""
+        #### 🌫️ **Atmosphäre & Klarheit**
+        """)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            clarity = st.slider("Klarheit", -50, 100, 20)
+            dehaze = st.slider("Dunst entfernen", -50, 100, 15)
+            texture = st.slider("Textur", -100, 100, 10)
+        with col2:
+            vignette = st.slider("Vignette", -100, 100, -20)
+            grain = st.slider("Körnigkeit", 0, 100, 10)
+        
+        st.success(f"""
+        ### Einstellungen:
+        - Klarheit: {clarity:+d}
+        - Dunst: {dehaze:+d}
+        - Textur: {texture:+d}
+        - Vignette: {vignette:+d}
+        - Körnigkeit: {grain}
+        """)
+        
+        st.markdown("""
+        #### 🎯 **Effekt-Empfehlungen nach Genre:**
+        
+        **Landschaft:**
+        - Klarheit: +30 bis +50
+        - Dunst: +20 bis +40
+        - Vignette: -15 bis -30
+        
+        **Portrait:**
+        - Klarheit: -10 bis +10 (weich)
+        - Textur: -20 (Haut glätten)
+        - Vignette: -10 bis -20
+        
+        **Astro:**
+        - Klarheit: +40 bis +60
+        - Dunst: +30 bis +50
+        - Körnigkeit: 15-25 (Film-Look)
+        
+        **Street:**
+        - Klarheit: +20 bis +40
+        - Körnigkeit: 20-40 (Vintage)
+        - Vignette: -20 bis -40
+        """)
+    
+    with tab4:
+        st.subheader("🌙 Astro-Bearbeitung (Spezial)")
+        st.markdown("Workflow für Milchstraße & Sternenhimmel")
+        
+        st.markdown("""
+        #### 📊 **Schritt-für-Schritt:**
+        
+        **1. Stacking (VOR Lightroom!)**
+        - Software: Sequator (Win) / Starry Landscape Stacker (Mac)
+        - Bilder laden (20-50 Aufnahmen)
+        - "Align stars" aktivieren
+        - Output: 16-bit TIFF
+        """)
+        
+        astro_exp = st.expander("📋 Kompletter Astro-Workflow")
+        with astro_exp:
+            st.markdown("""
+            **2. Grundkorrektur (Lightroom):**
+            - Weißabgleich: 3500-4000K (kühl)
+            - Belichtung: +0.5 bis +1.0
+            - Kontrast: +30
+            - Tiefen: +50
+            - Lichter: -30
+            - Weiß: +20
+            - Schwarz: -20
+            
+            **3. HSL-Anpassungen:**
+            - Blau: Sättigung +40, Helligkeit -20
+            - Lila: Sättigung +50
+            - Rot/Orange: Sättigung +20 (Sterne)
+            
+            **4. Detail:**
+            - Schärfen: 60-80
+            - Rauschreduzierung: 20-30
+            - Luminanz: 25
+            - Farbe: 50
+            
+            **5. Lokale Anpassungen:**
+            - Verlaufsfilter (Himmel): Belichtung +0.5
+            - Radialfilter (Milchstraße): Klarheit +40
+            - Pinsel (Vordergrund): Belichtung +0.3
+            
+            **6. Finale Korrekturen:**
+            - Klarheit: +40
+            - Dunst: +30
+            - Vignette: -20
+            """)
+        
+        st.info("""
+        #### 🎨 **Farben der Milchstraße betonen:**
+        - Kern: Orange/Rot (alte Sterne)
+        - Arme: Blau/Lila (junge Sterne, Nebel)
+        - Staub: Dunkle Bänder (Kontrast erhöhen)
+        
+        #### ⚠️ **Nicht übertreiben!**
+        - Natürlichkeit bewahren
+        - Keine "Neon-Farben"
+        - Rauschen nicht komplett entfernen (Details verlieren)
+        """)
+    
+    with tab5:
+        st.markdown("""
+        ### 📚 Komplette Workflows nach Genre
+        
+        #### 🏔️ **Landschaftsfotografie**
+        1. Objektivkorrektur
+        2. Weißabgleich (5500K)
+        3. Belichtung (Histogramm zentrieren)
+        4. Lichter -50, Tiefen +40
+        5. Klarheit +40, Dunst +30
+        6. HSL: Blau +30 Sättigung, Grün -15
+        7. Schärfen: 60
+        8. Vignette: -20
+        
+        #### 👤 **Portrait**
+        1. Objektivkorrektur
+        2. Weißabgleich (Hauttöne natürlich)
+        3. Belichtung (Haut nicht überbelichten!)
+        4. Lichter -30, Tiefen +20
+        5. Textur -20 (Haut glätten)
+        6. Orange: Helligkeit +10, Sättigung -5
+        7. Schärfen: 40 (nur Augen!)
+        8. Vignette: -15
+        
+        #### 🌃 **Street Photography**
+        1. Objektivkorrektur
+        2. Schwarz-Weiß oder kontrastreich
+        3. Belichtung: Leicht unterbelichten (-0.3)
+        4. Kontrast: +40
+        5. Klarheit: +30
+        6. Körnigkeit: 25 (Vintage-Look)
+        7. Vignette: -30
+        8. Gradationskurve: Starke S-Kurve
+        
+        #### 🌙 **Astrofotografie**
+        1. Stacking (Sequator)
+        2. Weißabgleich: 3800K
+        3. Belichtung: +0.7
+        4. Tiefen: +50, Lichter: -30
+        5. Klarheit: +50, Dunst: +40
+        6. Blau/Lila: Sättigung +50
+        7. Schärfen: 70
+        8. Rauschreduzierung: 25
+        
+        #### 🎪 **Event/Hochzeit**
+        1. Objektivkorrektur
+        2. Weißabgleich (Lichtverhältnisse anpassen)
+        3. Belichtung: Sicher (+0.3)
+        4. Lichter -40 (Kleider nicht ausbrennen!)
+        5. Tiefen +30
+        6. Hauttöne: Orange Helligkeit +5
+        7. Schärfen: 50
+        8. Vignette: -10
+        
+        ---
+        
+        ### 💾 Export-Einstellungen
+        
+        **Für Web/Social Media:**
+        - Format: JPEG
+        - Qualität: 80-85%
+        - Größe: 2048px (längste Seite)
+        - Farbraum: sRGB
+        - Schärfen für Bildschirm
+        
+        **Für Druck:**
+        - Format: TIFF oder JPEG 100%
+        - Auflösung: 300 DPI
+        - Farbraum: Adobe RGB
+        - Keine Größenänderung
+        
+        **Für Archiv:**
+        - Format: Original-RAW + XMP
+        - Oder: DNG (Digital Negative)
+        - 1:1 Kopie, keine Kompression
+        """)
+        
+        st.success("""
+        ### 🎯 Goldene Regeln der Bearbeitung:
+        
+        1. **Weniger ist mehr** – Natürlichkeit bewahren
+        2. **RAW fotografieren** – Maximum an Informationen
+        3. **Nicht-destruktiv** – Immer Kopien bearbeiten
+        4. **Kalibrierter Monitor** – Farben stimmen nur so
+        5. **Pausen machen** – Frische Augen sehen besser
+        6. **Vergleichen** – Vorher/Nachher (Y-Taste)
+        7. **Lernen** – Von Profis inspirieren lassen
+        
+        **Software-Empfehlungen:**
+        - 🥇 **Lightroom Classic** (Allrounder, Abo)
+        - 🥈 **Capture One** (Profi, teuer)
+        - 🥉 **Darktable** (Kostenlos, Open Source)
+        - 🎨 **Photoshop** (Compositing, Retusche)
+        - 🌟 **Luminar Neo** (KI-gestützt, einfach)
+        """)
+# ═══════════════════════════════════════════
+# 🌙 AKTUELLE MOND-DATEN (Live)
+# ═══════════════════════════════════════════
+elif tool == "🌙 Aktuelle Mond-Daten":
+    st.header("🌙 Live-Mondinformationen")
+    st.markdown("Aktuelle Mondphase, Auf-/Untergang & Position")
+    
+    city = st.text_input("📍 Standort (Stadt)", value="Berlin")
+    
+    if st.button("🔄 Daten aktualisieren", type="primary"):
+        try:
+            from astral import LocationInfo
+            from astral.sun import sun, moon
+            import pytz
+            
+            # Standort ermitteln (vereinfacht – für echte Geocoding API nötig)
+            # Koordinaten für Berlin als Fallback
+            coords = {
+                "Berlin": (52.52, 13.405),
+                "München": (48.1351, 11.5820),
+                "Hamburg": (53.5511, 9.9937),
+                "Köln": (50.9375, 6.9603),
+                "Frankfurt": (50.1109, 8.6821),
+            }
+            lat, lon = coords.get(city, (52.52, 13.405))  # Default: Berlin
+            
+            city_info = LocationInfo(city, "Germany", "Europe/Berlin", lat, lon)
+            
+            now = datetime.now(pytz.timezone("Europe/Berlin"))
+            
+            # Sonnen-Daten
+            s = sun(city_info.observer, date=now.date(), tzinfo=now.tzinfo)
+            
+            # Mond-Daten
+            m = moon(city_info.observer, date=now.date(), tzinfo=now.tzinfo)
+            
+            # Mondphase (astral gibt Phase als float 0-29.53 zurück)
+            from astral import moon as moon_module
+            moon_phase = moon_module.phase(now.date())
+            
+            st.success(f"""
+            ### 📅 {now.strftime("%d.%m.%Y %H:%M")}
+            
+            **🌞 Sonne:**
+            - Aufgang: {s['sunrise'].strftime('%H:%M')}
+            - Untergang: {s['sunset'].strftime('%H:%M')}
+            - Golden Hour Morgen: {(s['sunrise'] - timedelta(minutes=30)).strftime('%H:%M')} - {s['sunrise'].strftime('%H:%M')}
+            - Golden Hour Abend: {(s['sunset'] - timedelta(minutes=30)).strftime('%H:%M')} - {(s['sunset'] + timedelta(minutes=30)).strftime('%H:%M')}
+            
+            **🌙 Mond:**
+            - Phase: {get_moon_phase_name(moon_phase)} ({moon_phase:.1f} Tage)
+            - Aufgang: {m['moonrise'].strftime('%H:%M') if m['moonrise'] else '--:--'}
+            - Untergang: {m['moonset'].strftime('%H:%M') if m['moonset'] else '--:--'}
+            - Beleuchtung: {(moon_phase / 29.53 * 100):.0f}%
+            
+            ### 📸 Beste Foto-Zeiten heute:
+            {get_best_photo_times(now, s, moon_phase)}
+            """)
+            
+        except ImportError:
+            st.error("❌ Bibliothek 'astral' nicht installiert. Bitte requirements.txt prüfen.")
+        except Exception as e:
+            st.error(f"Fehler: {e}")
+            st.info("💡 Tipp: Stadtname prüfen oder Koordinaten manuell eingeben")
+                
 
-def get_moon_phase_info(phase):
-    """Gibt Informationen zur Mondphase zurück"""
-    if phase < 0.03 or phase > 0.97:
-        return "🌑 Neumond", 0, "Perfekt für Milchstraße & Deep Sky!"
-    elif phase < 0.22:
-        return "🌒 Zunehmende Sichel", phase * 100, "Gut für frühe Abendfotos"
-    elif phase < 0.28:
-        return "🌓 Erstes Viertel", 50, "Interessante Schatten am Mond"
-    elif phase < 0.47:
-        return "🌔 Zunehmender Mond", phase * 100, "Zu hell für Milchstraße"
-    elif phase < 0.53:
-        return "🌕 Vollmond", 100, "Perfekt für Mondlandschaften"
-    elif phase < 0.72:
-        return "🌖 Abnehmender Mond", (1-phase) * 100, "Gut für späte Nacht"
-    elif phase < 0.78:
-        return "🌗 Letztes Viertel", 50, "Mond geht spät auf"
-    else:
-        return "🌘 Abnehmende Sichel", (1-phase) * 100, "Gut für Morgenaufnahmen"
 
-def get_milky_way_recommendation(score, moon_phase):
-    """Gibt Empfehlungen für Milchstraßen-Fotografie"""
-    if score >= 85:
-        return "🟢 Hervorragend! Perfekte Bedingungen für Milchstraße."
-    elif score >= 65:
-        return "🟡 Gut! Milchstraße sichtbar, leichte Einschränkungen."
-    elif score >= 40:
-        return "🟠 Mäßig. Warte auf dunklere Mondphase oder bessere Saison."
-    else:
-        return "🔴 Schlecht. Zu hell oder falsche Jahreszeit."
-
-def get_moon_recommendation(phase):
-    """Gibt Empfehlungen für Mondfotografie"""
-    if 0.45 <= phase <= 0.55:
-        return "🌕 Perfekt für Vollmond-Aufnahmen!"
-    elif 0.20 <= phase <= 0.30 or 0.70 <= phase <= 0.80:
-        return "🌓 Ideal für Halbmond mit schönen Schatten."
-    else:
-        return "🌙 Interessante Sichel-Phase für kreative Aufnahmen."
 
 # ═══════════════════════════════════════════
 #  FOOTER

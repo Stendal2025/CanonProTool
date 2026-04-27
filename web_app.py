@@ -178,7 +178,7 @@ def calculate_star(focal):
 #  HEADER
 # ═══════════════════════════════════════════
 st.title("📷 CANON EOS R – PRO TOOL")
-st.markdown("**Web Version** | 23 Photography Tools")
+st.markdown("**Web Version** | 26 Photography Tools")
 st.divider()
 
 # ═══════════════════════════════════════════

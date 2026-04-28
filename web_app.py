@@ -2001,67 +2001,75 @@ elif tool == "📅 5-Tage Prognose":
             st.error(f"Fehler: {e}")
 
 # ═══════════════════════════════════════════
-# 📍 GPS-STANDORT (Modern & Iframe-frei)
+# 📍 GPS-STANDORT (Streamlit 1.56 stabil)
 # ═══════════════════════════════════════════
 elif tool == "📍 GPS-Standort":
     st.header("📍 Standort automatisch erkennen")
-    st.markdown("Ermittelt deine aktuellen Koordinaten direkt im Browser.")
+    st.markdown("Klicke unten, um deine GPS-Koordinaten zu ermitteln.")
 
     if "gps_coords" not in st.session_state:
         st.session_state.gps_coords = ""
 
-    # Verstecktes Streamlit-Input zur Datenübernahme
+    # Verstecktes Input-Feld mit eindeutiger Key-Struktur
     st.text_input(
-        "GPS_Coords_Hidden",
+        "gps_hidden_input",
         value=st.session_state.gps_coords,
         key="gps_hidden",
         label_visibility="collapsed"
     )
 
-    # Modernes st.html (ersetzt st.components.v1.html)
-    gps_js = """
+    # HTML/JS Block mit st.html
+    gps_html = """
     <button id="gps-btn" style="padding:12px 24px; background:#1F6FEB; color:white; border:none; border-radius:8px; cursor:pointer; font-size:16px;">
-        📍 Standort jetzt abrufen
+        📍 Standort abrufen
     </button>
     <p id="gps-status" style="margin-top:10px; color:#8B949E; font-size:14px;"></p>
+
     <script>
     document.getElementById('gps-btn').addEventListener('click', function() {
         const status = document.getElementById('gps-status');
         if (!navigator.geolocation) {
-            status.textContent = "❌ Geolocation wird von diesem Browser nicht unterstützt.";
+            status.textContent = "❌ Geolocation nicht verfügbar.";
             return;
         }
-        status.textContent = "⏳ Standort wird angefragt... Bitte Zugriff erlauben.";
+        status.textContent = "⏳ Zugriff anfragen...";
         
         navigator.geolocation.getCurrentPosition(
             (pos) => {
-                const coords = pos.coords.latitude.toFixed(6) + "," + pos.coords.longitude.toFixed(6);
-                // Streamlit-Input direkt aktualisieren (inline im DOM)
-                const input = document.getElementById('gps_hidden');
-                if (input) {
-                    input.value = coords;
-                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                const lat = pos.coords.latitude.toFixed(6);
+                const lon = pos.coords.longitude.toFixed(6);
+                const coords = lat + "," + lon;
+                
+                // Robuster Streamlit-Input-Selector
+                const inputs = document.querySelectorAll('input[data-baseweb="input"]');
+                for (let input of inputs) {
+                    if (input.id && input.id.includes('gps_hidden')) {
+                        input.value = coords;
+                        input.dispatchEvent(new Event('input', { bubbles: true }));
+                        break;
+                    }
                 }
-                status.textContent = "✅ Koordinaten erfasst! Klicke auf Dashboard, um fortzufahren.";
+                
+                status.textContent = "✅ Koordinaten: " + coords;
             },
             (err) => {
-                status.textContent = "❌ Fehler: " + err.message + " (Bitte Zugriff in Browser-Einstellungen erlauben)";
+                status.textContent = "❌ Fehler: " + err.message;
             },
             { enableHighAccuracy: true, timeout: 10000 }
         );
     });
     </script>
     """
-    st.html(gps_js)
+    st.html(gps_html)
 
-    # Ergebnis & Weiterleitung
+    # Anzeige & Weiterleitung
     if st.session_state.gps_coords:
-        st.success(f"✅ Koordinaten: `{st.session_state.gps_coords}`")
+        st.success(f"✅ Koordinaten erfasst: `{st.session_state.gps_coords}`")
         if st.button("🌤️ Zum Astro & Wetter Dashboard", type="primary"):
             st.session_state.dash_input = st.session_state.gps_coords
             st.rerun()
     else:
-        st.info("💡 Nach dem Klick fragt der Browser um Erlaubnis. Die Koordinaten werden automatisch übernommen.")
+        st.info("💡 **Hinweis:** Erlaube den Standortzugriff im Browser. Die Koordinaten werden automatisch übernommen.")
 # ═══════════════════════════════════════════
 # 🌍 ASTRO & WETTER DASHBOARD
 # ═══════════════════════════════════════════

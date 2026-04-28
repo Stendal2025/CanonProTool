@@ -13,6 +13,11 @@ try:
 except Exception as e:
     st.error(f"⚠️ Import-Fehler: {type(e).__name__}: {e}")
     st.stop()
+
+# 🔍 DEBUG: Session-State anzeigen (kann später gelöscht werden)
+if st.checkbox("🔍 Debug-Modus", value=False):
+    st.json(dict(st.session_state))
+    st.json(dict(st.query_params))
 # ═══════════════════════════════════════════
 # HILFSFUNKTIONEN FÜR MOND & MILCHSTRAßE
 # ═══════════════════════════════════════════
@@ -1209,15 +1214,32 @@ elif tool == "🌙 Mond & Milchstraße":
     st.header("🌙 Mondphasen & Milchstraße Sichtbarkeit")
     st.markdown("Berechne optimale Termine für Astrofotografie und Milchstraßen-Aufnahmen.")
     
+    # 📍 Stadt-Input mit Koordinaten-Lookup
+    city = st.text_input("📍 Stadt (optional)", value="", help="z.B. Berlin, München, Hamburg – lässt Breitengrad automatisch setzen")
+    
+    # Koordinaten-Dictionary für bekannte Städte
+    coords = {
+        "Berlin": (52.52, 13.405), "München": (48.1351, 11.5820),
+        "Hamburg": (53.5511, 9.9937), "Köln": (50.9375, 6.9603),
+        "Frankfurt": (50.1109, 8.6821), "Wien": (48.2082, 16.3738),
+        "Zürich": (47.3769, 8.5417), "": (50.0, 10.0)  # Default: Deutschland-Mitte
+    }
+    
     col1, col2 = st.columns(2)
     with col1:
         date_str = st.text_input("📅 Datum (TT.MM.JJJJ)", value=datetime.now().strftime("%d.%m.%Y"))
     with col2:
-        latitude = st.number_input("🌍 Breitengrad", min_value=-90.0, max_value=90.0, value=50.0, help="Deutschland: ~47-55°")
+        # Wenn Stadt eingegeben → Koordinaten nutzen, sonst manuelle Eingabe
+        if city.strip() in coords:
+            latitude = coords[city.strip()][0]
+            st.number_input("🌍 Breitengrad", min_value=-90.0, max_value=90.0, value=latitude, disabled=True, help=f"Automatisch von '{city}'")
+        else:
+            latitude = st.number_input("🌍 Breitengrad", min_value=-90.0, max_value=90.0, value=50.0, help="Deutschland: ~47-55°")
     
     option = st.selectbox("🎯 Fokus", ["Milchstraße", "Mondfotografie", "Deep Sky", "Nordlichter"])
     
     if st.button("🔍 Berechnen", type="primary"):
+        # ... Rest des Codes bleibt gleich ...
         try:
             day, month, year = map(int, date_str.split("."))
             
@@ -1982,28 +2004,29 @@ elif tool == "📅 5-Tage Prognose":
             st.error(f"Fehler: {e}")
 
 # ═══════════════════════════════════════════
-# 📍 GPS-STANDORT (Zuverlässige Query-Param-Methode)
+# 📍 GPS-STANDORT (Query-Param-Methode)
 # ═══════════════════════════════════════════
 elif tool == "📍 GPS-Standort":
     st.header("📍 Standort automatisch erkennen")
-    st.markdown("Klicke unten, um deinen aktuellen Standort abzurufen.")
-
-    # 1. Prüfe, ob Koordinaten über die URL gekommen sind
-    lat = st.query_params.get("lat", None)
-    lon = st.query_params.get("lon", None)
-
-    if lat and lon:
-        lat, lon = float(lat), float(lon)
-        st.success(f"✅ Standort erkannt: `{lat:.4f}, {lon:.4f}`")
-        st.info("📋 Kopiere diese Koordinaten oder nutze sie direkt im Wetter-Dashboard.")
+    
+    # 1. Prüfe URL-Parameter (lat/lon aus GPS-Redirect)
+    lat_param = st.query_params.get("lat")
+    lon_param = st.query_params.get("lon")
+    
+    if lat_param and lon_param:
+        lat, lon = float(lat_param), float(lon_param)
+        coords_str = f"{lat},{lon}"
+        st.success(f"✅ Standort erkannt: `{coords_str}`")
         
-        # Optional: Direkt zum Dashboard springen & Werte übergeben
-        if st.button("🌤️ Wetter für diesen Standort laden", type="primary"):
-            st.session_state.gps_coords = f"{lat},{lon}"
-            st.rerun()
+        # In Session-State speichern für andere Tools
+        st.session_state.gps_coords = coords_str
+        
+        # Button zum Weiterleiten
+        if st.button("🌤️ Zum Astro & Wetter Dashboard", type="primary"):
+            st.switch_page("web_app.py")  # oder einfach st.rerun()
         st.stop()
-
-    # 2. JS-Button mit sicherer Redirect-Methode
+    
+    # 2. GPS-Button mit JS
     js_code = """
     <button id="gps-btn" style="padding:12px 24px; background:#1F6FEB; color:white; border:none; border-radius:8px; cursor:pointer; font-size:16px;">
         📍 GPS-Standort abrufen
@@ -2016,30 +2039,26 @@ elif tool == "📍 GPS-Standort":
             status.textContent = "❌ Browser unterstützt Geolocation nicht.";
             return;
         }
-        status.textContent = "⏳ Standort wird abgefragt... Bitte Zugriff erlauben.";
+        status.textContent = "⏳ Standort wird abgefragt...";
         navigator.geolocation.getCurrentPosition(
             (pos) => {
-                status.textContent = "✅ Gefunden! App wird neu geladen...";
-                // Zuverlässiger als postMessage: Einfach URL mit Parametern neu laden
+                status.textContent = "✅ Gefunden! Lade neu...";
                 window.location.href = `?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`;
             },
             (err) => {
-                status.textContent = `❌ Fehler: ${err.message} (Zugriff verweigert oder Timeout)`;
+                status.textContent = `❌ Fehler: ${err.message}`;
             },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            { enableHighAccuracy: true, timeout: 10000 }
         );
     };
     </script>
     """
     st.components.v1.html(js_code, height=100)
     
-    st.info("""
-    💡 **Hinweise:**
-    - Dein Browser fragt um Erlaubnis. Klicke auf `Zulassen`.
-    - GPS funktioniert nur über HTTPS (Streamlit Cloud nutzt dies automatisch).
-    - Für Wetter-APIs sind oft **Stadt-Namen** genauer, da Wetterstationen an Städten orientiert sind.
-    """)
-
+    # Debug-Hilfe (kann später entfernt werden)
+    with st.expander("🔍 Debug: Session-State prüfen"):
+        st.write("`st.session_state.gps_coords`:", st.session_state.get("gps_coords", "Nicht gesetzt"))
+        st.write("`st.query_params`:", dict(st.query_params))
 # ═══════════════════════════════════════════
 # 🌍 ASTRO & WETTER DASHBOARD
 # ═══════════════════════════════════════════
@@ -2050,7 +2069,7 @@ elif tool == "🌍 Astro & Wetter Dashboard":
     # ✅ GPS-Koordinaten aus Session-State holen (fallback: Berlin)
     default_input = st.session_state.get("gps_coords", "Berlin")
     
-    # ✅ NUR EINE text_input-Zeile mit dynamic value
+    # ✅ NUR EINE text_input-Zeile – keine zweite!
     city = st.text_input(
         "📍 Stadt oder Koordinaten (z.B. Berlin oder 52.52,13.40)", 
         value=default_input, 
@@ -2058,6 +2077,7 @@ elif tool == "🌍 Astro & Wetter Dashboard":
     )
     
     if st.button("🔄 Dashboard aktualisieren", type="primary"):
+        # ... Rest des Codes bleibt gleich ...
         try:
             import requests
             API_KEY = st.secrets["OPENWEATHER_API_KEY"]

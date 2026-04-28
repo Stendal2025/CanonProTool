@@ -2001,49 +2001,67 @@ elif tool == "📅 5-Tage Prognose":
             st.error(f"Fehler: {e}")
 
 # ═══════════════════════════════════════════
-# 📍 GPS-STANDORT (Sichere Query-Param-Methode)
+# 📍 GPS-STANDORT (Mit Debug-Alerts)
 # ═══════════════════════════════════════════
 elif tool == "📍 GPS-Standort":
     st.header("📍 Standort automatisch erkennen")
     
-    # 1. URL-Parameter auslesen & State setzen (wird nach JS-Redirect ausgelöst)
+    # 1. URL Parameter lesen & State setzen
     lat_q = st.query_params.get("lat")
     lon_q = st.query_params.get("lon")
     if lat_q and lon_q:
         st.session_state.gps_coords = f"{lat_q},{lon_q}"
         st.query_params.clear()  # URL säubern
-        st.rerun()               # Sauberer Neustart mit gesetztem State
+        st.rerun()               # App neu laden mit gesetztem State
         
     if "gps_coords" not in st.session_state:
         st.session_state.gps_coords = ""
         
-    # 2. JS-Button mit sicherem Redirect
+    # Verstecktes Feld zur Visualisierung
+    st.text_input("Versteckt", value=st.session_state.gps_coords, key="gps_hidden", label_visibility="collapsed")
+
+    # 2. JS-Button mit ALERTS zum Debuggen
     st.html("""
     <button id="gps-btn" style="padding:12px 24px; background:#1F6FEB; color:white; border:none; border-radius:8px; cursor:pointer; font-size:16px;">
         📍 Standort abrufen
     </button>
     <p id="gps-status" style="margin-top:10px; font-size:14px; color:#8B949E;"></p>
     <script>
-    document.getElementById('gps-btn').onclick = () => {
+    document.getElementById('gps-btn').onclick = function() {
+        alert("DEBUG: Button wurde geklickt!"); // Wenn dies erscheint, läuft das Skript
+        
+        if (!navigator.geolocation) {
+            alert("DEBUG: Geolocation wird vom Browser nicht unterstützt.");
+            return;
+        }
+        
         const status = document.getElementById('gps-status');
-        if (!navigator.geolocation) { status.textContent = "❌ Nicht unterstützt"; return; }
         status.textContent = "⏳ Wird angefragt... Bitte Zugriff erlauben.";
         
         navigator.geolocation.getCurrentPosition(
             (pos) => {
                 const lat = pos.coords.latitude.toFixed(6);
                 const lon = pos.coords.longitude.toFixed(6);
-                status.textContent = "✅ Gefunden! Daten werden übernommen...";
-                // Zuverlässigste Methode: URL-Parameter setzen & App neu laden
-                window.parent.location.href = `?lat=${lat}&lon=${lon}`;
+                alert("DEBUG: Koordinaten gefunden! Weiterleitung...");
+                
+                // Versuch, die Top-Level-URL zu ändern
+                try {
+                    window.top.location.href = `?lat=${lat}&lon=${lon}`;
+                } catch (e) {
+                    alert("DEBUG: Redirect blockiert durch Sandbox. Bitte Koordinaten manuell eingeben.");
+                    status.textContent = "❌ Redirect blockiert. Bitte manuell eingeben.";
+                }
             },
-            (err) => { status.textContent = "❌ " + err.message; },
+            (err) => { 
+                alert("DEBUG: Fehler bei Geolocation: " + err.message);
+                status.textContent = "❌ " + err.message; 
+            },
             { enableHighAccuracy: true, timeout: 10000 }
         );
     };
     </script>
     """)
-    
+
     # 3. Ergebnis & Weiterleitung
     if st.session_state.gps_coords:
         st.success(f"✅ Koordinaten erkannt: `{st.session_state.gps_coords}`")
@@ -2051,7 +2069,7 @@ elif tool == "📍 GPS-Standort":
             st.session_state.dash_input = st.session_state.gps_coords
             st.rerun()
     else:
-        st.info("💡 Klicke den Button. Die App lädt einmal kurz neu, um die GPS-Daten sicher an Python zu übergeben.")
+        st.info("💡 **Hinweis:** Falls keine Popups erscheinen, blockiert dein Browser/Streamlit-Sandbox das Skript. Nutze dann bitte die manuelle Eingabe im Dashboard.")
 # ═══════════════════════════════════════════
 # 🌍 ASTRO & WETTER DASHBOARD
 # ═══════════════════════════════════════════

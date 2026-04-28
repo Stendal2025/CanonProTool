@@ -260,7 +260,8 @@ tool = st.sidebar.radio(
         "🌙 Mond & Milchstraße",
         "🌠 Sternspuren",
         "🎨 Bearbeitung",
-        "🌙 Aktuelle Mond-Daten"
+        "🌙 Aktuelle Mond-Daten",
+        "☁️ Live-Wetter"
     ],
     index=0
 )
@@ -1847,8 +1848,83 @@ elif tool == "🌙 Aktuelle Mond-Daten":
         except Exception as e:
             st.error(f"❌ {type(e).__name__}: {e}")
             st.info("💡 Tipp: Prüfe den Stadtnamen oder nutze Koordinaten")
+            
         
+   # ═══════════════════════════════════════════
+# ☁️ LIVE-WETTER (OpenWeatherMap API)
+# ═══════════════════════════════════════════
+elif tool == "☁️ Live-Wetter":
+    st.header("☁️ Live-Wetter für Fotografen")
+    st.markdown("Echtzeit-Daten & Foto-Empfehlungen für deinen Standort")
+    
+    city = st.text_input("📍 Stadt eingeben", value="Berlin", help="z.B. München, Hamburg, Wien, Zürich")
+    
+    if st.button("🌤️ Wetter laden", type="primary"):
+        try:
+            import requests
+            
+            # 1. API-Key aus dem sicheren Streamlit-Secret holen
+            API_KEY = st.secrets["OPENWEATHER_API_KEY"]
+            
+            # 2. URL zusammenbauen (metric = Celsius, lang = Deutsch)
+            url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric&lang=de"
+            
+            # 3. Anfrage senden & Antwort als JSON speichern
+            response = requests.get(url)
+            data = response.json()
+            
+            # 4. Prüfen, ob Stadt gefunden wurde
+            if data.get("cod") != 200:
+                st.error(f"❌ Stadt nicht gefunden: {data.get('message', 'Unbekannter Fehler')}")
+            else:
+                # 5. Daten aus JSON extrahieren
+                temp        = data["main"]["temp"]
+                feels_like  = data["main"]["feels_like"]
+                humidity    = data["main"]["humidity"]
+                wind_speed  = data["wind"]["speed"] * 3.6  # m/s → km/h
+                clouds      = data["clouds"]["all"]
+                weather_desc= data["weather"][0]["description"]
+                weather_icon= data["weather"][0]["icon"]
+                sunrise     = datetime.fromtimestamp(data["sys"]["sunrise"]).strftime("%H:%M")
+                sunset      = datetime.fromtimestamp(data["sys"]["sunset"]).strftime("%H:%M")
                 
+                # 6. Foto-Empfehlung generieren
+                if clouds < 20:
+                    foto_tip = "🌅 Klarer Himmel – Perfekt für Sunset & Astro!"
+                elif clouds < 50:
+                    foto_tip = "⛅ Teilweise bewölkt – Ideal für dramatische Landschaften"
+                else:
+                    foto_tip = "☁️ Stark bewölkt – Weiches Licht für Portrait/Makro"
+                
+                if wind_speed > 40:
+                    foto_tip += "\n💨 Starker Wind! Stativ beschweren, kurze Verschlusszeit"
+                
+                # 7. Anzeige
+                col1, col2, col3 = st.columns(3)
+                col1.metric("🌡️ Temperatur", f"{temp:.1f}°C", f"{feels_like:.1f}°C gefühlt")
+                col2.metric("💨 Wind", f"{wind_speed:.1f} km/h")
+                col3.metric("💧 Luftfeuchtigkeit", f"{humidity}%")
+                
+                st.success(f"""
+                ### 📸 Wetter-Bedingungen: {weather_desc.capitalize()}
+                - **Bewölkung:** {clouds}%
+                - **Sonnenaufgang:** {sunrise} Uhr
+                - **Sonnenuntergang:** {sunset} Uhr
+                
+                ### 💡 Foto-Empfehlung:
+                {foto_tip}
+                """)
+                
+                # Wetter-Icon anzeigen
+                st.image(f"http://openweathermap.org/img/wn/{weather_icon}@2x.png", width=80)
+                
+        except requests.exceptions.RequestException:
+            st.error("🌐 Netzwerkfehler. Prüfe deine Internetverbindung.")
+        except KeyError as e:
+            st.error(f"🔍 Datenstruktur unbekannt: {e}. Bitte später erneut versuchen.")
+        except Exception as e:
+            st.error(f"❌ Unerwarteter Fehler: {e}")
+            st.info("💡 Tipp: Prüfe deinen API-Key in `.streamlit/secrets.toml`")             
 
 
 

@@ -1982,45 +1982,63 @@ elif tool == "📅 5-Tage Prognose":
             st.error(f"Fehler: {e}")
 
 # ═══════════════════════════════════════════
-# 📍 GPS-STANDORT ERKENNEN
+# 📍 GPS-STANDORT (Zuverlässige Query-Param-Methode)
 # ═══════════════════════════════════════════
 elif tool == "📍 GPS-Standort":
     st.header("📍 Standort automatisch erkennen")
-    st.markdown("Erlaubt den Zugriff auf deinen aktuellen Standort (nur für diese Session)")
-    
-    # Verstecktes Feld für Koordinaten
-    if "gps_coords" not in st.session_state:
-        st.session_state.gps_coords = ""
-    
-    # JS-Brücke zu Streamlit
-    js_code = """
-    <script>
-    function getGPS() {
-        if (!navigator.geolocation) { alert("Geolocation nicht unterstützt"); return; }
-        navigator.geolocation.getCurrentPosition(
-            pos => {
-                // Koordinaten in Streamlit-Textfeld schreiben & App neu laden
-                window.parent.postMessage({type: 'streamlit:setComponentValue', value: pos.coords.latitude + "," + pos.coords.longitude}, "*");
-                setTimeout(() => window.location.reload(), 500);
-            },
-            err => alert("Standort-Zugriff verweigert oder Fehler: " + err.message)
-        );
-    }
-    </script>
-    <button onclick="getGPS()" style="padding:10px 20px; background:#1F6FEB; color:white; border:none; border-radius:8px; cursor:pointer;">
-        📍 Standort jetzt freigeben
-    </button>
-    """
-    st.components.v1.html(js_code, height=60)
-    
-    # Koordinaten-Anzeige & Weiterleitung
-    if st.session_state.gps_coords:
-        lat, lon = map(float, st.session_state.gps_coords.split(","))
+    st.markdown("Klicke unten, um deinen aktuellen Standort abzurufen.")
+
+    # 1. Prüfe, ob Koordinaten über die URL gekommen sind
+    lat = st.query_params.get("lat", None)
+    lon = st.query_params.get("lon", None)
+
+    if lat and lon:
+        lat, lon = float(lat), float(lon)
         st.success(f"✅ Standort erkannt: `{lat:.4f}, {lon:.4f}`")
-        st.info("🔄 Lade Wetter für diesen Standort...")
-        st.rerun()
-    else:
-        st.info("💡 Klicke den Button oben. Dein Browser fragt um Erlaubnis.")
+        st.info("📋 Kopiere diese Koordinaten oder nutze sie direkt im Wetter-Dashboard.")
+        
+        # Optional: Direkt zum Dashboard springen & Werte übergeben
+        if st.button("🌤️ Wetter für diesen Standort laden", type="primary"):
+            st.session_state.gps_coords = f"{lat},{lon}"
+            st.rerun()
+        st.stop()
+
+    # 2. JS-Button mit sicherer Redirect-Methode
+    js_code = """
+    <button id="gps-btn" style="padding:12px 24px; background:#1F6FEB; color:white; border:none; border-radius:8px; cursor:pointer; font-size:16px;">
+        📍 GPS-Standort abrufen
+    </button>
+    <p id="gps-status" style="margin-top:10px; color:#8B949E; font-size:14px;"></p>
+    <script>
+    document.getElementById('gps-btn').onclick = function() {
+        const status = document.getElementById('gps-status');
+        if (!navigator.geolocation) {
+            status.textContent = "❌ Browser unterstützt Geolocation nicht.";
+            return;
+        }
+        status.textContent = "⏳ Standort wird abgefragt... Bitte Zugriff erlauben.";
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                status.textContent = "✅ Gefunden! App wird neu geladen...";
+                // Zuverlässiger als postMessage: Einfach URL mit Parametern neu laden
+                window.location.href = `?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`;
+            },
+            (err) => {
+                status.textContent = `❌ Fehler: ${err.message} (Zugriff verweigert oder Timeout)`;
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+    };
+    </script>
+    """
+    st.components.v1.html(js_code, height=100)
+    
+    st.info("""
+    💡 **Hinweise:**
+    - Dein Browser fragt um Erlaubnis. Klicke auf `Zulassen`.
+    - GPS funktioniert nur über HTTPS (Streamlit Cloud nutzt dies automatisch).
+    - Für Wetter-APIs sind oft **Stadt-Namen** genauer, da Wetterstationen an Städten orientiert sind.
+    """)
 
 # ═══════════════════════════════════════════
 # 🌍 ASTRO & WETTER DASHBOARD
@@ -2029,7 +2047,15 @@ elif tool == "🌍 Astro & Wetter Dashboard":
     st.header("🌍 Astro & Wetter Dashboard")
     st.markdown("Alles für die Shooting-Planung an einem Ort")
     
-    city = st.text_input("📍 Stadt oder Koordinaten (z.B. Berlin oder 52.52,13.40)", value="Berlin", key="dash_input")
+    # ✅ GPS-Koordinaten aus Session-State holen (fallback: Berlin)
+    default_input = st.session_state.get("gps_coords", "Berlin")
+    
+    # ✅ NUR EINE text_input-Zeile mit dynamic value
+    city = st.text_input(
+        "📍 Stadt oder Koordinaten (z.B. Berlin oder 52.52,13.40)", 
+        value=default_input, 
+        key="dash_input"
+    )
     
     if st.button("🔄 Dashboard aktualisieren", type="primary"):
         try:

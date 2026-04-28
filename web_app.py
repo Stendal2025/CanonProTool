@@ -2001,75 +2001,61 @@ elif tool == "📅 5-Tage Prognose":
             st.error(f"Fehler: {e}")
 
 # ═══════════════════════════════════════════
-# 📍 GPS-STANDORT (Streamlit 1.56 stabil)
+# 📍 GPS-STANDORT (Query-Param-Methode)
 # ═══════════════════════════════════════════
 elif tool == "📍 GPS-Standort":
     st.header("📍 Standort automatisch erkennen")
-    st.markdown("Klicke unten, um deine GPS-Koordinaten zu ermitteln.")
-
-    if "gps_coords" not in st.session_state:
-        st.session_state.gps_coords = ""
-
-    # Verstecktes Input-Feld mit eindeutiger Key-Struktur
-    st.text_input(
-        "gps_hidden_input",
-        value=st.session_state.gps_coords,
-        key="gps_hidden",
-        label_visibility="collapsed"
-    )
-
-    # HTML/JS Block mit st.html
-    gps_html = """
+    
+    # 1. Prüfe URL-Parameter (lat/lon aus GPS-Redirect)
+    lat_param = st.query_params.get("lat")
+    lon_param = st.query_params.get("lon")
+    
+    if lat_param and lon_param:
+        lat, lon = float(lat_param), float(lon_param)
+        coords_str = f"{lat},{lon}"
+        st.success(f"✅ Standort erkannt: `{coords_str}`")
+        
+        # In Session-State speichern für andere Tools
+        st.session_state.gps_coords = coords_str
+        
+        # Button zum Weiterleiten
+        if st.button("🌤️ Zum Astro & Wetter Dashboard", type="primary"):
+            st.switch_page("web_app.py")  # oder einfach st.rerun()
+        st.stop()
+    
+    # 2. GPS-Button mit JS
+    js_code = """
     <button id="gps-btn" style="padding:12px 24px; background:#1F6FEB; color:white; border:none; border-radius:8px; cursor:pointer; font-size:16px;">
-        📍 Standort abrufen
+        📍 GPS-Standort abrufen
     </button>
     <p id="gps-status" style="margin-top:10px; color:#8B949E; font-size:14px;"></p>
-
     <script>
-    document.getElementById('gps-btn').addEventListener('click', function() {
+    document.getElementById('gps-btn').onclick = function() {
         const status = document.getElementById('gps-status');
         if (!navigator.geolocation) {
-            status.textContent = "❌ Geolocation nicht verfügbar.";
+            status.textContent = "❌ Browser unterstützt Geolocation nicht.";
             return;
         }
-        status.textContent = "⏳ Zugriff anfragen...";
-        
+        status.textContent = "⏳ Standort wird abgefragt...";
         navigator.geolocation.getCurrentPosition(
             (pos) => {
-                const lat = pos.coords.latitude.toFixed(6);
-                const lon = pos.coords.longitude.toFixed(6);
-                const coords = lat + "," + lon;
-                
-                // Robuster Streamlit-Input-Selector
-                const inputs = document.querySelectorAll('input[data-baseweb="input"]');
-                for (let input of inputs) {
-                    if (input.id && input.id.includes('gps_hidden')) {
-                        input.value = coords;
-                        input.dispatchEvent(new Event('input', { bubbles: true }));
-                        break;
-                    }
-                }
-                
-                status.textContent = "✅ Koordinaten: " + coords;
+                status.textContent = "✅ Gefunden! Lade neu...";
+                window.location.href = `?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`;
             },
             (err) => {
-                status.textContent = "❌ Fehler: " + err.message;
+                status.textContent = `❌ Fehler: ${err.message}`;
             },
             { enableHighAccuracy: true, timeout: 10000 }
         );
-    });
+    };
     </script>
     """
-    st.html(gps_html)
-
-    # Anzeige & Weiterleitung
-    if st.session_state.gps_coords:
-        st.success(f"✅ Koordinaten erfasst: `{st.session_state.gps_coords}`")
-        if st.button("🌤️ Zum Astro & Wetter Dashboard", type="primary"):
-            st.session_state.dash_input = st.session_state.gps_coords
-            st.rerun()
-    else:
-        st.info("💡 **Hinweis:** Erlaube den Standortzugriff im Browser. Die Koordinaten werden automatisch übernommen.")
+    st.components.v1.html(js_code, height=100)
+    
+    # Debug-Hilfe (kann später entfernt werden)
+    with st.expander("🔍 Debug: Session-State prüfen"):
+        st.write("`st.session_state.gps_coords`:", st.session_state.get("gps_coords", "Nicht gesetzt"))
+        st.write("`st.query_params`:", dict(st.query_params))
 # ═══════════════════════════════════════════
 # 🌍 ASTRO & WETTER DASHBOARD
 # ═══════════════════════════════════════════

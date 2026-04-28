@@ -14,6 +14,11 @@ except Exception as e:
     st.error(f"⚠️ Import-Fehler: {type(e).__name__}: {e}")
     st.stop()
 
+# 🔍 DEBUG: Session-State anzeigen (kann später gelöscht werden)
+if st.checkbox("🔍 Debug-Modus", value=False):
+    st.json(dict(st.session_state))
+    st.json(dict(st.query_params))
+
 
 # ═══════════════════════════════════════════
 # HILFSFUNKTIONEN FÜR MOND & MILCHSTRAßE
@@ -2001,75 +2006,62 @@ elif tool == "📅 5-Tage Prognose":
             st.error(f"Fehler: {e}")
 
 # ═══════════════════════════════════════════
-# 📍 GPS-STANDORT (Mit Debug-Alerts)
+# 📍 GPS-STANDORT (Ifreame-kompatible Methode)
 # ═══════════════════════════════════════════
 elif tool == "📍 GPS-Standort":
     st.header("📍 Standort automatisch erkennen")
-    
-    # 1. URL Parameter lesen & State setzen
-    lat_q = st.query_params.get("lat")
-    lon_q = st.query_params.get("lon")
-    if lat_q and lon_q:
-        st.session_state.gps_coords = f"{lat_q},{lon_q}"
-        st.query_params.clear()  # URL säubern
-        st.rerun()               # App neu laden mit gesetztem State
-        
+    st.markdown("Klicke unten, um deinen aktuellen Standort abzurufen.")
+
     if "gps_coords" not in st.session_state:
         st.session_state.gps_coords = ""
-        
-    # Verstecktes Feld zur Visualisierung
-    st.text_input("Versteckt", value=st.session_state.gps_coords, key="gps_hidden", label_visibility="collapsed")
 
-    # 2. JS-Button mit ALERTS zum Debuggen
-    st.html("""
+    # Verstecktes Eingabefeld, das JS beschreiben kann
+    st.text_input(
+        "GPS_Coords_Hidden", 
+        value=st.session_state.gps_coords, 
+        key="gps_hidden", 
+        label_visibility="collapsed"
+    )
+
+    js_code = """
     <button id="gps-btn" style="padding:12px 24px; background:#1F6FEB; color:white; border:none; border-radius:8px; cursor:pointer; font-size:16px;">
-        📍 Standort abrufen
+        📍 GPS-Standort abrufen
     </button>
-    <p id="gps-status" style="margin-top:10px; font-size:14px; color:#8B949E;"></p>
+    <p id="gps-status" style="margin-top:10px; color:#8B949E; font-size:14px;"></p>
     <script>
     document.getElementById('gps-btn').onclick = function() {
-        alert("DEBUG: Button wurde geklickt!"); // Wenn dies erscheint, läuft das Skript
-        
-        if (!navigator.geolocation) {
-            alert("DEBUG: Geolocation wird vom Browser nicht unterstützt.");
-            return;
-        }
-        
         const status = document.getElementById('gps-status');
-        status.textContent = "⏳ Wird angefragt... Bitte Zugriff erlauben.";
+        if (!navigator.geolocation) { status.textContent = "❌ Browser unterstützt Geolocation nicht."; return; }
+        status.textContent = "⏳ Wird abgefragt... Bitte Zugriff erlauben.";
         
         navigator.geolocation.getCurrentPosition(
             (pos) => {
-                const lat = pos.coords.latitude.toFixed(6);
-                const lon = pos.coords.longitude.toFixed(6);
-                alert("DEBUG: Koordinaten gefunden! Weiterleitung...");
-                
-                // Versuch, die Top-Level-URL zu ändern
-                try {
-                    window.top.location.href = `?lat=${lat}&lon=${lon}`;
-                } catch (e) {
-                    alert("DEBUG: Redirect blockiert durch Sandbox. Bitte Koordinaten manuell eingeben.");
-                    status.textContent = "❌ Redirect blockiert. Bitte manuell eingeben.";
+                const coords = pos.coords.latitude + "," + pos.coords.longitude;
+                // Schreibt in das versteckte Streamlit-Feld
+                const input = parent.document.getElementById('gps_hidden');
+                if (input) {
+                    input.value = coords;
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
                 }
+                status.textContent = "✅ Standort erfasst! Seite lädt neu...";
+                setTimeout(() => window.parent.location.reload(), 800);
             },
-            (err) => { 
-                alert("DEBUG: Fehler bei Geolocation: " + err.message);
-                status.textContent = "❌ " + err.message; 
-            },
+            (err) => { status.textContent = "❌ Fehler: " + err.message; },
             { enableHighAccuracy: true, timeout: 10000 }
         );
     };
     </script>
-    """)
+    """
+    st.components.v1.html(js_code, height=100)
 
-    # 3. Ergebnis & Weiterleitung
+    # Anzeige & Weiterleitung
     if st.session_state.gps_coords:
         st.success(f"✅ Koordinaten erkannt: `{st.session_state.gps_coords}`")
         if st.button("🌤️ Zum Astro & Wetter Dashboard", type="primary"):
             st.session_state.dash_input = st.session_state.gps_coords
             st.rerun()
     else:
-        st.info("💡 **Hinweis:** Falls keine Popups erscheinen, blockiert dein Browser/Streamlit-Sandbox das Skript. Nutze dann bitte die manuelle Eingabe im Dashboard.")
+        st.info("💡 **Hinweis:** Falls der Browser den Zugriff blockiert, nutze einfach die manuelle Stadt-/Koordinaten-Eingabe im Dashboard.")
 # ═══════════════════════════════════════════
 # 🌍 ASTRO & WETTER DASHBOARD
 # ═══════════════════════════════════════════

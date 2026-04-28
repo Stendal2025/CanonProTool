@@ -261,7 +261,9 @@ tool = st.sidebar.radio(
         "🌠 Sternspuren",
         "🎨 Bearbeitung",
         "🌙 Aktuelle Mond-Daten",
-        "☁️ Live-Wetter"
+        "☁️ Live-Wetter",
+        "📅 5-Tage Prognose",      # ← NEU
+        "🌍 Astro & Wetter Dashboard", # ← NEU
     ],
     index=0
 )
@@ -1924,7 +1926,169 @@ elif tool == "☁️ Live-Wetter":
             st.error(f"🔍 Datenstruktur unbekannt: {e}. Bitte später erneut versuchen.")
         except Exception as e:
             st.error(f"❌ Unerwarteter Fehler: {e}")
-            st.info("💡 Tipp: Prüfe deinen API-Key in `.streamlit/secrets.toml`")             
+            st.info("💡 Tipp: Prüfe deinen API-Key in `.streamlit/secrets.toml`")
+
+# ═══════════════════════════════════════════
+# 📅 5-TAGE WETTERPROGNOSE
+# ═══════════════════════════════════════════
+elif tool == "📅 5-Tage Prognose":
+    st.header("📅 5-Tage-Wettervorhersage")
+    st.markdown("Alle 3 Stunden aktualisiert – kostenlos im Free-Tier")
+    
+    city = st.text_input("📍 Stadt", value="Berlin", key="forecast_city")
+    
+    if st.button("📊 Vorhersage laden", type="primary"):
+        try:
+            import requests
+            API_KEY = st.secrets["OPENWEATHER_API_KEY"]
+            url = f"http://api.openweathermap.org/data/2.5/forecast?q={city}&appid={API_KEY}&units=metric&lang=de"
+            res = requests.get(url)
+            data = res.json()
+            
+            if data.get("cod") != "200":
+                st.error(f"❌ {data.get('message')}")
+            else:
+                # Daten vorbereiten
+                times, temps, icons = [], [], []
+                daily = {}
+                
+                for item in data["list"]:
+                    dt = datetime.fromtimestamp(item["dt"])
+                    times.append(dt.strftime("%d.%m. %H:%M"))
+                    temps.append(item["main"]["temp"])
+                    icons.append(item["weather"][0]["icon"])
+                    
+                    day = dt.strftime("%d.%m.")
+                    if day not in daily:
+                        daily[day] = {"min": item["main"]["temp_min"], "max": item["main"]["temp_max"], "desc": item["weather"][0]["description"]}
+                    else:
+                        daily[day]["min"] = min(daily[day]["min"], item["main"]["temp_min"])
+                        daily[day]["max"] = max(daily[day]["max"], item["main"]["temp_max"])
+                
+                # Temperaturverlauf
+                st.subheader("🌡️ Temperaturverlauf (°C)")
+                df_temp = pd.DataFrame({"Uhrzeit": times[:40], "Temperatur": temps[:40]})
+                st.line_chart(df_temp.set_index("Uhrzeit"), use_container_width=True)
+                
+                # Tagesübersicht
+                st.subheader("📆 Tagesübersicht")
+                cols = st.columns(len(daily))
+                for i, (day, vals) in enumerate(daily.items()):
+                    with cols[i]:
+                        st.metric(day, f"{vals['min']:.0f}° / {vals['max']:.0f}°")
+                        st.caption(vals["desc"].capitalize())
+                        
+        except Exception as e:
+            st.error(f"Fehler: {e}")
+
+# ═══════════════════════════════════════════
+# 📍 GPS-STANDORT ERKENNEN
+# ═══════════════════════════════════════════
+elif tool == "📍 GPS-Standort":
+    st.header("📍 Standort automatisch erkennen")
+    st.markdown("Erlaubt den Zugriff auf deinen aktuellen Standort (nur für diese Session)")
+    
+    # Verstecktes Feld für Koordinaten
+    if "gps_coords" not in st.session_state:
+        st.session_state.gps_coords = ""
+    
+    # JS-Brücke zu Streamlit
+    js_code = """
+    <script>
+    function getGPS() {
+        if (!navigator.geolocation) { alert("Geolocation nicht unterstützt"); return; }
+        navigator.geolocation.getCurrentPosition(
+            pos => {
+                // Koordinaten in Streamlit-Textfeld schreiben & App neu laden
+                window.parent.postMessage({type: 'streamlit:setComponentValue', value: pos.coords.latitude + "," + pos.coords.longitude}, "*");
+                setTimeout(() => window.location.reload(), 500);
+            },
+            err => alert("Standort-Zugriff verweigert oder Fehler: " + err.message)
+        );
+    }
+    </script>
+    <button onclick="getGPS()" style="padding:10px 20px; background:#1F6FEB; color:white; border:none; border-radius:8px; cursor:pointer;">
+        📍 Standort jetzt freigeben
+    </button>
+    """
+    st.components.v1.html(js_code, height=60)
+    
+    # Koordinaten-Anzeige & Weiterleitung
+    if st.session_state.gps_coords:
+        lat, lon = map(float, st.session_state.gps_coords.split(","))
+        st.success(f"✅ Standort erkannt: `{lat:.4f}, {lon:.4f}`")
+        st.info("🔄 Lade Wetter für diesen Standort...")
+        st.rerun()
+    else:
+        st.info("💡 Klicke den Button oben. Dein Browser fragt um Erlaubnis.")
+
+# ═══════════════════════════════════════════
+# 🌍 ASTRO & WETTER DASHBOARD
+# ═══════════════════════════════════════════
+elif tool == "🌍 Astro & Wetter Dashboard":
+    st.header("🌍 Astro & Wetter Dashboard")
+    st.markdown("Alles für die Shooting-Planung an einem Ort")
+    
+    city = st.text_input("📍 Stadt oder Koordinaten (z.B. Berlin oder 52.52,13.40)", value="Berlin", key="dash_input")
+    
+    if st.button("🔄 Dashboard aktualisieren", type="primary"):
+        try:
+            import requests
+            API_KEY = st.secrets["OPENWEATHER_API_KEY"]
+            
+            # Koordinaten extrahieren (falls User sie direkt eingibt)
+            if "," in city:
+                lat, lon = map(float, city.split(","))
+                city_name = f"{lat:.2f}, {lon:.2f}"
+                weather_url = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API_KEY}&units=metric&lang=de"
+            else:
+                weather_url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric&lang=de"
+                lat, lon = 52.52, 13.405  # Fallback
+            
+            res = requests.get(weather_url)
+            w = res.json()
+            
+            if w.get("cod") != 200:
+                st.error(f"❌ {w.get('message')}")
+            else:
+                # Wetter-Daten
+                temp = w["main"]["temp"]
+                clouds = w["clouds"]["all"]
+                wind = w["wind"]["speed"] * 3.6
+                desc = w["weather"][0]["description"]
+                icon = w["weather"][0]["icon"]
+                
+                # Mond-Daten (aus deinen bestehenden Funktionen)
+                now = datetime.now()
+                m_phase = calculate_moon_phase(now.year, now.month, now.day)
+                m_name, m_illum, _ = get_moon_phase_info(m_phase)
+                
+                # Layout
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.subheader("☁️ Live-Wetter")
+                    st.image(f"http://openweathermap.org/img/wn/{icon}@2x.png", width=60)
+                    st.metric("Temperatur", f"{temp:.1f}°C")
+                    st.caption(f"{desc.capitalize()} | Wind: {wind:.1f} km/h | Wolken: {clouds}%")
+                    
+                with col2:
+                    st.subheader("🌙 Mondstatus")
+                    st.metric("Phase", m_name)
+                    st.caption(f"Beleuchtung: {m_illum:.0f}% | {get_moon_phase_info(m_phase)[2]}")
+                
+                # Gemeinsame Empfehlung
+                astro_score = (100 - m_illum) * 0.6 + (100 - clouds) * 0.4
+                if astro_score > 70:
+                    rec = "🟢 **Exzellent!** Dunkler Himmel + gutes Wetter → Perfekt für Astro/Langzeit"
+                elif astro_score > 40:
+                    rec = "🟡 **Gut.** Leichte Einschränkungen, aber nutzbar."
+                else:
+                    rec = "🔴 **Schlecht.** Zu hell oder zu bewölkt für Nachtaufnahmen."
+                
+                st.info(f"### 📸 Shooting-Empfehlung\n{rec}")
+                
+        except Exception as e:
+            st.error(f"Fehler: {e}")
 
 
 

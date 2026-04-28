@@ -2004,29 +2004,23 @@ elif tool == "📅 5-Tage Prognose":
             st.error(f"Fehler: {e}")
 
 # ═══════════════════════════════════════════
-# 📍 GPS-STANDORT (Query-Param-Methode)
+# 📍 GPS-STANDORT (Ifreame-kompatible Methode)
 # ═══════════════════════════════════════════
 elif tool == "📍 GPS-Standort":
     st.header("📍 Standort automatisch erkennen")
-    
-    # 1. Prüfe URL-Parameter (lat/lon aus GPS-Redirect)
-    lat_param = st.query_params.get("lat")
-    lon_param = st.query_params.get("lon")
-    
-    if lat_param and lon_param:
-        lat, lon = float(lat_param), float(lon_param)
-        coords_str = f"{lat},{lon}"
-        st.success(f"✅ Standort erkannt: `{coords_str}`")
-        
-        # In Session-State speichern für andere Tools
-        st.session_state.gps_coords = coords_str
-        
-        # Button zum Weiterleiten
-        if st.button("🌤️ Zum Astro & Wetter Dashboard", type="primary"):
-            st.switch_page("web_app.py")  # oder einfach st.rerun()
-        st.stop()
-    
-    # 2. GPS-Button mit JS
+    st.markdown("Klicke unten, um deinen aktuellen Standort abzurufen.")
+
+    if "gps_coords" not in st.session_state:
+        st.session_state.gps_coords = ""
+
+    # Verstecktes Eingabefeld, das JS beschreiben kann
+    st.text_input(
+        "GPS_Coords_Hidden", 
+        value=st.session_state.gps_coords, 
+        key="gps_hidden", 
+        label_visibility="collapsed"
+    )
+
     js_code = """
     <button id="gps-btn" style="padding:12px 24px; background:#1F6FEB; color:white; border:none; border-radius:8px; cursor:pointer; font-size:16px;">
         📍 GPS-Standort abrufen
@@ -2035,30 +2029,37 @@ elif tool == "📍 GPS-Standort":
     <script>
     document.getElementById('gps-btn').onclick = function() {
         const status = document.getElementById('gps-status');
-        if (!navigator.geolocation) {
-            status.textContent = "❌ Browser unterstützt Geolocation nicht.";
-            return;
-        }
-        status.textContent = "⏳ Standort wird abgefragt...";
+        if (!navigator.geolocation) { status.textContent = "❌ Browser unterstützt Geolocation nicht."; return; }
+        status.textContent = "⏳ Wird abgefragt... Bitte Zugriff erlauben.";
+        
         navigator.geolocation.getCurrentPosition(
             (pos) => {
-                status.textContent = "✅ Gefunden! Lade neu...";
-                window.location.href = `?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`;
+                const coords = pos.coords.latitude + "," + pos.coords.longitude;
+                // Schreibt in das versteckte Streamlit-Feld
+                const input = parent.document.getElementById('gps_hidden');
+                if (input) {
+                    input.value = coords;
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+                status.textContent = "✅ Standort erfasst! Seite lädt neu...";
+                setTimeout(() => window.parent.location.reload(), 800);
             },
-            (err) => {
-                status.textContent = `❌ Fehler: ${err.message}`;
-            },
+            (err) => { status.textContent = "❌ Fehler: " + err.message; },
             { enableHighAccuracy: true, timeout: 10000 }
         );
     };
     </script>
     """
     st.components.v1.html(js_code, height=100)
-    
-    # Debug-Hilfe (kann später entfernt werden)
-    with st.expander("🔍 Debug: Session-State prüfen"):
-        st.write("`st.session_state.gps_coords`:", st.session_state.get("gps_coords", "Nicht gesetzt"))
-        st.write("`st.query_params`:", dict(st.query_params))
+
+    # Anzeige & Weiterleitung
+    if st.session_state.gps_coords:
+        st.success(f"✅ Koordinaten erkannt: `{st.session_state.gps_coords}`")
+        if st.button("🌤️ Zum Astro & Wetter Dashboard", type="primary"):
+            st.session_state.dash_input = st.session_state.gps_coords
+            st.rerun()
+    else:
+        st.info("💡 **Hinweis:** Falls der Browser den Zugriff blockiert, nutze einfach die manuelle Stadt-/Koordinaten-Eingabe im Dashboard.")
 # ═══════════════════════════════════════════
 # 🌍 ASTRO & WETTER DASHBOARD
 # ═══════════════════════════════════════════

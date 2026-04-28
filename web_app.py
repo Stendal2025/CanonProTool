@@ -230,7 +230,7 @@ def calculate_star(focal):
 #  HEADER
 # ═══════════════════════════════════════════
 st.title("📷 CANON EOS R – PRO TOOL")
-st.markdown("**Web Version** | 26 Photography Tools")
+st.markdown("**Web Version** | 28 Photography Tools")
 st.divider()
 
 # ═══════════════════════════════════════════
@@ -267,8 +267,9 @@ tool = st.sidebar.radio(
         "🎨 Bearbeitung",
         "🌙 Aktuelle Mond-Daten",
         "☁️ Live-Wetter",
-        "📅 5-Tage Prognose",      # ← NEU
-        "🌍 Astro & Wetter Dashboard", # ← NEU
+        "📅 5-Tage Prognose",      
+        "🌍 Astro & Wetter Dashboard",
+        "📍 GPS-Standort"
     ],
     index=0
 )
@@ -280,7 +281,7 @@ if tool == "🏠 Home":
     st.header("Willkommen beim Canon EOS R Pro Tool!")
     st.markdown("""
     ### 📸 Was kann diese App?
-    - **26 professionelle Rechner** für Fotografie
+    - **28 professionelle Rechner** für Fotografie
     - **Belichtungsdreieck** optimieren
     - **Schärfentiefe** berechnen
     - **Goldene Stunde** planen
@@ -1239,7 +1240,6 @@ elif tool == "🌙 Mond & Milchstraße":
     option = st.selectbox("🎯 Fokus", ["Milchstraße", "Mondfotografie", "Deep Sky", "Nordlichter"])
     
     if st.button("🔍 Berechnen", type="primary"):
-        # ... Rest des Codes bleibt gleich ...
         try:
             day, month, year = map(int, date_str.split("."))
             
@@ -2144,7 +2144,7 @@ elif tool == "🌍 Astro & Wetter Dashboard":
 st.divider()
 st.markdown("""
 <div style='text-align:center; color:#8B949E; font-size:0.85em;'>
-    📷 Canon EOS R – Pro Tool v6.0 | Web Version | 26 Tools<br>
+    📷 Canon EOS R – Pro Tool v6.0 | Web Version | 28 Tools<br>
     Alle Berechnungen sind Richtwerte – Praxistests empfohlen.
 </div>
 """, unsafe_allow_html=True)

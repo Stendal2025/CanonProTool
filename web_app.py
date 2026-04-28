@@ -2001,61 +2001,57 @@ elif tool == "📅 5-Tage Prognose":
             st.error(f"Fehler: {e}")
 
 # ═══════════════════════════════════════════
-# 📍 GPS-STANDORT (Query-Param-Methode)
+# 📍 GPS-STANDORT (Sichere Query-Param-Methode)
 # ═══════════════════════════════════════════
 elif tool == "📍 GPS-Standort":
     st.header("📍 Standort automatisch erkennen")
     
-    # 1. Prüfe URL-Parameter (lat/lon aus GPS-Redirect)
-    lat_param = st.query_params.get("lat")
-    lon_param = st.query_params.get("lon")
-    
-    if lat_param and lon_param:
-        lat, lon = float(lat_param), float(lon_param)
-        coords_str = f"{lat},{lon}"
-        st.success(f"✅ Standort erkannt: `{coords_str}`")
+    # 1. URL-Parameter auslesen & State setzen (wird nach JS-Redirect ausgelöst)
+    lat_q = st.query_params.get("lat")
+    lon_q = st.query_params.get("lon")
+    if lat_q and lon_q:
+        st.session_state.gps_coords = f"{lat_q},{lon_q}"
+        st.query_params.clear()  # URL säubern
+        st.rerun()               # Sauberer Neustart mit gesetztem State
         
-        # In Session-State speichern für andere Tools
-        st.session_state.gps_coords = coords_str
+    if "gps_coords" not in st.session_state:
+        st.session_state.gps_coords = ""
         
-        # Button zum Weiterleiten
-        if st.button("🌤️ Zum Astro & Wetter Dashboard", type="primary"):
-            st.switch_page("web_app.py")  # oder einfach st.rerun()
-        st.stop()
-    
-    # 2. GPS-Button mit JS
-    js_code = """
+    # 2. JS-Button mit sicherem Redirect
+    st.html("""
     <button id="gps-btn" style="padding:12px 24px; background:#1F6FEB; color:white; border:none; border-radius:8px; cursor:pointer; font-size:16px;">
-        📍 GPS-Standort abrufen
+        📍 Standort abrufen
     </button>
-    <p id="gps-status" style="margin-top:10px; color:#8B949E; font-size:14px;"></p>
+    <p id="gps-status" style="margin-top:10px; font-size:14px; color:#8B949E;"></p>
     <script>
-    document.getElementById('gps-btn').onclick = function() {
+    document.getElementById('gps-btn').onclick = () => {
         const status = document.getElementById('gps-status');
-        if (!navigator.geolocation) {
-            status.textContent = "❌ Browser unterstützt Geolocation nicht.";
-            return;
-        }
-        status.textContent = "⏳ Standort wird abgefragt...";
+        if (!navigator.geolocation) { status.textContent = "❌ Nicht unterstützt"; return; }
+        status.textContent = "⏳ Wird angefragt... Bitte Zugriff erlauben.";
+        
         navigator.geolocation.getCurrentPosition(
             (pos) => {
-                status.textContent = "✅ Gefunden! Lade neu...";
-                window.location.href = `?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`;
+                const lat = pos.coords.latitude.toFixed(6);
+                const lon = pos.coords.longitude.toFixed(6);
+                status.textContent = "✅ Gefunden! Daten werden übernommen...";
+                // Zuverlässigste Methode: URL-Parameter setzen & App neu laden
+                window.parent.location.href = `?lat=${lat}&lon=${lon}`;
             },
-            (err) => {
-                status.textContent = `❌ Fehler: ${err.message}`;
-            },
+            (err) => { status.textContent = "❌ " + err.message; },
             { enableHighAccuracy: true, timeout: 10000 }
         );
     };
     </script>
-    """
-    st.components.v1.html(js_code, height=100)
+    """)
     
-    # Debug-Hilfe (kann später entfernt werden)
-    with st.expander("🔍 Debug: Session-State prüfen"):
-        st.write("`st.session_state.gps_coords`:", st.session_state.get("gps_coords", "Nicht gesetzt"))
-        st.write("`st.query_params`:", dict(st.query_params))
+    # 3. Ergebnis & Weiterleitung
+    if st.session_state.gps_coords:
+        st.success(f"✅ Koordinaten erkannt: `{st.session_state.gps_coords}`")
+        if st.button("🌤️ Zum Astro & Wetter Dashboard", type="primary"):
+            st.session_state.dash_input = st.session_state.gps_coords
+            st.rerun()
+    else:
+        st.info("💡 Klicke den Button. Die App lädt einmal kurz neu, um die GPS-Daten sicher an Python zu übergeben.")
 # ═══════════════════════════════════════════
 # 🌍 ASTRO & WETTER DASHBOARD
 # ═══════════════════════════════════════════

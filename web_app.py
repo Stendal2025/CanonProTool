@@ -352,6 +352,7 @@ TOOLS = [
     "📅 5-Tage Prognose",
     "🌍 Astro & Wetter Dashboard",
     "📍 GPS-Standort",
+    "📄 PDF-Planer"
 ]
 
 st.sidebar.title("🔧 Tools")
@@ -1627,6 +1628,90 @@ elif tool == "🌍 Astro & Wetter Dashboard":
         except Exception as e:
             st.error(f"Fehler: {e}")
             st.info("💡 Prüfe deinen API-Key in .streamlit/secrets.toml")
+
+# ═══════════════════════════════════════════
+# 📄 PDF-SHOOTING-PLAN
+# ═══════════════════════════════════════════
+elif tool == "📄 PDF-Planer":
+    st.header("📄 PDF-Shooting-Plan Generator")
+    st.markdown("Erstelle einen professionellen Plan für dein nächstes Shooting.")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        p_title = st.text_input("📸 Projektname", value="Canon EOS R Shooting")
+        p_date = st.date_input("📅 Datum", datetime.now())
+        p_loc = st.text_input("📍 Ort", value="Berlin")
+    with col2:
+        p_subj = st.text_input("🎯 Motiv", value="Landschaft / Portrait")
+        p_client = st.text_input("👤 Kunde / Auftraggeber", value="Privat")
+    
+    # Ausrüstung & Settings
+    equip = st.text_area("🎒 Equipment-Liste (je Zeile ein Item)", 
+                         height=100,
+                         value="Kamera: Canon EOS R\nObjektiv: RF 24-70mm f/2.8\nStativ: Manfrotto\nFilter: ND 1000, Polfilter\nAkkus: 3x LP-E6NH")
+    
+    notes = st.text_area("📝 Notizen & Ablauf", 
+                         height=100,
+                         value="08:00 Aufbau\n08:30 Golden Hour\n10:00 Backup\n")
+
+    if st.button("📄 PDF Generieren & Herunterladen", type="primary"):
+        try:
+            from fpdf import FPDF
+            import io
+            
+            pdf = FPDF()
+            pdf.add_page()
+            
+            # Header
+            pdf.set_font("Helvetica", "B", 24)
+            pdf.set_text_color(31, 111, 235) # Streamlit Blau
+            pdf.cell(0, 20, "SHOOTING PLAN", ln=True, align="C")
+            pdf.line(10, 30, 200, 30)
+            
+            # Meta Daten
+            pdf.set_font("Helvetica", "B", 12)
+            pdf.set_text_color(0, 0, 0)
+            pdf.cell(0, 10, f"Projekt: {p_title}", ln=True)
+            pdf.cell(0, 8, f"Datum: {p_date.strftime('%d.%m.%Y')} | Ort: {p_loc}", ln=True)
+            pdf.cell(0, 8, f"Motiv: {p_subj} | Kunde: {p_client}", ln=True)
+            pdf.ln(5)
+            
+            # Equipment
+            pdf.set_font("Helvetica", "B", 14)
+            pdf.set_fill_color(240, 246, 252)
+            pdf.cell(0, 10, "  Ausruestung & Settings", ln=True, fill=True)
+            pdf.set_font("Helvetica", size=11)
+            for line in equip.split('\n'):
+                if line.strip():
+                    pdf.cell(0, 7, f"- {line}", ln=True)
+            
+            pdf.ln(5)
+            
+            # Ablauf
+            pdf.set_font("Helvetica", "B", 14)
+            pdf.cell(0, 10, "  Ablauf & Notizen", ln=True, fill=True)
+            pdf.set_font("Helvetica", size=11)
+            for line in notes.split('\n'):
+                if line.strip():
+                    pdf.multi_cell(0, 7, line)
+            
+            # Footer
+            pdf.set_y(-20)
+            pdf.set_font("Helvetica", "I", 8)
+            pdf.set_text_color(128, 128, 128)
+            pdf.cell(0, 10, "Erstellt mit Canon EOS R Pro Tool | Web Version", ln=True, align="C")
+            
+            # Speichern & Download
+            pdf_output = pdf.output(dest="S").encode("latin-1", "replace")
+            st.download_button(
+                label="⬇️ PDF Speichern",
+                data=pdf_output,
+                file_name=f"Shooting_Plan_{p_date.strftime('%Y%m%d')}.pdf",
+                mime="application/pdf"
+            )
+            
+        except Exception as e:
+            st.error(f"Fehler beim Erstellen: {e}")            
 
 # ════════════════════════════════════════════════════════════════
 #  FOOTER

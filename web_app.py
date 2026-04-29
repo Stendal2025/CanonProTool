@@ -1711,7 +1711,8 @@ elif tool == "📄 PDF-Planer":
             )
             
         except Exception as e:
-            st.error(f"Fehler beim Erstellen: {e}")            
+                        st.error(f"Fehler beim Erstellen: {e}")
+
 
 # ════════════════════════════════════════════════════════════════
 #  FOOTER

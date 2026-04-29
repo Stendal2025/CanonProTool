@@ -1640,4 +1640,4 @@ st.markdown("""
     Alle Berechnungen sind Richtwerte – Praxistests empfohlen.
 </div>
 """, unsafe_allow_html=True)
-Fertig
+

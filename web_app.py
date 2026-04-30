@@ -515,7 +515,7 @@ elif tool == "🕶️ ND Rechner":
 
     if st.button("✅ Berechnen", type="primary"):
         result_sec = calculate_nd(base_sec, nd_stops)
-        elif result_sec >= 3600:
+        if result_sec >= 3600:
             result_str = f"{result_sec/3600:.2f} Stunden"
         elif result_sec >= 60:
             result_str = f"{result_sec/60:.1f} Minuten"

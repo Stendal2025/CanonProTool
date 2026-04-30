@@ -24,6 +24,7 @@ try:
     from astral import LocationInfo
     from astral.sun import sun
     import pytz
+
     ASTRAL_OK = True
 except Exception as _e:
     ASTRAL_OK = False
@@ -35,54 +36,68 @@ except Exception as _e:
 
 # Sicheres Shutter-Speed-Mapping (ersetzt eval())
 SHUTTER_MAP: dict[str, float] = {
-    "1/8000": 1/8000, "1/4000": 1/4000, "1/2000": 1/2000,
-    "1/1000": 1/1000, "1/500":  1/500,  "1/250":  1/250,
-    "1/125":  1/125,  "1/60":   1/60,   "1/30":   1/30,
-    "1/15":   1/15,   "1/8":    1/8,    "1/4":    1/4,
-    "1/2":    1/2,    "1":      1.0,    "2":      2.0,
-    "4":      4.0,    "8":      8.0,    "15":     15.0,
-    "30":     30.0,   "60":     60.0,
+    "1/8000": 1 / 8000,
+    "1/4000": 1 / 4000,
+    "1/2000": 1 / 2000,
+    "1/1000": 1 / 1000,
+    "1/500": 1 / 500,
+    "1/250": 1 / 250,
+    "1/125": 1 / 125,
+    "1/60": 1 / 60,
+    "1/30": 1 / 30,
+    "1/15": 1 / 15,
+    "1/8": 1 / 8,
+    "1/4": 1 / 4,
+    "1/2": 1 / 2,
+    "1": 1.0,
+    "2": 2.0,
+    "4": 4.0,
+    "8": 8.0,
+    "15": 15.0,
+    "30": 30.0,
+    "60": 60.0,
 }
 
 # Stadtkoordinaten (einmalig definiert, überall nutzbar)
 CITY_COORDS: dict[str, tuple[float, float]] = {
-    "Berlin":    (52.520,  13.405),
-    "München":   (48.135,  11.582),
-    "Hamburg":   (53.551,   9.994),
-    "Köln":      (50.938,   6.960),
-    "Frankfurt": (50.111,   8.682),
-    "Wien":      (48.208,  16.374),
-    "Zürich":    (47.377,   8.542),
-    "Stuttgart": (48.775,   9.182),
-    "Düsseldorf":(51.227,   6.773),
-    "Leipzig":   (51.340,  12.375),
+    "Berlin": (52.520, 13.405),
+    "München": (48.135, 11.582),
+    "Hamburg": (53.551, 9.994),
+    "Köln": (50.938, 6.960),
+    "Frankfurt": (50.111, 8.682),
+    "Wien": (48.208, 16.374),
+    "Zürich": (47.377, 8.542),
+    "Stuttgart": (48.775, 9.182),
+    "Düsseldorf": (51.227, 6.773),
+    "Leipzig": (51.340, 12.375),
 }
 CITY_LIST = sorted(CITY_COORDS.keys())
 
 # CoC (Circle of Confusion) je Sensortyp
 COC_MAP: dict[str, float] = {
-    "Vollformat (36×24 mm)":   0.030,
-    "APS-C Canon (1.6×)":      0.019,
+    "Vollformat (36×24 mm)": 0.030,
+    "APS-C Canon (1.6×)": 0.019,
     "APS-C Nikon/Sony (1.5×)": 0.020,
-    "Micro 4/3 (2.0×)":        0.015,
+    "Micro 4/3 (2.0×)": 0.015,
 }
 
 CROP_MAP: dict[str, float] = {
-    "Vollformat (1.0×)":          1.0,
-    "APS-C Canon (1.6×)":         1.6,
-    "APS-C Nikon/Sony (1.5×)":    1.5,
-    "Micro 4/3 (2.0×)":           2.0,
-    "1 Zoll (2.7×)":              2.7,
-    "Smartphone (~6×)":           6.0,
+    "Vollformat (1.0×)": 1.0,
+    "APS-C Canon (1.6×)": 1.6,
+    "APS-C Nikon/Sony (1.5×)": 1.5,
+    "Micro 4/3 (2.0×)": 2.0,
+    "1 Zoll (2.7×)": 2.7,
+    "Smartphone (~6×)": 6.0,
 }
 
 # ════════════════════════════════════════════════════════════════
 #  HILFSFUNKTIONEN
 # ════════════════════════════════════════════════════════════════
 
+
 def parse_shutter(s: str) -> float:
     """Sichere Shutter-Speed-Konvertierung (kein eval)."""
-    return SHUTTER_MAP.get(s, 1/125)
+    return SHUTTER_MAP.get(s, 1 / 125)
 
 
 @st.cache_data(ttl=3600)
@@ -96,9 +111,13 @@ def calculate_moon_phase(year: int, month: int, day: int) -> float:
         month += 12
     a = math.floor(year / 100)
     b = 2 - a + math.floor(a / 4)
-    jd = (math.floor(365.25 * (year + 4716))
-          + math.floor(30.6001 * (month + 1))
-          + day + b - 1524.5)
+    jd = (
+        math.floor(365.25 * (year + 4716))
+        + math.floor(30.6001 * (month + 1))
+        + day
+        + b
+        - 1524.5
+    )
     # Bekannter Neumond: 6. Jan 2000 (JD 2451549.5)
     days_since_new = (jd - 2451549.5) % 29.53058867
     return days_since_new / 29.53058867
@@ -108,58 +127,71 @@ def moon_phase_info(phase: float) -> tuple[str, float, str]:
     """Gibt (Name, Beleuchtung%, Tipp) für eine Phase 0..1 zurück."""
     illum = abs(math.sin(phase * math.pi)) * 100
     if phase < 0.03 or phase > 0.97:
-        return "🌑 Neumond",            illum, "Perfekt für Milchstraße & Deep-Sky!"
+        return "🌑 Neumond", illum, "Perfekt für Milchstraße & Deep-Sky!"
     if phase < 0.22:
-        return "🌒 Zunehmende Sichel",  illum, "Gut für frühe Abendfotos"
+        return "🌒 Zunehmende Sichel", illum, "Gut für frühe Abendfotos"
     if phase < 0.28:
-        return "🌓 Erstes Viertel",     illum, "Interessante Schatten am Mond"
+        return "🌓 Erstes Viertel", illum, "Interessante Schatten am Mond"
     if phase < 0.47:
-        return "🌔 Zunehmender Mond",   illum, "Zu hell für Milchstraße"
+        return "🌔 Zunehmender Mond", illum, "Zu hell für Milchstraße"
     if phase < 0.53:
-        return "🌕 Vollmond",           illum, "Perfekt für Mondlandschaften"
+        return "🌕 Vollmond", illum, "Perfekt für Mondlandschaften"
     if phase < 0.72:
-        return "🌖 Abnehmender Mond",   illum, "Gut für späte Nacht"
+        return "🌖 Abnehmender Mond", illum, "Gut für späte Nacht"
     if phase < 0.78:
-        return "🌗 Letztes Viertel",    illum, "Mond geht spät auf"
-    return "🌘 Abnehmende Sichel",      illum, "Gut für Morgenaufnahmen"
+        return "🌗 Letztes Viertel", illum, "Mond geht spät auf"
+    return "🌘 Abnehmende Sichel", illum, "Gut für Morgenaufnahmen"
 
 
 def calculate_nd(base_sec: float, stops: int) -> float:
-    return base_sec * (2 ** stops)
+    return base_sec * (2**stops)
 
 
 def evaluate_exposure(iso: int, aperture: float, shutter: float):
-    ev = math.log2((aperture ** 2) / shutter)
+    ev = math.log2((aperture**2) / shutter)
     ev_c = ev - math.log2(iso / 100)
-    if ev_c < 6:    return ev_c, "⚫ Sehr dunkel"
-    if ev_c < 10:   return ev_c, "🔵 Dunkel"
-    if ev_c < 13:   return ev_c, "🟢 Optimal"
-    if ev_c < 15:   return ev_c, "🟡 Hell"
+    if ev_c < 6:
+        return ev_c, "⚫ Sehr dunkel"
+    if ev_c < 10:
+        return ev_c, "🔵 Dunkel"
+    if ev_c < 13:
+        return ev_c, "🟢 Optimal"
+    if ev_c < 15:
+        return ev_c, "🟡 Hell"
     return ev_c, "🔴 Überbelichtet"
 
 
-def calculate_dof(focal_mm: float, aperture: float, distance_m: float, coc: float = 0.030):
-    h = (focal_mm ** 2) / (aperture * coc * 1000)
+def calculate_dof(
+    focal_mm: float, aperture: float, distance_m: float, coc: float = 0.030
+):
+    h = (focal_mm**2) / (aperture * coc * 1000)
     fm = focal_mm / 1000
     dn = (h * distance_m) / (h + (distance_m - fm))
-    df = ((h * distance_m) / (h - (distance_m - fm))
-          if distance_m < h else float("inf"))
+    df = (h * distance_m) / (h - (distance_m - fm)) if distance_m < h else float("inf")
     return dn, df, (df - dn if df != float("inf") else float("inf")), h
 
 
 def calculate_golden_hour(sr: str, ss: str) -> dict:
     fmt = "%H:%M"
     sunrise = datetime.strptime(sr, fmt)
-    sunset  = datetime.strptime(ss, fmt)
+    sunset = datetime.strptime(ss, fmt)
     return {
-        "golden_morning": (sunrise.strftime(fmt),
-                           (sunrise + timedelta(minutes=60)).strftime(fmt)),
-        "golden_evening": ((sunset  - timedelta(minutes=60)).strftime(fmt),
-                           sunset.strftime(fmt)),
-        "blue_morning":   ((sunrise - timedelta(minutes=30)).strftime(fmt),
-                           sunrise.strftime(fmt)),
-        "blue_evening":   (sunset.strftime(fmt),
-                           (sunset  + timedelta(minutes=30)).strftime(fmt)),
+        "golden_morning": (
+            sunrise.strftime(fmt),
+            (sunrise + timedelta(minutes=60)).strftime(fmt),
+        ),
+        "golden_evening": (
+            (sunset - timedelta(minutes=60)).strftime(fmt),
+            sunset.strftime(fmt),
+        ),
+        "blue_morning": (
+            (sunrise - timedelta(minutes=30)).strftime(fmt),
+            sunrise.strftime(fmt),
+        ),
+        "blue_evening": (
+            sunset.strftime(fmt),
+            (sunset + timedelta(minutes=30)).strftime(fmt),
+        ),
     }
 
 
@@ -177,9 +209,12 @@ def milky_way_score(phase: float, month: int) -> float:
 
 
 def astro_recommendation(score: float) -> str:
-    if score >= 80: return "🟢 **Perfekt!** Pack die Kamera ein!"
-    if score >= 60: return "🟡 **Gut!** Milchstraße sichtbar."
-    if score >= 40: return "🟠 **Mäßig.** Auf dunklere Phase warten."
+    if score >= 80:
+        return "🟢 **Perfekt!** Pack die Kamera ein!"
+    if score >= 60:
+        return "🟡 **Gut!** Milchstraße sichtbar."
+    if score >= 40:
+        return "🟠 **Mäßig.** Auf dunklere Phase warten."
     return "🔴 **Schlecht.** Besseres Datum suchen."
 
 
@@ -206,6 +241,7 @@ def get_best_photo_times(sun_data: dict, moon_phase: float) -> str:
 #  Funktioniert zuverlässig ohne iframe-Tricks:
 #  JS liest GPS → setzt ?lat=XX&lon=YY → Streamlit liest st.query_params
 # ════════════════════════════════════════════════════════════════
+
 
 def gps_js_widget() -> tuple[float | None, float | None]:
     """
@@ -283,7 +319,8 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-st.markdown("""
+st.markdown(
+    """
 <style>
   .main { background-color: #0A0E14; color: #F0F6FC; }
   h1, h2, h3 { color: #58A6FF; }
@@ -301,7 +338,9 @@ st.markdown("""
   }
   input, select, textarea { font-size: 16px !important; }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # Debug-Modus nur wenn ENV-Var gesetzt (kein UI-Checkbox in Produktion)
 if os.getenv("DEBUG_MODE") == "1":
@@ -427,9 +466,12 @@ if tool == "🏠 Home":
     Wähle links ein Tool aus der Sidebar!
     """)
     col1, col2, col3 = st.columns(3)
-    with col1: st.info("📊 **Belichtung**\n\nEV-Werte berechnen")
-    with col2: st.success("📐 **Schärfentiefe**\n\nDoF kalkulieren")
-    with col3: st.warning("🌅 **Planung**\n\nGolden Hour Times")
+    with col1:
+        st.info("📊 **Belichtung**\n\nEV-Werte berechnen")
+    with col2:
+        st.success("📐 **Schärfentiefe**\n\nDoF kalkulieren")
+    with col3:
+        st.warning("🌅 **Planung**\n\nGolden Hour Times")
 
 # ════════════════════════════════════════════════════════════════
 #  🕶️ ND RECHNER
@@ -438,19 +480,37 @@ if tool == "🏠 Home":
 elif tool == "🕶️ ND Rechner":
     st.header("🕶️ ND Filter Rechner")
     SHUTTERS_ND = [
-        "1/8000","1/4000","1/2000","1/1000","1/500","1/250",
-        "1/125","1/60","1/30","1/15","1/8","1/4","1/2",
-        "1","2","4","8","15","30","60",
+        "1/8000",
+        "1/4000",
+        "1/2000",
+        "1/1000",
+        "1/500",
+        "1/250",
+        "1/125",
+        "1/60",
+        "1/30",
+        "1/15",
+        "1/8",
+        "1/4",
+        "1/2",
+        "1",
+        "2",
+        "4",
+        "8",
+        "15",
+        "30",
+        "60",
     ]
     col1, col2 = st.columns(2)
     with col1:
         base_str = st.selectbox("Basiszeit (ohne ND)", SHUTTERS_ND, index=6)
         base_sec = parse_shutter(base_str)
     with col2:
-        nd_stops = st.slider("ND Stops", 1, 15, 3,
-                             help="ND8=3 | ND64=6 | ND1000=10 | ND32768=15")
+        nd_stops = st.slider(
+            "ND Stops", 1, 15, 3, help="ND8=3 | ND64=6 | ND1000=10 | ND32768=15"
+        )
 
-    nd_factor = 2 ** nd_stops
+    nd_factor = 2**nd_stops
     st.caption(f"Gewählter Filter: **ND{nd_factor}** ({nd_stops} Stops)")
 
     if st.button("✅ Berechnen", type="primary"):
@@ -481,17 +541,21 @@ elif tool == "🕶️ ND Rechner":
 elif tool == "📐 Schärfentiefe":
     st.header("📐 Schärfentiefe-Rechner")
     col1, col2, col3 = st.columns(3)
-    with col1: focal    = st.number_input("Brennweite (mm)", 14, 800, 50)
-    with col2: aperture = st.selectbox("Blende (f/)",
-                            [1.2,1.4,1.8,2.0,2.8,4.0,5.6,8.0,11,16,22], index=4)
-    with col3: distance = st.number_input("Entfernung (m)", 0.3, 500.0, 3.0, 0.1)
+    with col1:
+        focal = st.number_input("Brennweite (mm)", 14, 800, 50)
+    with col2:
+        aperture = st.selectbox(
+            "Blende (f/)", [1.2, 1.4, 1.8, 2.0, 2.8, 4.0, 5.6, 8.0, 11, 16, 22], index=4
+        )
+    with col3:
+        distance = st.number_input("Entfernung (m)", 0.3, 500.0, 3.0, 0.1)
 
     sensor = st.selectbox("Sensor", list(COC_MAP.keys()))
     coc = COC_MAP[sensor]
 
     if st.button("✅ Berechnen", type="primary"):
         near, far, total, hyper = calculate_dof(focal, aperture, distance, coc)
-        far_str   = "∞"           if far   == float("inf") else f"{far:.2f} m"
+        far_str = "∞" if far == float("inf") else f"{far:.2f} m"
         total_str = "∞ (alles scharf)" if total == float("inf") else f"{total:.2f} m"
         st.success(f"""
         ### 📊 Ergebnisse:
@@ -501,9 +565,13 @@ elif tool == "📐 Schärfentiefe":
         - **Hyperfokale Distanz:** {hyper:.1f} m
         """)
         if distance >= hyper:
-            st.info("💡 Fokus jenseits der hyperfokalen Distanz – alles bis ∞ ist scharf!")
+            st.info(
+                "💡 Fokus jenseits der hyperfokalen Distanz – alles bis ∞ ist scharf!"
+            )
         elif distance < 1.0:
-            st.info("💡 Sehr kurze Distanz – Schärfentiefe sehr gering. Stativ empfohlen.")
+            st.info(
+                "💡 Sehr kurze Distanz – Schärfentiefe sehr gering. Stativ empfohlen."
+            )
 
 # ════════════════════════════════════════════════════════════════
 #  📊 BELICHTUNG
@@ -512,14 +580,37 @@ elif tool == "📐 Schärfentiefe":
 elif tool == "📊 Belichtung":
     st.header("📊 Belichtungs-Bewerter")
     SHUTTERS_BASIC = [
-        "1/8000","1/4000","1/2000","1/1000","1/500",
-        "1/250","1/125","1/60","1/30","1/15",
-        "1/8","1/4","1/2","1","2","4","8","15","30",
+        "1/8000",
+        "1/4000",
+        "1/2000",
+        "1/1000",
+        "1/500",
+        "1/250",
+        "1/125",
+        "1/60",
+        "1/30",
+        "1/15",
+        "1/8",
+        "1/4",
+        "1/2",
+        "1",
+        "2",
+        "4",
+        "8",
+        "15",
+        "30",
     ]
     col1, col2, col3 = st.columns(3)
-    with col1: iso         = st.selectbox("ISO", [100,200,400,800,1600,3200,6400,12800], index=0)
-    with col2: aperture    = st.selectbox("Blende", [1.4,1.8,2.8,4.0,5.6,8.0,11,16,22], index=3)
-    with col3: shutter_str = st.selectbox("Verschlusszeit", SHUTTERS_BASIC)
+    with col1:
+        iso = st.selectbox(
+            "ISO", [100, 200, 400, 800, 1600, 3200, 6400, 12800], index=0
+        )
+    with col2:
+        aperture = st.selectbox(
+            "Blende", [1.4, 1.8, 2.8, 4.0, 5.6, 8.0, 11, 16, 22], index=3
+        )
+    with col3:
+        shutter_str = st.selectbox("Verschlusszeit", SHUTTERS_BASIC)
 
     shutter = parse_shutter(shutter_str)
 
@@ -544,8 +635,10 @@ elif tool == "📊 Belichtung":
 elif tool == "🌅 Golden Hour":
     st.header("🌅 Golden & Blue Hour")
     col1, col2 = st.columns(2)
-    with col1: sunrise = st.text_input("Sonnenaufgang (HH:MM)", value="06:30")
-    with col2: sunset  = st.text_input("Sonnenuntergang (HH:MM)", value="20:15")
+    with col1:
+        sunrise = st.text_input("Sonnenaufgang (HH:MM)", value="06:30")
+    with col2:
+        sunset = st.text_input("Sonnenuntergang (HH:MM)", value="20:15")
 
     if st.button("🔍 Berechnen", type="primary"):
         try:
@@ -553,12 +646,20 @@ elif tool == "🌅 Golden Hour":
             col1, col2 = st.columns(2)
             with col1:
                 st.markdown("### 🌄 Morgen")
-                st.info(f"🔵 **Blaue Stunde:** {r['blue_morning'][0]} – {r['blue_morning'][1]}")
-                st.warning(f"🟠 **Goldene Stunde:** {r['golden_morning'][0]} – {r['golden_morning'][1]}")
+                st.info(
+                    f"🔵 **Blaue Stunde:** {r['blue_morning'][0]} – {r['blue_morning'][1]}"
+                )
+                st.warning(
+                    f"🟠 **Goldene Stunde:** {r['golden_morning'][0]} – {r['golden_morning'][1]}"
+                )
             with col2:
                 st.markdown("### 🌆 Abend")
-                st.warning(f"🟠 **Goldene Stunde:** {r['golden_evening'][0]} – {r['golden_evening'][1]}")
-                st.info(f"🔵 **Blaue Stunde:** {r['blue_evening'][0]} – {r['blue_evening'][1]}")
+                st.warning(
+                    f"🟠 **Goldene Stunde:** {r['golden_evening'][0]} – {r['golden_evening'][1]}"
+                )
+                st.info(
+                    f"🔵 **Blaue Stunde:** {r['blue_evening'][0]} – {r['blue_evening'][1]}"
+                )
         except ValueError:
             st.error("⚠️ Bitte gültiges Format HH:MM eingeben (z.B. 06:30)")
 
@@ -569,9 +670,12 @@ elif tool == "🌅 Golden Hour":
 elif tool == "🔦 Blitz":
     st.header("🔦 Blitz-Rechner (Leitzahl)")
     col1, col2, col3 = st.columns(3)
-    with col1: gn       = st.number_input("Leitzahl (GN)", 10, 100, 58)
-    with col2: distance = st.number_input("Entfernung (m)", 0.5, 50.0, 5.0, 0.5)
-    with col3: iso      = st.selectbox("ISO", [100,200,400,800,1600,3200], index=0)
+    with col1:
+        gn = st.number_input("Leitzahl (GN)", 10, 100, 58)
+    with col2:
+        distance = st.number_input("Entfernung (m)", 0.5, 50.0, 5.0, 0.5)
+    with col3:
+        iso = st.selectbox("ISO", [100, 200, 400, 800, 1600, 3200], index=0)
 
     if st.button("✅ Berechnen", type="primary"):
         ap = calculate_flash(gn, distance, iso)
@@ -582,8 +686,10 @@ elif tool == "🔦 Blitz":
         """)
         with st.expander("📋 Reichweiten-Tabelle"):
             rows = [
-                {"Blende": f"f/{f}",
-                 "Max. Reichweite": f"{gn * math.sqrt(iso/100) / f:.1f} m"}
+                {
+                    "Blende": f"f/{f}",
+                    "Max. Reichweite": f"{gn * math.sqrt(iso/100) / f:.1f} m",
+                }
                 for f in [1.4, 2.0, 2.8, 4.0, 5.6, 8.0, 11, 16]
             ]
             st.dataframe(pd.DataFrame(rows), use_container_width=True)
@@ -594,24 +700,60 @@ elif tool == "🔦 Blitz":
 
 elif tool == "🤖 KI":
     st.header("🤖 KI Fotografie-Assistent")
-    scene = st.text_area("📝 Szene beschreiben",
-                         placeholder="z.B. 'Sonnenuntergang am See'", height=80)
+    scene = st.text_area(
+        "📝 Szene beschreiben", placeholder="z.B. 'Sonnenuntergang am See'", height=80
+    )
     st.markdown("**Quick-Presets:**")
     cols = st.columns(4)
-    presets = ["sunset","portrait","night","landscape","street","macro","sport","astro"]
+    presets = [
+        "sunset",
+        "portrait",
+        "night",
+        "landscape",
+        "street",
+        "macro",
+        "sport",
+        "astro",
+    ]
     for i, p in enumerate(presets):
-        if cols[i % 4].button(f"📸 {p.capitalize()}", use_container_width=True, key=f"ki_{p}"):
+        if cols[i % 4].button(
+            f"📸 {p.capitalize()}", use_container_width=True, key=f"ki_{p}"
+        ):
             scene = p
 
     KI_DB = {
-        "sunset":    ("🌅 SUNSET",     "ISO 100 | f/8 | 1/125s",   "GND-Filter | Stativ | Bracketing"),
-        "portrait":  ("👤 PORTRAIT",   "ISO 100 | f/1.8 | 1/200s", "Eye-AF | 85 mm | Offener Schatten"),
-        "night":     ("🌙 NACHT",      "ISO 1600 | f/2.8 | 10s",   "Stativ | Fernauslöser | RAW"),
-        "landscape": ("🏔️ LANDSCHAFT", "ISO 100 | f/11 | 1/60s",   "Stativ | Polfilter | Golden Hour"),
-        "street":    ("🏙️ STREET",     "ISO 400 | f/5.6 | 1/250s", "35 mm | Zone Focus | Burst"),
-        "macro":     ("🔬 MAKRO",      "ISO 200 | f/8 | 1/160s",   "Focus Stack | Stativ | Diffusor"),
-        "sport":     ("⚡ SPORT",      "ISO 800 | f/4 | 1/1000s",  "AI Servo | Burst | 70–200 mm"),
-        "astro":     ("🌌 ASTRO",      "ISO 3200 | f/1.8 | 20s",   "500er-Regel | Neumond | MF ∞"),
+        "sunset": (
+            "🌅 SUNSET",
+            "ISO 100 | f/8 | 1/125s",
+            "GND-Filter | Stativ | Bracketing",
+        ),
+        "portrait": (
+            "👤 PORTRAIT",
+            "ISO 100 | f/1.8 | 1/200s",
+            "Eye-AF | 85 mm | Offener Schatten",
+        ),
+        "night": ("🌙 NACHT", "ISO 1600 | f/2.8 | 10s", "Stativ | Fernauslöser | RAW"),
+        "landscape": (
+            "🏔️ LANDSCHAFT",
+            "ISO 100 | f/11 | 1/60s",
+            "Stativ | Polfilter | Golden Hour",
+        ),
+        "street": (
+            "🏙️ STREET",
+            "ISO 400 | f/5.6 | 1/250s",
+            "35 mm | Zone Focus | Burst",
+        ),
+        "macro": (
+            "🔬 MAKRO",
+            "ISO 200 | f/8 | 1/160s",
+            "Focus Stack | Stativ | Diffusor",
+        ),
+        "sport": (
+            "⚡ SPORT",
+            "ISO 800 | f/4 | 1/1000s",
+            "AI Servo | Burst | 70–200 mm",
+        ),
+        "astro": ("🌌 ASTRO", "ISO 3200 | f/1.8 | 20s", "500er-Regel | Neumond | MF ∞"),
     }
 
     if st.button("🤖 KI Vorschlag", type="primary"):
@@ -621,12 +763,16 @@ elif tool == "🤖 KI":
             found = False
             for key, (title, settings, tips) in KI_DB.items():
                 if key in scene.lower():
-                    st.success(f"### {title}\n**Settings:** `{settings}`\n**Tipps:** {tips}")
+                    st.success(
+                        f"### {title}\n**Settings:** `{settings}`\n**Tipps:** {tips}"
+                    )
                     found = True
                     break
             if not found:
-                st.info("### 📸 Allgemein\n**Settings:** `ISO 200 | f/5.6 | 1/125s`\n"
-                        "Beschreibe deine Szene genauer für spezifischere Empfehlungen.")
+                st.info(
+                    "### 📸 Allgemein\n**Settings:** `ISO 200 | f/5.6 | 1/125s`\n"
+                    "Beschreibe deine Szene genauer für spezifischere Empfehlungen."
+                )
 
 # ════════════════════════════════════════════════════════════════
 #  🌡️ WEISSABGLEICH
@@ -635,21 +781,25 @@ elif tool == "🤖 KI":
 elif tool == "🌡️ Weißabgleich":
     st.header("🌡️ Weißabgleich & Farbtemperatur")
     wb_data = [
-        ("🕯️ Kerzenlicht",    "1800–2000 K",  "#FF6B35"),
-        ("💡 Glühlampe",      "2700–3200 K",  "#FFA500"),
-        ("🌅 Sonnenaufgang",  "3000–3500 K",  "#FF8C42"),
-        ("📸 Blitz",          "5000–5500 K",  "#FFFEF0"),
-        ("☀️ Tageslicht",     "5200–5800 K",  "#FFFFF0"),
-        ("⛅ Bewölkt",        "6000–6500 K",  "#E8F0FF"),
-        ("🏔️ Schatten",       "7000–8000 K",  "#D0E0FF"),
-        ("🌌 Blaue Stunde",   "9000–12000 K", "#9090FF"),
+        ("🕯️ Kerzenlicht", "1800–2000 K", "#FF6B35"),
+        ("💡 Glühlampe", "2700–3200 K", "#FFA500"),
+        ("🌅 Sonnenaufgang", "3000–3500 K", "#FF8C42"),
+        ("📸 Blitz", "5000–5500 K", "#FFFEF0"),
+        ("☀️ Tageslicht", "5200–5800 K", "#FFFFF0"),
+        ("⛅ Bewölkt", "6000–6500 K", "#E8F0FF"),
+        ("🏔️ Schatten", "7000–8000 K", "#D0E0FF"),
+        ("🌌 Blaue Stunde", "9000–12000 K", "#9090FF"),
     ]
     for name, kelvin, color in wb_data:
         c1, c2 = st.columns([2, 3])
-        c1.markdown(f"<span style='color:{color};font-weight:bold'>{name}</span>",
-                    unsafe_allow_html=True)
+        c1.markdown(
+            f"<span style='color:{color};font-weight:bold'>{name}</span>",
+            unsafe_allow_html=True,
+        )
         c2.code(kelvin)
-    st.info("💡 **Tipp:** Immer manuellen WB in Kelvin setzen statt Auto – stabilere Farben im Timelapse!")
+    st.info(
+        "💡 **Tipp:** Immer manuellen WB in Kelvin setzen statt Auto – stabilere Farben im Timelapse!"
+    )
 
 # ════════════════════════════════════════════════════════════════
 #  📋 CHEAT SHEETS
@@ -657,8 +807,18 @@ elif tool == "🌡️ Weißabgleich":
 
 elif tool == "📋 Cheat Sheets":
     st.header("📋 Schnellreferenz-Karten")
-    sheet = st.selectbox("📑 Kategorie:",
-        ["Portrait","Landschaft","Nacht/Astro","Street","Makro","Sport","Hochzeit"])
+    sheet = st.selectbox(
+        "📑 Kategorie:",
+        [
+            "Portrait",
+            "Landschaft",
+            "Nacht/Astro",
+            "Street",
+            "Makro",
+            "Sport",
+            "Hochzeit",
+        ],
+    )
     GUIDES = {
         "Portrait": """
 👤 PORTRAIT
@@ -746,18 +906,20 @@ elif tool == "🔄 Crop-Faktor":
     st.header("🔄 Crop-Faktor Rechner")
     col1, col2 = st.columns(2)
     with col1:
-        focal    = st.number_input("Brennweite (mm)", 10, 800, 50)
-        aperture = st.selectbox("Blende (f/)", [1.2,1.4,1.8,2.0,2.8,4.0,5.6,8.0,11,16], index=4)
+        focal = st.number_input("Brennweite (mm)", 10, 800, 50)
+        aperture = st.selectbox(
+            "Blende (f/)", [1.2, 1.4, 1.8, 2.0, 2.8, 4.0, 5.6, 8.0, 11, 16], index=4
+        )
     with col2:
         sensor_from = st.selectbox("Von Sensor:", list(CROP_MAP.keys()), index=0)
-        sensor_to   = st.selectbox("Nach Sensor:", list(CROP_MAP.keys()), index=1)
+        sensor_to = st.selectbox("Nach Sensor:", list(CROP_MAP.keys()), index=1)
 
     if st.button("✅ Berechnen", type="primary"):
         cf_from = CROP_MAP[sensor_from]
-        cf_to   = CROP_MAP[sensor_to]
-        focal_ff       = focal    * cf_from
-        aperture_ff    = aperture * cf_from
-        equiv_focal    = focal_ff    / cf_to
+        cf_to = CROP_MAP[sensor_to]
+        focal_ff = focal * cf_from
+        aperture_ff = aperture * cf_from
+        equiv_focal = focal_ff / cf_to
         equiv_aperture = aperture_ff / cf_to
         st.success(f"""
         ### 📊 Ergebnis:
@@ -771,9 +933,14 @@ elif tool == "🔄 Crop-Faktor":
         - Brennweite: `{equiv_focal:.0f} mm` | Blende: `f/{equiv_aperture:.1f}`
         """)
     with st.expander("📋 Crop-Faktor Referenz"):
-        ref = [{"Sensor": k, "Crop-Faktor": v,
-                "50 mm entspricht": f"{50*v:.0f} mm FF-Äquivalent"}
-               for k, v in CROP_MAP.items()]
+        ref = [
+            {
+                "Sensor": k,
+                "Crop-Faktor": v,
+                "50 mm entspricht": f"{50*v:.0f} mm FF-Äquivalent",
+            }
+            for k, v in CROP_MAP.items()
+        ]
         st.dataframe(pd.DataFrame(ref), use_container_width=True)
 
 # ════════════════════════════════════════════════════════════════
@@ -782,10 +949,13 @@ elif tool == "🔄 Crop-Faktor":
 
 elif tool == "🖼️ EXIF":
     st.header("🖼️ EXIF-Daten auslesen")
-    uploaded = st.file_uploader("📤 Foto hochladen", type=["jpg","jpeg","png","webp"])
+    uploaded = st.file_uploader(
+        "📤 Foto hochladen", type=["jpg", "jpeg", "png", "webp"]
+    )
     if uploaded:
         try:
             from PIL import Image, ExifTags
+
             img = Image.open(uploaded)
             col1, col2 = st.columns(2)
             with col1:
@@ -795,19 +965,31 @@ elif tool == "🖼️ EXIF":
                 if not exif_data:
                     st.warning("⚠️ Keine EXIF-Daten gefunden.")
                 else:
-                    tags = {ExifTags.TAGS[k]: str(v)
-                            for k, v in exif_data.items()
-                            if k in ExifTags.TAGS and not isinstance(v, bytes)}
-                    IMPORTANT = ["Make","Model","ExposureTime","FNumber",
-                                 "ISOSpeedRatings","FocalLength","DateTimeOriginal","LensModel"]
+                    tags = {
+                        ExifTags.TAGS[k]: str(v)
+                        for k, v in exif_data.items()
+                        if k in ExifTags.TAGS and not isinstance(v, bytes)
+                    }
+                    IMPORTANT = [
+                        "Make",
+                        "Model",
+                        "ExposureTime",
+                        "FNumber",
+                        "ISOSpeedRatings",
+                        "FocalLength",
+                        "DateTimeOriginal",
+                        "LensModel",
+                    ]
                     st.subheader("📸 Kamera-Einstellungen")
                     for key in IMPORTANT:
                         if key in tags:
                             st.markdown(f"**{key}:** `{tags[key]}`")
                     with st.expander("📋 Alle EXIF-Daten"):
-                        st.dataframe(pd.DataFrame(list(tags.items()),
-                                     columns=["Tag","Wert"]),
-                                     use_container_width=True, height=400)
+                        st.dataframe(
+                            pd.DataFrame(list(tags.items()), columns=["Tag", "Wert"]),
+                            use_container_width=True,
+                            height=400,
+                        )
         except Exception as e:
             st.error(f"Fehler beim Lesen der EXIF-Daten: {e}")
     else:
@@ -819,20 +1001,32 @@ elif tool == "🖼️ EXIF":
 
 elif tool == "⏱️ Timelapse":
     st.header("⏱️ Timelapse-Rechner")
-    tab1, tab2 = st.tabs(["📊 Berechnung","💡 Tipps"])
+    tab1, tab2 = st.tabs(["📊 Berechnung", "💡 Tipps"])
     with tab1:
         col1, col2, col3 = st.columns(3)
-        with col1: duration = st.number_input("🎬 Video-Länge (Sek)", min_value=5, value=30)
-        with col2: fps      = st.selectbox("📊 FPS", [24,25,30,60], index=0)
-        with col3: interval = st.number_input("⏱️ Intervall (Sek)", min_value=1, value=5)
-        file_format = st.selectbox("💾 Format",
-            ["RAW (~30 MB)","JPEG Fine (~10 MB)","JPEG Normal (~5 MB)"])
+        with col1:
+            duration = st.number_input("🎬 Video-Länge (Sek)", min_value=5, value=30)
+        with col2:
+            fps = st.selectbox("📊 FPS", [24, 25, 30, 60], index=0)
+        with col3:
+            interval = st.number_input("⏱️ Intervall (Sek)", min_value=1, value=5)
+        file_format = st.selectbox(
+            "💾 Format", ["RAW (~30 MB)", "JPEG Fine (~10 MB)", "JPEG Normal (~5 MB)"]
+        )
         if st.button("✅ Berechnen", type="primary"):
-            frames    = duration * fps
+            frames = duration * fps
             total_sec = frames * interval
-            h, m, s   = int(total_sec//3600), int((total_sec%3600)//60), int(total_sec%60)
-            size_map  = {"RAW (~30 MB)": 30, "JPEG Fine (~10 MB)": 10, "JPEG Normal (~5 MB)": 5}
-            size_gb   = frames * size_map[file_format] / 1024
+            h, m, s = (
+                int(total_sec // 3600),
+                int((total_sec % 3600) // 60),
+                int(total_sec % 60),
+            )
+            size_map = {
+                "RAW (~30 MB)": 30,
+                "JPEG Fine (~10 MB)": 10,
+                "JPEG Normal (~5 MB)": 5,
+            }
+            size_gb = frames * size_map[file_format] / 1024
             st.success(f"""
             ### 📊 Ergebnis:
             | Parameter | Wert |
@@ -841,8 +1035,10 @@ elif tool == "⏱️ Timelapse":
             | ⏱️ Aufnahmedauer | {h}h {m}m {s}s |
             | 💾 Speicherbedarf | {size_gb:.1f} GB |
             """)
-            if size_gb > 64:  st.warning("⚠️ Mehr als 64 GB!")
-            if total_sec > 14400: st.warning("⚠️ Über 4 Stunden – mehrere Akkus einplanen!")
+            if size_gb > 64:
+                st.warning("⚠️ Mehr als 64 GB!")
+            if total_sec > 14400:
+                st.warning("⚠️ Über 4 Stunden – mehrere Akkus einplanen!")
     with tab2:
         st.markdown("""
         ### 💡 Intervall-Empfehlungen
@@ -863,41 +1059,63 @@ elif tool == "📝 Planer":
     st.header("📝 Aufnahme-Planer & Logbuch")
     if "logbook" not in st.session_state:
         st.session_state.logbook = []
-    tab1, tab2 = st.tabs(["➕ Neuer Eintrag","📖 Logbuch"])
-    SHUTTERS_LOG = ["1/1000","1/500","1/250","1/125","1/60","1/30","1/15","1s","2s","4s"]
+    tab1, tab2 = st.tabs(["➕ Neuer Eintrag", "📖 Logbuch"])
+    SHUTTERS_LOG = [
+        "1/1000",
+        "1/500",
+        "1/250",
+        "1/125",
+        "1/60",
+        "1/30",
+        "1/15",
+        "1s",
+        "2s",
+        "4s",
+    ]
     with tab1:
         c1, c2 = st.columns(2)
-        loc = c1.text_input("📍 Ort");  sub = c2.text_input("📸 Motiv")
+        loc = c1.text_input("📍 Ort")
+        sub = c2.text_input("📸 Motiv")
         c3, c4 = st.columns(2)
-        iso_log = c3.selectbox("ISO", [100,200,400,800,1600,3200], key="log_iso")
-        ap_log  = c4.selectbox("Blende", [1.4,1.8,2.8,4,5.6,8,11,16], key="log_ap")
-        sh_log  = st.selectbox("Verschluss", SHUTTERS_LOG, key="log_sh")
-        notes   = st.text_area("📝 Notizen")
-        rating  = st.slider("⭐ Bewertung", 1, 5, 3)
+        iso_log = c3.selectbox("ISO", [100, 200, 400, 800, 1600, 3200], key="log_iso")
+        ap_log = c4.selectbox(
+            "Blende", [1.4, 1.8, 2.8, 4, 5.6, 8, 11, 16], key="log_ap"
+        )
+        sh_log = st.selectbox("Verschluss", SHUTTERS_LOG, key="log_sh")
+        notes = st.text_area("📝 Notizen")
+        rating = st.slider("⭐ Bewertung", 1, 5, 3)
         if st.button("➕ Speichern", type="primary"):
             if loc or sub:
-                st.session_state.logbook.append({
-                    "date":     datetime.now().strftime("%Y-%m-%d %H:%M"),
-                    "loc": loc, "sub": sub,
-                    "settings": f"ISO {iso_log} | f/{ap_log} | {sh_log}",
-                    "notes": notes, "rating": "⭐" * rating,
-                })
+                st.session_state.logbook.append(
+                    {
+                        "date": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                        "loc": loc,
+                        "sub": sub,
+                        "settings": f"ISO {iso_log} | f/{ap_log} | {sh_log}",
+                        "notes": notes,
+                        "rating": "⭐" * rating,
+                    }
+                )
                 st.success("✅ Gespeichert!")
                 st.rerun()
             else:
                 st.warning("Bitte Ort oder Motiv eingeben.")
     with tab2:
         if st.session_state.logbook:
-            search  = st.text_input("🔍 Suchen…")
+            search = st.text_input("🔍 Suchen…")
             entries = st.session_state.logbook
             if search:
                 entries = [e for e in entries if search.lower() in str(e).lower()]
             for entry in reversed(entries):
-                with st.expander(f"📸 {entry['date']} | {entry['loc']} – {entry['sub']} {entry['rating']}"):
-                    st.markdown(f"- **📍 Ort:** {entry['loc']}\n"
-                                f"- **📸 Motiv:** {entry['sub']}\n"
-                                f"- **⚙️ Settings:** `{entry['settings']}`\n"
-                                f"- **📝 Notizen:** {entry['notes']}")
+                with st.expander(
+                    f"📸 {entry['date']} | {entry['loc']} – {entry['sub']} {entry['rating']}"
+                ):
+                    st.markdown(
+                        f"- **📍 Ort:** {entry['loc']}\n"
+                        f"- **📸 Motiv:** {entry['sub']}\n"
+                        f"- **⚙️ Settings:** `{entry['settings']}`\n"
+                        f"- **📝 Notizen:** {entry['notes']}"
+                    )
             if st.button("🗑️ Alle löschen"):
                 st.session_state.logbook = []
                 st.rerun()
@@ -910,18 +1128,42 @@ elif tool == "📝 Planer":
 
 elif tool == "⚖️ Vergleich":
     st.header("⚖️ Einstellungs-Vergleich")
-    SHUTTERS_CMP = ["1/8000","1/4000","1/2000","1/1000","1/500","1/250",
-                    "1/125","1/60","1/30","1/15","1/8","1/4","1/2","1","2","4"]
+    SHUTTERS_CMP = [
+        "1/8000",
+        "1/4000",
+        "1/2000",
+        "1/1000",
+        "1/500",
+        "1/250",
+        "1/125",
+        "1/60",
+        "1/30",
+        "1/15",
+        "1/8",
+        "1/4",
+        "1/2",
+        "1",
+        "2",
+        "4",
+    ]
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("🅰️ Setup A")
-        a_iso    = st.selectbox("ISO", [100,200,400,800,1600,3200,6400], index=0, key="a_iso")
-        a_ap     = st.selectbox("Blende", [1.4,1.8,2.8,4,5.6,8,11,16], index=3, key="a_ap")
+        a_iso = st.selectbox(
+            "ISO", [100, 200, 400, 800, 1600, 3200, 6400], index=0, key="a_iso"
+        )
+        a_ap = st.selectbox(
+            "Blende", [1.4, 1.8, 2.8, 4, 5.6, 8, 11, 16], index=3, key="a_ap"
+        )
         a_sh_str = st.selectbox("Verschluss", SHUTTERS_CMP, index=6, key="a_sh")
     with col2:
         st.subheader("🅱️ Setup B")
-        b_iso    = st.selectbox("ISO", [100,200,400,800,1600,3200,6400], index=0, key="b_iso")
-        b_ap     = st.selectbox("Blende", [1.4,1.8,2.8,4,5.6,8,11,16], index=3, key="b_ap")
+        b_iso = st.selectbox(
+            "ISO", [100, 200, 400, 800, 1600, 3200, 6400], index=0, key="b_iso"
+        )
+        b_ap = st.selectbox(
+            "Blende", [1.4, 1.8, 2.8, 4, 5.6, 8, 11, 16], index=3, key="b_ap"
+        )
         b_sh_str = st.selectbox("Verschluss", SHUTTERS_CMP, index=6, key="b_sh")
     if st.button("⚖️ Vergleichen", type="primary"):
         a_sh = parse_shutter(a_sh_str)
@@ -947,17 +1189,94 @@ elif tool == "⚖️ Vergleich":
 elif tool == "🔭 Objektive":
     st.header("🔭 RF Objektiv-Datenbank")
     LENSES = [
-        {"Name":"RF 14-35mm f/4L IS",       "Typ":"Weitwinkel Zoom",  "f/":4.0,     "Gewicht":"540g",   "IS":"✅","Preis":"~1.600€"},
-        {"Name":"RF 15-35mm f/2.8L IS",      "Typ":"Weitwinkel Zoom",  "f/":2.8,     "Gewicht":"840g",   "IS":"✅","Preis":"~2.500€"},
-        {"Name":"RF 24-70mm f/2.8L IS",      "Typ":"Standard Zoom",    "f/":2.8,     "Gewicht":"900g",   "IS":"✅","Preis":"~2.700€"},
-        {"Name":"RF 24-105mm f/4L IS",       "Typ":"Standard Zoom",    "f/":4.0,     "Gewicht":"700g",   "IS":"✅","Preis":"~1.200€"},
-        {"Name":"RF 50mm f/1.2L USM",        "Typ":"Standard Prime",   "f/":1.2,     "Gewicht":"950g",   "IS":"❌","Preis":"~2.400€"},
-        {"Name":"RF 50mm f/1.8 STM",         "Typ":"Standard Prime",   "f/":1.8,     "Gewicht":"160g",   "IS":"❌","Preis":"~230€"},
-        {"Name":"RF 85mm f/1.2L USM",        "Typ":"Portrait Prime",   "f/":1.2,     "Gewicht":"1195g",  "IS":"❌","Preis":"~3.000€"},
-        {"Name":"RF 85mm f/2 Macro IS",      "Typ":"Portrait Prime",   "f/":2.0,     "Gewicht":"500g",   "IS":"✅","Preis":"~700€"},
-        {"Name":"RF 70-200mm f/2.8L IS",     "Typ":"Tele Zoom",        "f/":2.8,     "Gewicht":"1070g",  "IS":"✅","Preis":"~2.900€"},
-        {"Name":"RF 100-500mm f/4.5-7.1L",   "Typ":"Supertele Zoom",   "f/":"4.5-7", "Gewicht":"1370g",  "IS":"✅","Preis":"~3.000€"},
-        {"Name":"RF 100mm f/2.8L Macro IS",  "Typ":"Makro Prime",      "f/":2.8,     "Gewicht":"730g",   "IS":"✅","Preis":"~1.500€"},
+        {
+            "Name": "RF 14-35mm f/4L IS",
+            "Typ": "Weitwinkel Zoom",
+            "f/": 4.0,
+            "Gewicht": "540g",
+            "IS": "✅",
+            "Preis": "~1.600€",
+        },
+        {
+            "Name": "RF 15-35mm f/2.8L IS",
+            "Typ": "Weitwinkel Zoom",
+            "f/": 2.8,
+            "Gewicht": "840g",
+            "IS": "✅",
+            "Preis": "~2.500€",
+        },
+        {
+            "Name": "RF 24-70mm f/2.8L IS",
+            "Typ": "Standard Zoom",
+            "f/": 2.8,
+            "Gewicht": "900g",
+            "IS": "✅",
+            "Preis": "~2.700€",
+        },
+        {
+            "Name": "RF 24-105mm f/4L IS",
+            "Typ": "Standard Zoom",
+            "f/": 4.0,
+            "Gewicht": "700g",
+            "IS": "✅",
+            "Preis": "~1.200€",
+        },
+        {
+            "Name": "RF 50mm f/1.2L USM",
+            "Typ": "Standard Prime",
+            "f/": 1.2,
+            "Gewicht": "950g",
+            "IS": "❌",
+            "Preis": "~2.400€",
+        },
+        {
+            "Name": "RF 50mm f/1.8 STM",
+            "Typ": "Standard Prime",
+            "f/": 1.8,
+            "Gewicht": "160g",
+            "IS": "❌",
+            "Preis": "~230€",
+        },
+        {
+            "Name": "RF 85mm f/1.2L USM",
+            "Typ": "Portrait Prime",
+            "f/": 1.2,
+            "Gewicht": "1195g",
+            "IS": "❌",
+            "Preis": "~3.000€",
+        },
+        {
+            "Name": "RF 85mm f/2 Macro IS",
+            "Typ": "Portrait Prime",
+            "f/": 2.0,
+            "Gewicht": "500g",
+            "IS": "✅",
+            "Preis": "~700€",
+        },
+        {
+            "Name": "RF 70-200mm f/2.8L IS",
+            "Typ": "Tele Zoom",
+            "f/": 2.8,
+            "Gewicht": "1070g",
+            "IS": "✅",
+            "Preis": "~2.900€",
+        },
+        {
+            "Name": "RF 100-500mm f/4.5-7.1L",
+            "Typ": "Supertele Zoom",
+            "f/": "4.5-7",
+            "Gewicht": "1370g",
+            "IS": "✅",
+            "Preis": "~3.000€",
+        },
+        {
+            "Name": "RF 100mm f/2.8L Macro IS",
+            "Typ": "Makro Prime",
+            "f/": 2.8,
+            "Gewicht": "730g",
+            "IS": "✅",
+            "Preis": "~1.500€",
+        },
     ]
     typ_filter = st.multiselect("🏷️ Typ filtern:", sorted({l["Typ"] for l in LENSES}))
     filtered = [l for l in LENSES if not typ_filter or l["Typ"] in typ_filter]
@@ -970,7 +1289,7 @@ elif tool == "🔭 Objektive":
 
 elif tool == "🎬 Video":
     st.header("🎬 Video-Modus Guide")
-    tab1, tab2, tab3 = st.tabs(["📊 Specs","⚙️ Settings","🎞️ 180°-Regel"])
+    tab1, tab2, tab3 = st.tabs(["📊 Specs", "⚙️ Settings", "🎞️ 180°-Regel"])
     with tab1:
         st.markdown("""
         ### 📹 Canon EOS R Video-Spezifikationen
@@ -989,7 +1308,7 @@ elif tool == "🎬 Video":
         **⚡ Slow-Mo:** 120fps | 1/250s | Viel Licht erforderlich
         """)
     with tab3:
-        fps_v = st.selectbox("FPS wählen:", [24,25,30,50,60,120])
+        fps_v = st.selectbox("FPS wählen:", [24, 25, 30, 50, 60, 120])
         shutter_180 = fps_v * 2
         st.success(f"**{fps_v} fps → 1/{shutter_180}s Verschlusszeit** (180°-Regel)")
 
@@ -1005,23 +1324,29 @@ elif tool == "🔋 Akku":
         "LP-E6   (1800 mAh) – ~300 Shots": 300,
     }
     battery = st.selectbox("🔋 Akku-Typ", list(BATTERY_MAP.keys()))
-    cap     = BATTERY_MAP[battery]
-    spm     = st.number_input("⏱️ Shots/Minute", 0.5, 10.0, 2.0, 0.5)
+    cap = BATTERY_MAP[battery]
+    spm = st.number_input("⏱️ Shots/Minute", 0.5, 10.0, 2.0, 0.5)
     col1, col2, col3 = st.columns(3)
-    lcd   = col1.slider("📱 LCD-Nutzung (%)",   0, 100, 50)
+    lcd = col1.slider("📱 LCD-Nutzung (%)", 0, 100, 50)
     flash = col2.slider("💡 Blitz-Nutzung (%)", 0, 100, 20)
-    wifi  = col3.slider("📡 WiFi/BT (%)",        0, 100, 30)
-    ibis  = st.checkbox("📷 IBIS aktiv", value=True)
+    wifi = col3.slider("📡 WiFi/BT (%)", 0, 100, 30)
+    ibis = st.checkbox("📷 IBIS aktiv", value=True)
     if st.button("✅ Berechnen", type="primary"):
-        factor = max(0.3, 1.0 - (lcd/100)*0.15 - (flash/100)*0.20
-                     - (wifi/100)*0.10 - (0.05 if ibis else 0))
+        factor = max(
+            0.3,
+            1.0
+            - (lcd / 100) * 0.15
+            - (flash / 100) * 0.20
+            - (wifi / 100) * 0.10
+            - (0.05 if ibis else 0),
+        )
         shots = int(cap * factor)
-        mins  = shots / spm if spm > 0 else 0
-        h, m  = int(mins//60), int(mins%60)
+        mins = shots / spm if spm > 0 else 0
+        h, m = int(mins // 60), int(mins % 60)
         c1, c2, c3 = st.columns(3)
-        c1.metric("📸 Shots",    f"{shots:,}")
+        c1.metric("📸 Shots", f"{shots:,}")
         c2.metric("⏱️ Laufzeit", f"{h}h {m}min")
-        c3.metric("⚡ Effizienz",f"{factor*100:.0f}%")
+        c3.metric("⚡ Effizienz", f"{factor*100:.0f}%")
         if factor < 0.6:
             st.warning("⚠️ Hoher Verbrauch – Ersatzakku einpacken!")
         akkus_needed = math.ceil((8 * 60 * spm) / max(shots, 1))
@@ -1033,26 +1358,38 @@ elif tool == "🔋 Akku":
 
 elif tool == "📡 Rauschen":
     st.header("📡 Sensor-Rauschen & Dynamikumfang")
-    iso = st.selectbox("ISO wählen:", [100,200,400,800,1600,3200,6400,12800,25600])
+    iso = st.selectbox(
+        "ISO wählen:", [100, 200, 400, 800, 1600, 3200, 6400, 12800, 25600]
+    )
     if st.button("📊 Analysieren", type="primary"):
         stops = math.log2(iso / 100)
-        dr    = max(13.5 - stops * 0.8, 5.0)
-        snr   = max(40   - stops * 5.5, 8.0)
-        rating = ("🟢 Exzellent" if snr >= 35 else
-                  "🟡 Gut"       if snr >= 25 else
-                  "🟠 Akzeptabel"if snr >= 15 else "🔴 Stark verrauscht")
+        dr = max(13.5 - stops * 0.8, 5.0)
+        snr = max(40 - stops * 5.5, 8.0)
+        rating = (
+            "🟢 Exzellent"
+            if snr >= 35
+            else (
+                "🟡 Gut"
+                if snr >= 25
+                else "🟠 Akzeptabel" if snr >= 15 else "🔴 Stark verrauscht"
+            )
+        )
         c1, c2, c3 = st.columns(3)
-        c1.metric("📉 SNR",           f"{snr:.1f} dB")
+        c1.metric("📉 SNR", f"{snr:.1f} dB")
         c2.metric("🌈 Dynamikumfang", f"{dr:.1f} EV")
-        c3.metric("📊 Bewertung",     rating)
+        c3.metric("📊 Bewertung", rating)
         with st.expander("📋 Alle ISO-Werte im Vergleich"):
             rows = []
-            for i in [100,200,400,800,1600,3200,6400,12800,25600]:
+            for i in [100, 200, 400, 800, 1600, 3200, 6400, 12800, 25600]:
                 s = math.log2(i / 100)
-                rows.append({"ISO": i,
-                              "SNR (dB)":     f"{max(40-s*5.5,8):.1f}",
-                              "Dynamik (EV)": f"{max(13.5-s*0.8,5):.1f}",
-                              "Empfehlung":   "✅" if max(40-s*5.5,8) >= 25 else "⚠️"})
+                rows.append(
+                    {
+                        "ISO": i,
+                        "SNR (dB)": f"{max(40-s*5.5,8):.1f}",
+                        "Dynamik (EV)": f"{max(13.5-s*0.8,5):.1f}",
+                        "Empfehlung": "✅" if max(40 - s * 5.5, 8) >= 25 else "⚠️",
+                    }
+                )
             st.dataframe(pd.DataFrame(rows), use_container_width=True)
 
 # ════════════════════════════════════════════════════════════════
@@ -1063,23 +1400,31 @@ elif tool == "🗺️ Spots":
     st.header("🗺️ Foto-Spot Manager")
     if "spots" not in st.session_state:
         st.session_state.spots = []
-    tab1, tab2 = st.tabs(["➕ Spot hinzufügen","📌 Meine Spots"])
+    tab1, tab2 = st.tabs(["➕ Spot hinzufügen", "📌 Meine Spots"])
     with tab1:
         c1, c2 = st.columns(2)
-        name  = c1.text_input("📍 Name des Spots")
-        typ   = c2.selectbox("🏷️ Typ", ["Landschaft","Portrait","Street","Architektur","Astro","Sonstiges"])
+        name = c1.text_input("📍 Name des Spots")
+        typ = c2.selectbox(
+            "🏷️ Typ",
+            ["Landschaft", "Portrait", "Street", "Architektur", "Astro", "Sonstiges"],
+        )
         c3, c4 = st.columns(2)
-        lat   = c3.number_input("🌐 Breitengrad",  value=51.34, format="%.4f")
-        lon   = c4.number_input("🌐 Längengrad",   value=12.38, format="%.4f")
+        lat = c3.number_input("🌐 Breitengrad", value=51.34, format="%.4f")
+        lon = c4.number_input("🌐 Längengrad", value=12.38, format="%.4f")
         beste = st.text_input("⏰ Beste Zeit")
         notes = st.text_area("📝 Notizen")
         if st.button("➕ Spot speichern", type="primary"):
             if name:
-                st.session_state.spots.append({
-                    "Name": name, "Typ": typ,
-                    "Lat": lat, "Lon": lon,
-                    "Beste Zeit": beste, "Notizen": notes
-                })
+                st.session_state.spots.append(
+                    {
+                        "Name": name,
+                        "Typ": typ,
+                        "Lat": lat,
+                        "Lon": lon,
+                        "Beste Zeit": beste,
+                        "Notizen": notes,
+                    }
+                )
                 st.success(f"✅ '{name}' gespeichert!")
                 st.rerun()
             else:
@@ -1088,7 +1433,9 @@ elif tool == "🗺️ Spots":
         if st.session_state.spots:
             st.dataframe(pd.DataFrame(st.session_state.spots), use_container_width=True)
             last = st.session_state.spots[-1]
-            st.markdown(f"🔗 [Letzten Spot auf Google Maps öffnen](https://maps.google.com/?q={last['Lat']},{last['Lon']})")
+            st.markdown(
+                f"🔗 [Letzten Spot auf Google Maps öffnen](https://maps.google.com/?q={last['Lat']},{last['Lon']})"
+            )
             if st.button("🗑️ Alle Spots löschen"):
                 st.session_state.spots = []
                 st.rerun()
@@ -1102,23 +1449,35 @@ elif tool == "🗺️ Spots":
 elif tool == "☁️ Wetter":
     st.header("☁️ Wetter-Assistent für Fotografen")
     col1, col2 = st.columns(2)
-    temp   = col1.number_input("🌡️ Temperatur (°C)", value=15)
-    wind   = col2.number_input("💨 Wind (km/h)", value=10)
+    temp = col1.number_input("🌡️ Temperatur (°C)", value=15)
+    wind = col2.number_input("💨 Wind (km/h)", value=10)
     clouds = st.slider("☁️ Bewölkung (%)", 0, 100, 40)
-    cond   = st.selectbox("Bedingung",
-        ["☀️ Klar","⛅ Teilweise","☁️ Bedeckt","🌧️ Regen","🌫️ Nebel","❄️ Schnee"])
+    cond = st.selectbox(
+        "Bedingung",
+        ["☀️ Klar", "⛅ Teilweise", "☁️ Bedeckt", "🌧️ Regen", "🌫️ Nebel", "❄️ Schnee"],
+    )
     if st.button("📊 Foto-Bedingungen prüfen", type="primary"):
         recs = []
-        if clouds < 30:   recs.append("🌅 Klarer Horizont – ideal für Sunset & Astro!")
-        elif clouds < 60: recs.append("⛅ Wolkenstruktur – gut für dramatische Landschaften")
-        else:             recs.append("☁️ Weiches Diffuslicht – ideal für Portrait & Makro")
-        if wind > 40:     recs.append("💨 Starker Wind! Stativ beschweren, 1/500s+, Tele meiden")
-        elif wind > 20:   recs.append("💨 Mäßiger Wind – Verwacklungsgefahr, Stativ stabilisieren")
-        if temp < 0:      recs.append("❄️ Kalt! Akku warm halten, Fingerhandschuhe")
-        elif temp > 35:   recs.append("☀️ Heiß! Kamera vor Sonne schützen")
-        if "Nebel" in cond: recs.append("🌫️ Nebel = mystische Stimmung! Kontrast & Klarheit erhöhen")
-        if "Regen" in cond: recs.append("🌧️ Regenhülle! Nach dem Regen = tolle Reflexionen")
-        if "Schnee" in cond: recs.append("❄️ Belichtung +1 EV | Weißabgleich manuell")
+        if clouds < 30:
+            recs.append("🌅 Klarer Horizont – ideal für Sunset & Astro!")
+        elif clouds < 60:
+            recs.append("⛅ Wolkenstruktur – gut für dramatische Landschaften")
+        else:
+            recs.append("☁️ Weiches Diffuslicht – ideal für Portrait & Makro")
+        if wind > 40:
+            recs.append("💨 Starker Wind! Stativ beschweren, 1/500s+, Tele meiden")
+        elif wind > 20:
+            recs.append("💨 Mäßiger Wind – Verwacklungsgefahr, Stativ stabilisieren")
+        if temp < 0:
+            recs.append("❄️ Kalt! Akku warm halten, Fingerhandschuhe")
+        elif temp > 35:
+            recs.append("☀️ Heiß! Kamera vor Sonne schützen")
+        if "Nebel" in cond:
+            recs.append("🌫️ Nebel = mystische Stimmung! Kontrast & Klarheit erhöhen")
+        if "Regen" in cond:
+            recs.append("🌧️ Regenhülle! Nach dem Regen = tolle Reflexionen")
+        if "Schnee" in cond:
+            recs.append("❄️ Belichtung +1 EV | Weißabgleich manuell")
         st.info("✅ **Analyse:**\n\n" + "\n\n".join(recs))
 
 # ════════════════════════════════════════════════════════════════
@@ -1127,23 +1486,34 @@ elif tool == "☁️ Wetter":
 
 elif tool == "📈 Histogramm":
     st.header("📈 Belichtungs-Histogramm Simulator")
-    ev       = st.slider("EV (Helligkeit)", 0, 20, 12)
+    ev = st.slider("EV (Helligkeit)", 0, 20, 12)
     contrast = st.slider("Kontrast (Szene)", 10, 100, 50)
-    channel  = st.selectbox("Kanal", ["Luminanz","🔴 Rot","🟢 Grün","🔵 Blau"])
+    channel = st.selectbox("Kanal", ["Luminanz", "🔴 Rot", "🟢 Grün", "🔵 Blau"])
     if st.button("📊 Generieren", type="primary"):
         try:
             import numpy as np
+
             center = int((ev / 20) * 255)
-            x      = np.arange(256)
-            y      = 1000 * np.exp(-((x - center)**2) / (2 * (contrast/2)**2))
-            color_map = {"Luminanz":"#E0E0E0","🔴 Rot":"#FF4444",
-                         "🟢 Grün":"#44FF44","🔵 Blau":"#4444FF"}
+            x = np.arange(256)
+            y = 1000 * np.exp(-((x - center) ** 2) / (2 * (contrast / 2) ** 2))
+            color_map = {
+                "Luminanz": "#E0E0E0",
+                "🔴 Rot": "#FF4444",
+                "🟢 Grün": "#44FF44",
+                "🔵 Blau": "#4444FF",
+            }
             df_hist = pd.DataFrame({"Pixelwert": x, "Häufigkeit": y.astype(int)})
-            st.bar_chart(df_hist.set_index("Pixelwert"),
-                         color=color_map[channel], use_container_width=True)
-            if ev > 17:   st.warning("🔴 Überbelichtet – Clipping!")
-            elif ev < 4:  st.warning("🔵 Unterbelichtet – Detailverlust in Schatten!")
-            else:         st.success("🟢 Gut belichtet! ETTR für weniger Rauschen.")
+            st.bar_chart(
+                df_hist.set_index("Pixelwert"),
+                color=color_map[channel],
+                use_container_width=True,
+            )
+            if ev > 17:
+                st.warning("🔴 Überbelichtet – Clipping!")
+            elif ev < 4:
+                st.warning("🔵 Unterbelichtet – Detailverlust in Schatten!")
+            else:
+                st.success("🟢 Gut belichtet! ETTR für weniger Rauschen.")
         except ImportError:
             st.error("numpy nicht verfügbar: pip install numpy")
 
@@ -1153,64 +1523,94 @@ elif tool == "📈 Histogramm":
 
 elif tool == "🎨 Filter-Sim":
     st.header("🎨 Filter-Simulator")
-    uploaded = st.file_uploader("🖼️ Foto hochladen", type=["jpg","png","jpeg","webp"])
+    uploaded = st.file_uploader(
+        "🖼️ Foto hochladen", type=["jpg", "png", "jpeg", "webp"]
+    )
     if uploaded:
         try:
             import numpy as np
             from PIL import Image, ImageEnhance, ImageFilter
+
             img = Image.open(uploaded).convert("RGB")
             col1, col2 = st.columns(2)
             with col1:
                 st.image(img, caption="Original", use_container_width=True)
-            filt = st.selectbox("🎨 Filter wählen", [
-                "Kein Filter",
-                "ND2  (1 Stop dunkler)","ND8  (3 Stops dunkler)",
-                "ND64 (6 Stops dunkler)","ND1000 (10 Stops dunkler)",
-                "Schwarzweiß (S/W)","Warmton (Sunset-Look)",
-                "Kaltton (Blaustich)","Kontrast erhöhen",
-                "Soft-Focus / Glow","Vignette",
-            ])
+            filt = st.selectbox(
+                "🎨 Filter wählen",
+                [
+                    "Kein Filter",
+                    "ND2  (1 Stop dunkler)",
+                    "ND8  (3 Stops dunkler)",
+                    "ND64 (6 Stops dunkler)",
+                    "ND1000 (10 Stops dunkler)",
+                    "Schwarzweiß (S/W)",
+                    "Warmton (Sunset-Look)",
+                    "Kaltton (Blaustich)",
+                    "Kontrast erhöhen",
+                    "Soft-Focus / Glow",
+                    "Vignette",
+                ],
+            )
             intensity = st.slider("Intensität", 0.0, 1.0, 0.8, 0.05)
             img_f = img.copy()
-            if "ND2"    in filt: img_f = ImageEnhance.Brightness(img_f).enhance(max(0.05, 1.0 - 0.50 * intensity))
-            elif "ND8"  in filt: img_f = ImageEnhance.Brightness(img_f).enhance(max(0.05, 1.0 - 0.875 * intensity))
-            elif "ND64" in filt: img_f = ImageEnhance.Brightness(img_f).enhance(max(0.02, 1.0 - 0.984 * intensity))
-            elif "ND1000"in filt:img_f = ImageEnhance.Brightness(img_f).enhance(max(0.01, 0.001 + (1-intensity)*0.1))
+            if "ND2" in filt:
+                img_f = ImageEnhance.Brightness(img_f).enhance(
+                    max(0.05, 1.0 - 0.50 * intensity)
+                )
+            elif "ND8" in filt:
+                img_f = ImageEnhance.Brightness(img_f).enhance(
+                    max(0.05, 1.0 - 0.875 * intensity)
+                )
+            elif "ND64" in filt:
+                img_f = ImageEnhance.Brightness(img_f).enhance(
+                    max(0.02, 1.0 - 0.984 * intensity)
+                )
+            elif "ND1000" in filt:
+                img_f = ImageEnhance.Brightness(img_f).enhance(
+                    max(0.01, 0.001 + (1 - intensity) * 0.1)
+                )
             elif "Schwarzweiß" in filt:
                 img_f = img_f.convert("L").convert("RGB")
                 img_f = ImageEnhance.Contrast(img_f).enhance(1.0 + intensity * 0.5)
             elif "Warmton" in filt:
                 r, g, b = img_f.split()
                 r = r.point(lambda p: min(255, int(p * (1.0 + 0.25 * intensity))))
-                b = b.point(lambda p: max(0,   int(p * (1.0 - 0.25 * intensity))))
+                b = b.point(lambda p: max(0, int(p * (1.0 - 0.25 * intensity))))
                 img_f = Image.merge("RGB", (r, g, b))
             elif "Kaltton" in filt:
                 r, g, b = img_f.split()
-                r = r.point(lambda p: max(0,   int(p * (1.0 - 0.20 * intensity))))
+                r = r.point(lambda p: max(0, int(p * (1.0 - 0.20 * intensity))))
                 b = b.point(lambda p: min(255, int(p * (1.0 + 0.30 * intensity))))
                 img_f = Image.merge("RGB", (r, g, b))
             elif "Kontrast" in filt:
                 img_f = ImageEnhance.Contrast(img_f).enhance(1.0 + intensity * 1.5)
             elif "Soft-Focus" in filt:
-                blurred = img_f.filter(ImageFilter.GaussianBlur(radius=int(intensity * 8)))
+                blurred = img_f.filter(
+                    ImageFilter.GaussianBlur(radius=int(intensity * 8))
+                )
                 img_f = Image.blend(img_f, blurred, alpha=intensity * 0.6)
             elif "Vignette" in filt:
                 # Numpy-Import ist bereits oben erfolgt
                 w, h_px = img_f.size
                 arr = np.array(img_f, dtype=float)
                 cx, cy = w / 2, h_px / 2
-                Y, X   = np.ogrid[:h_px, :w]
-                dist   = np.sqrt(((X - cx)/cx)**2 + ((Y - cy)/cy)**2)
-                mask   = np.clip(1 - intensity * np.clip(dist - 0.5, 0, 1) * 1.5, 0, 1)
-                arr    = (arr * mask[:, :, np.newaxis]).clip(0, 255).astype("uint8")
-                img_f  = Image.fromarray(arr)
+                Y, X = np.ogrid[:h_px, :w]
+                dist = np.sqrt(((X - cx) / cx) ** 2 + ((Y - cy) / cy) ** 2)
+                mask = np.clip(1 - intensity * np.clip(dist - 0.5, 0, 1) * 1.5, 0, 1)
+                arr = (arr * mask[:, :, np.newaxis]).clip(0, 255).astype("uint8")
+                img_f = Image.fromarray(arr)
             with col2:
                 st.image(img_f, caption=f"Filter: {filt}", use_container_width=True)
             from io import BytesIO
+
             buf = BytesIO()
             img_f.save(buf, format="JPEG", quality=92)
-            st.download_button("⬇️ Gefiltertes Bild herunterladen",
-                               buf.getvalue(), "filtered_photo.jpg", "image/jpeg")
+            st.download_button(
+                "⬇️ Gefiltertes Bild herunterladen",
+                buf.getvalue(),
+                "filtered_photo.jpg",
+                "image/jpeg",
+            )
         except Exception as e:
             st.error(f"Fehler: {e}")
     else:
@@ -1225,14 +1625,20 @@ elif tool == "🌙 Mond & Milchstraße":
     city_sel = st.selectbox("📍 Stadt", ["(manuell)"] + CITY_LIST)
     col1, col2 = st.columns(2)
     with col1:
-        date_str = st.text_input("📅 Datum (TT.MM.JJJJ)", value=datetime.now().strftime("%d.%m.%Y"))
+        date_str = st.text_input(
+            "📅 Datum (TT.MM.JJJJ)", value=datetime.now().strftime("%d.%m.%Y")
+        )
     with col2:
         if city_sel != "(manuell)":
             latitude = CITY_COORDS[city_sel][0]
             st.number_input("🌍 Breitengrad", value=latitude, disabled=True)
         else:
-            latitude = st.number_input("🌍 Breitengrad", min_value=-90.0, max_value=90.0, value=51.34)
-    option = st.selectbox("🎯 Fokus", ["Milchstraße","Mondfotografie","Deep Sky","Nordlichter"])
+            latitude = st.number_input(
+                "🌍 Breitengrad", min_value=-90.0, max_value=90.0, value=51.34
+            )
+    option = st.selectbox(
+        "🎯 Fokus", ["Milchstraße", "Mondfotografie", "Deep Sky", "Nordlichter"]
+    )
 
     if st.button("🔍 Berechnen", type="primary"):
         try:
@@ -1241,28 +1647,46 @@ elif tool == "🌙 Mond & Milchstraße":
             p_name, p_illum, p_tip = moon_phase_info(phase)
 
             if option == "Milchstraße":
-                score       = milky_way_score(phase, month)
-                best_time   = "22:30–04:00" if 4 <= month <= 9 else "03:00–06:00"
-                rec = ("🟢 Hervorragend!" if score >= 85 else
-                       "🟡 Gut!"          if score >= 65 else
-                       "🟠 Mäßig."        if score >= 40 else
-                       "🔴 Schlecht.")
+                score = milky_way_score(phase, month)
+                best_time = "22:30–04:00" if 4 <= month <= 9 else "03:00–06:00"
+                rec = (
+                    "🟢 Hervorragend!"
+                    if score >= 85
+                    else (
+                        "🟡 Gut!"
+                        if score >= 65
+                        else "🟠 Mäßig." if score >= 40 else "🔴 Schlecht."
+                    )
+                )
             elif option == "Mondfotografie":
-                score     = p_illum
+                score = p_illum
                 best_time = "Abends nach Sonnenuntergang"
-                rec = "🌕 Vollmond – perfekt!" if 0.45 < phase < 0.55 else "🌙 Interessante Phase"
+                rec = (
+                    "🌕 Vollmond – perfekt!"
+                    if 0.45 < phase < 0.55
+                    else "🌙 Interessante Phase"
+                )
             elif option == "Deep Sky":
-                score     = max(0, 100 - p_illum)
+                score = max(0, 100 - p_illum)
                 best_time = "Mitternacht–Morgengrauen"
-                rec = "🔭 Dunkler Himmel – ideal!" if score > 80 else "⚠️ Auf Neumond warten."
+                rec = (
+                    "🔭 Dunkler Himmel – ideal!"
+                    if score > 80
+                    else "⚠️ Auf Neumond warten."
+                )
             else:  # Nordlichter
                 if abs(latitude) > 58:
-                    score     = max(0, 100 - p_illum) * (1.0 if month in range(10,13) or month in range(1,4) else 0.5)
+                    score = max(0, 100 - p_illum) * (
+                        1.0 if month in range(10, 13) or month in range(1, 4) else 0.5
+                    )
                     best_time = "21:00–02:00"
                     rec = "🌌 Aurora möglich bei klarem Himmel!"
                 else:
-                    score = 15; best_time = "–"
-                    rec = "📍 Zu weit südlich – >58° Breite nötig (Skandinavien, Island)"
+                    score = 15
+                    best_time = "–"
+                    rec = (
+                        "📍 Zu weit südlich – >58° Breite nötig (Skandinavien, Island)"
+                    )
 
             st.success(f"""
             ### 📊 Ergebnis – {date_str}
@@ -1288,18 +1712,21 @@ elif tool == "🌙 Mond & Milchstraße":
 elif tool == "🌠 Sternspuren":
     st.header("🌠 Sternspuren & Astrofotografie")
     tab1, tab2, tab3, tab4 = st.tabs(
-        ["🎯 Sternspuren","⭐ Scharfe Sterne","📐 Planung","📚 Tipps"])
+        ["🎯 Sternspuren", "⭐ Scharfe Sterne", "📐 Planung", "📚 Tipps"]
+    )
     with tab1:
         col1, col2 = st.columns(2)
         with col1:
             total_time = st.number_input("Gesamtzeit (Min)", 10, 480, 60)
-            interval   = st.number_input("Intervall (Sek)", 1, 30, 5)
+            interval = st.number_input("Intervall (Sek)", 1, 30, 5)
         with col2:
-            shutter_s = st.selectbox("Belichtung/Bild", ["10s","15s","20s","25s","30s"], index=2)
-            iso_s     = st.selectbox("ISO", [400,800,1600,3200], index=2)
+            shutter_s = st.selectbox(
+                "Belichtung/Bild", ["10s", "15s", "20s", "25s", "30s"], index=2
+            )
+            iso_s = st.selectbox("ISO", [400, 800, 1600, 3200], index=2)
         if st.button("✅ Berechnen", type="primary", key="star_calc"):
-            sh_sec    = int(shutter_s.replace("s",""))
-            n_frames  = (total_time * 60) // (sh_sec + interval)
+            sh_sec = int(shutter_s.replace("s", ""))
+            n_frames = (total_time * 60) // (sh_sec + interval)
             trail_deg = (total_time / 4) * 15
             st.success(f"""
             ### Ergebnis:
@@ -1308,17 +1735,25 @@ elif tool == "🌠 Sternspuren":
             - Speicher RAW: **~{n_frames*30/1024:.1f} GB**
             - Settings: {shutter_s} | ISO {iso_s} | f/2.8 | MF ∞
             """)
-            st.info("📦 Stacking: StarStaX (Win) | Starry Landscape Stacker (Mac) | Sequator (online)")
+            st.info(
+                "📦 Stacking: StarStaX (Win) | Starry Landscape Stacker (Mac) | Sequator (online)"
+            )
     with tab2:
         col1, col2 = st.columns(2)
         with col1:
-            focal_sh  = st.number_input("Brennweite (mm)", 14, 400, 24)
-            sensor_sh = st.selectbox("Sensor",
-                ["Vollformat","APS-C Canon 1.6×","APS-C Nikon 1.5×","Micro 4/3 2×"])
+            focal_sh = st.number_input("Brennweite (mm)", 14, 400, 24)
+            sensor_sh = st.selectbox(
+                "Sensor",
+                ["Vollformat", "APS-C Canon 1.6×", "APS-C Nikon 1.5×", "Micro 4/3 2×"],
+            )
         with col2:
-            ap_sh = st.selectbox("Blende", [1.2,1.4,1.8,2.0,2.8,4.0], index=3)
-        crop_sh_map = {"Vollformat":1.0,"APS-C Canon 1.6×":1.6,
-                       "APS-C Nikon 1.5×":1.5,"Micro 4/3 2×":2.0}
+            ap_sh = st.selectbox("Blende", [1.2, 1.4, 1.8, 2.0, 2.8, 4.0], index=3)
+        crop_sh_map = {
+            "Vollformat": 1.0,
+            "APS-C Canon 1.6×": 1.6,
+            "APS-C Nikon 1.5×": 1.5,
+            "Micro 4/3 2×": 2.0,
+        }
         crop_sh = crop_sh_map[sensor_sh]
         max_500 = 500 / (focal_sh * crop_sh)
         max_npf = (35 * ap_sh + 30) / (focal_sh * crop_sh)
@@ -1331,20 +1766,35 @@ elif tool == "🌠 Sternspuren":
         """)
     with tab3:
         col1, col2 = st.columns(2)
-        with col1: date_plan = st.text_input("Datum", value=datetime.now().strftime("%d.%m.%Y"))
+        with col1:
+            date_plan = st.text_input(
+                "Datum", value=datetime.now().strftime("%d.%m.%Y")
+            )
         with col2:
-            lp = st.selectbox("Lichtverschmutzung",
-                ["Bortle 1–2 (Sehr dunkel)","Bortle 3–4 (Dunkel)",
-                 "Bortle 5–6 (Vorstadt)","Bortle 7–9 (Stadt)"])
+            lp = st.selectbox(
+                "Lichtverschmutzung",
+                [
+                    "Bortle 1–2 (Sehr dunkel)",
+                    "Bortle 3–4 (Dunkel)",
+                    "Bortle 5–6 (Vorstadt)",
+                    "Bortle 7–9 (Stadt)",
+                ],
+            )
         if st.button("🔍 Prüfen"):
             try:
                 d, mo, yr = map(int, date_plan.split("."))
                 phase = calculate_moon_phase(yr, mo, d)
                 _, illum, _ = moon_phase_info(phase)
-                lp_score = {"Bortle 1–2 (Sehr dunkel)":1.0,"Bortle 3–4 (Dunkel)":0.7,
-                            "Bortle 5–6 (Vorstadt)":0.4,"Bortle 7–9 (Stadt)":0.1}[lp]
+                lp_score = {
+                    "Bortle 1–2 (Sehr dunkel)": 1.0,
+                    "Bortle 3–4 (Dunkel)": 0.7,
+                    "Bortle 5–6 (Vorstadt)": 0.4,
+                    "Bortle 7–9 (Stadt)": 0.1,
+                }[lp]
                 season = 1.0 if 3 <= mo <= 10 else 0.4
-                total  = ((100-illum)/100*0.4 + season*0.3 + lp_score*0.3) * 100
+                total = (
+                    (100 - illum) / 100 * 0.4 + season * 0.3 + lp_score * 0.3
+                ) * 100
                 st.success(f"""
                 ### Score: {total:.0f}/100
                 Mond: {illum:.0f}% | Saison: {"✅" if season==1.0 else "⚠️"} | LP: {lp}
@@ -1373,20 +1823,23 @@ elif tool == "🌠 Sternspuren":
 elif tool == "🎨 Bearbeitung":
     st.header("🎨 Fotobearbeitung & Post-Processing")
     tab1, tab2, tab3, tab4, tab5 = st.tabs(
-        ["📊 Grundbearbeitung","🌈 Farben","✨ Effekte","🌙 Astro","📚 Workflows"])
+        ["📊 Grundbearbeitung", "🌈 Farben", "✨ Effekte", "🌙 Astro", "📚 Workflows"]
+    )
     with tab1:
         st.markdown("#### Basis-Korrektur (Lightroom)")
         col1, col2 = st.columns(2)
         with col1:
-            exp_val    = st.slider("Belichtung",  -2.0, 2.0,  0.0, 0.1)
-            contrast   = st.slider("Kontrast",    -50,  100,   20)
-            highlights = st.slider("Lichter",     -100, 100,  -40)
+            exp_val = st.slider("Belichtung", -2.0, 2.0, 0.0, 0.1)
+            contrast = st.slider("Kontrast", -50, 100, 20)
+            highlights = st.slider("Lichter", -100, 100, -40)
         with col2:
-            shadows    = st.slider("Tiefen",      -100, 100,   40)
-            whites     = st.slider("Weiß",        -100, 100,   10)
-            blacks     = st.slider("Schwarz",     -100, 100,  -10)
-        st.success(f"""Belichtung: {exp_val:+.1f} | Kontrast: {contrast:+d}
-Lichter: {highlights:+d} | Tiefen: {shadows:+d} | Weiß: {whites:+d} | Schwarz: {blacks:+d}""")
+            shadows = st.slider("Tiefen", -100, 100, 40)
+            whites = st.slider("Weiß", -100, 100, 10)
+            blacks = st.slider("Schwarz", -100, 100, -10)
+        st.success(
+            f"""Belichtung: {exp_val:+.1f} | Kontrast: {contrast:+d}
+Lichter: {highlights:+d} | Tiefen: {shadows:+d} | Weiß: {whites:+d} | Schwarz: {blacks:+d}"""
+        )
     with tab2:
         st.markdown("#### HSL / Farbkorrektur")
         col1, col2 = st.columns(2)
@@ -1400,11 +1853,13 @@ Lichter: {highlights:+d} | Tiefen: {shadows:+d} | Weiß: {whites:+d} | Schwarz: 
             st.slider("Helligkeit", -100, 100, 5, key="or_l")
     with tab3:
         st.markdown("#### Kreative Effekte")
-        clarity  = st.slider("Klarheit",           -50, 100, 20)
-        dehaze   = st.slider("Dunst entfernen",     -50, 100, 15)
-        vignette = st.slider("Vignette",           -100, 100, -20)
-        grain    = st.slider("Körnigkeit",            0, 100,  10)
-        st.info(f"Klarheit: {clarity:+d} | Dunst: {dehaze:+d} | Vignette: {vignette:+d} | Körnung: {grain}")
+        clarity = st.slider("Klarheit", -50, 100, 20)
+        dehaze = st.slider("Dunst entfernen", -50, 100, 15)
+        vignette = st.slider("Vignette", -100, 100, -20)
+        grain = st.slider("Körnigkeit", 0, 100, 10)
+        st.info(
+            f"Klarheit: {clarity:+d} | Dunst: {dehaze:+d} | Vignette: {vignette:+d} | Körnung: {grain}"
+        )
     with tab4:
         st.markdown("""
         #### 🌙 Astro-Workflow (Schritt für Schritt)
@@ -1441,9 +1896,9 @@ elif tool == "🌙 Aktuelle Mond-Daten":
             lat, lon = CITY_COORDS[city_sel]
             tz = pytz.timezone("Europe/Berlin")
             city_info = LocationInfo(city_sel, "DE", "Europe/Berlin", lat, lon)
-            now       = datetime.now(tz)
-            s         = sun(city_info.observer, date=now.date(), tzinfo=tz)
-            phase     = calculate_moon_phase(now.year, now.month, now.day)
+            now = datetime.now(tz)
+            s = sun(city_info.observer, date=now.date(), tzinfo=tz)
+            phase = calculate_moon_phase(now.year, now.month, now.day)
             m_name, m_illum, m_tip = moon_phase_info(phase)
             st.success(f"""
             ### 📅 {now.strftime('%d.%m.%Y %H:%M')} | {city_sel}
@@ -1470,33 +1925,39 @@ elif tool == "🌙 Aktuelle Mond-Daten":
 elif tool == "☁️ Live-Wetter":
     st.header("☁️ Live-Wetter Analyse")
     st.markdown("Detaillierte Daten & Shooting-Empfehlungen")
-    
+
     # Input (GPS-Fallback nutzen)
     default_val = st.session_state.get("gps_coords", "Berlin")
-    city_input = st.text_input(" Stadt oder Koordinaten (z.B. Berlin oder 50.46, 7.46)", value=default_val)
-    
+    city_input = st.text_input(
+        " Stadt oder Koordinaten (z.B. Berlin oder 50.46, 7.46)", value=default_val
+    )
+
     if st.button("🔄 Analyse starten", type="primary"):
         try:
             import requests
+
             API_KEY = st.secrets["OPENWEATHER_API_KEY"]
             lat, lon = None, None
-            
+
             # Koordinaten erkennen
             if "," in city_input:
                 try:
-                    parts = city_input.replace(" ","").split(",")
+                    parts = city_input.replace(" ", "").split(",")
                     lat, lon = float(parts[0]), float(parts[1])
                 except:
                     st.error("❌ Ungültiges Format.")
                     st.stop()
-            
+
             # API Call
-            url = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API_KEY}&units=metric&lang=de" if lat else \
-                  f"http://api.openweathermap.org/data/2.5/weather?q={city_input}&appid={API_KEY}&units=metric&lang=de"
-            
+            url = (
+                f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API_KEY}&units=metric&lang=de"
+                if lat
+                else f"http://api.openweathermap.org/data/2.5/weather?q={city_input}&appid={API_KEY}&units=metric&lang=de"
+            )
+
             res = requests.get(url)
             data = res.json()
-            
+
             if data.get("cod") != 200:
                 st.error(f"❌ {data.get('message')}")
             else:
@@ -1511,16 +1972,24 @@ elif tool == "☁️ Live-Wetter":
                 clouds = data["clouds"]["all"]
                 desc = data["weather"][0]["description"]
                 icon = data["weather"][0]["icon"]
-                sunrise = datetime.fromtimestamp(data["sys"]["sunrise"]).strftime("%H:%M")
+                sunrise = datetime.fromtimestamp(data["sys"]["sunrise"]).strftime(
+                    "%H:%M"
+                )
                 sunset = datetime.fromtimestamp(data["sys"]["sunset"]).strftime("%H:%M")
-                
+
                 # --- Layout ---
-                st.subheader(f"📸 {desc.capitalize()} | {temp:.1f}°C (gefühlt {feels_like:.1f}°C)")
+                st.subheader(
+                    f"📸 {desc.capitalize()} | {temp:.1f}°C (gefühlt {feels_like:.1f}°C)"
+                )
                 st.image(f"http://openweathermap.org/img/wn/{icon}@2x.png", width=100)
-                
+
                 col1, col2, col3 = st.columns(3)
                 with col1:
-                    st.metric("💨 Wind", f"{wind:.1f} km/h", delta=f"Böen: {wind_gust:.1f}" if wind_gust > 0 else None)
+                    st.metric(
+                        "💨 Wind",
+                        f"{wind:.1f} km/h",
+                        delta=f"Böen: {wind_gust:.1f}" if wind_gust > 0 else None,
+                    )
                     st.metric("☁️ Bewölkung", f"{clouds}%")
                     st.metric(" Luftfeuchtigkeit", f"{humidity}%")
                 with col2:
@@ -1530,16 +1999,18 @@ elif tool == "☁️ Live-Wetter":
                 with col3:
                     st.metric("🌅 Aufgang", sunrise)
                     st.metric("🌇 Untergang", sunset)
-                    day_length = datetime.strptime(sunset, "%H:%M") - datetime.strptime(sunrise, "%H:%M")
+                    day_length = datetime.strptime(sunset, "%H:%M") - datetime.strptime(
+                        sunrise, "%H:%M"
+                    )
                     st.caption(f"Tageslänge: {str(day_length)[:5]} Std.")
-                
+
                 # --- Fotografen-Bewertung ---
                 st.divider()
                 st.subheader(" Fotografen-Check")
-                
+
                 score = 100
                 notes = []
-                
+
                 if clouds < 20:
                     notes.append("🟢 Klarer Himmel – Top für Astro & Sunset")
                 elif clouds < 60:
@@ -1548,26 +2019,30 @@ elif tool == "☁️ Live-Wetter":
                 else:
                     notes.append(" Stark bewölkt – Diffuses Licht (Portrait/Makro)")
                     score -= 40
-                    
+
                 if wind > 40:
                     notes.append("⚠️ Starker Wind – Stativ beschweren!")
                     score -= 30
                 elif wind > 20:
                     notes.append(" Mäßiger Wind – Auf Verwacklung achten")
                     score -= 10
-                    
+
                 if visibility < 5:
                     notes.append("️ Schlechte Sicht (Nebel/Smog)")
                     score -= 20
-                
+
                 # Ergebnis anzeigen
                 if score >= 80:
-                    st.success(f"⭐⭐⭐ **PERFEKT (Score: {score})**\n\n" + "\n".join(notes))
+                    st.success(
+                        f"⭐⭐⭐ **PERFEKT (Score: {score})**\n\n" + "\n".join(notes)
+                    )
                 elif score >= 50:
                     st.info(f"⭐⭐ **GUT (Score: {score})**\n\n" + "\n".join(notes))
                 else:
-                    st.warning(f"⭐ **SCHWIERIG (Score: {score})**\n\n" + "\n".join(notes))
-                    
+                    st.warning(
+                        f"⭐ **SCHWIERIG (Score: {score})**\n\n" + "\n".join(notes)
+                    )
+
         except Exception as e:
             st.error(f"Fehler: {e}")
 
@@ -1578,29 +2053,33 @@ elif tool == "📅 5-Tage Prognose":
     st.header("📅 5-Tage-Wettervorhersage")
     default_val = st.session_state.get("gps_coords", "Berlin")
     city_input = st.text_input("📍 Stadt oder Koordinaten", value=default_val)
-    
+
     if st.button("📊 Vorhersage laden", type="primary"):
         try:
             import requests
+
             API_KEY = st.secrets["OPENWEATHER_API_KEY"]
             lat, lon = None, None
-            
+
             # Koordinaten erkennen & formatieren
             if "," in city_input:
                 try:
-                    parts = city_input.replace(" ","").split(",")
+                    parts = city_input.replace(" ", "").split(",")
                     lat, lon = float(parts[0]), float(parts[1])
                 except:
                     st.error("❌ Ungültiges Format. Bitte: 52.52,13.40")
                     st.stop()
-            
+
             # Richtige API-URL wählen
-            url = f"http://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={API_KEY}&units=metric&lang=de" if lat else \
-                  f"http://api.openweathermap.org/data/2.5/forecast?q={city_input}&appid={API_KEY}&units=metric&lang=de"
-            
+            url = (
+                f"http://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={API_KEY}&units=metric&lang=de"
+                if lat
+                else f"http://api.openweathermap.org/data/2.5/forecast?q={city_input}&appid={API_KEY}&units=metric&lang=de"
+            )
+
             res = requests.get(url)
             data = res.json()
-            
+
             if data.get("cod") != "200":
                 st.error(f"❌ {data.get('message')}")
             else:
@@ -1611,15 +2090,25 @@ elif tool == "📅 5-Tage Prognose":
                     temps.append(item["main"]["temp"])
                     day = dt.strftime("%d.%m.")
                     if day not in daily:
-                        daily[day] = {"min": item["main"]["temp_min"], "max": item["main"]["temp_max"], "desc": item["weather"][0]["description"]}
+                        daily[day] = {
+                            "min": item["main"]["temp_min"],
+                            "max": item["main"]["temp_max"],
+                            "desc": item["weather"][0]["description"],
+                        }
                     else:
-                        daily[day]["min"] = min(daily[day]["min"], item["main"]["temp_min"])
-                        daily[day]["max"] = max(daily[day]["max"], item["main"]["temp_max"])
-                
+                        daily[day]["min"] = min(
+                            daily[day]["min"], item["main"]["temp_min"]
+                        )
+                        daily[day]["max"] = max(
+                            daily[day]["max"], item["main"]["temp_max"]
+                        )
+
                 st.subheader("️ Temperaturverlauf")
-                df_temp = pd.DataFrame({"Uhrzeit": times[:40], "Temperatur": temps[:40]})
+                df_temp = pd.DataFrame(
+                    {"Uhrzeit": times[:40], "Temperatur": temps[:40]}
+                )
                 st.line_chart(df_temp.set_index("Uhrzeit"), use_container_width=True)
-                
+
                 st.subheader("📆 Tagesübersicht")
                 cols = st.columns(len(daily))
                 for i, (day, vals) in enumerate(daily.items()):
@@ -1720,37 +2209,44 @@ elif tool == "🌍 Astro & Wetter Dashboard":
     if st.button("🔄 Dashboard aktualisieren", type="primary"):
         try:
             import requests
+
             API_KEY = st.secrets["OPENWEATHER_API_KEY"]
 
             # Koordinaten oder Stadtname
             if "," in city:
                 lat, lon = map(float, city.split(","))
-                w_url = (f"http://api.openweathermap.org/data/2.5/weather"
-                         f"?lat={lat}&lon={lon}&appid={API_KEY}&units=metric&lang=de")
+                w_url = (
+                    f"http://api.openweathermap.org/data/2.5/weather"
+                    f"?lat={lat}&lon={lon}&appid={API_KEY}&units=metric&lang=de"
+                )
             else:
-                w_url = (f"http://api.openweathermap.org/data/2.5/weather"
-                         f"?q={city}&appid={API_KEY}&units=metric&lang=de")
+                w_url = (
+                    f"http://api.openweathermap.org/data/2.5/weather"
+                    f"?q={city}&appid={API_KEY}&units=metric&lang=de"
+                )
 
             w = requests.get(w_url, timeout=8).json()
             if w.get("cod") != 200:
                 st.error(f"❌ {w.get('message','Fehler')}")
             else:
-                temp   = w["main"]["temp"]
+                temp = w["main"]["temp"]
                 clouds = w["clouds"]["all"]
-                wind   = w["wind"]["speed"] * 3.6
-                desc   = w["weather"][0]["description"]
-                icon   = w["weather"][0]["icon"]
-                sr_ts  = datetime.fromtimestamp(w["sys"]["sunrise"]).strftime("%H:%M")
-                ss_ts  = datetime.fromtimestamp(w["sys"]["sunset"]).strftime("%H:%M")
+                wind = w["wind"]["speed"] * 3.6
+                desc = w["weather"][0]["description"]
+                icon = w["weather"][0]["icon"]
+                sr_ts = datetime.fromtimestamp(w["sys"]["sunrise"]).strftime("%H:%M")
+                ss_ts = datetime.fromtimestamp(w["sys"]["sunset"]).strftime("%H:%M")
 
-                now     = datetime.now()
-                phase   = calculate_moon_phase(now.year, now.month, now.day)
+                now = datetime.now()
+                phase = calculate_moon_phase(now.year, now.month, now.day)
                 m_name, m_illum, m_tip = moon_phase_info(phase)
 
                 col1, col2 = st.columns(2)
                 with col1:
                     st.subheader("☁️ Live-Wetter")
-                    st.image(f"http://openweathermap.org/img/wn/{icon}@2x.png", width=60)
+                    st.image(
+                        f"http://openweathermap.org/img/wn/{icon}@2x.png", width=60
+                    )
                     c1, c2, c3 = st.columns(3)
                     c1.metric("🌡️", f"{temp:.1f}°C")
                     c2.metric("💨", f"{wind:.0f} km/h")
@@ -1763,7 +2259,7 @@ elif tool == "🌍 Astro & Wetter Dashboard":
                     st.caption(m_tip)
 
                 astro_sc = (100 - m_illum) * 0.6 + (100 - clouds) * 0.4
-                mw_sc    = milky_way_score(phase, now.month)
+                mw_sc = milky_way_score(phase, now.month)
 
                 st.info(f"""
                 ### 📸 Shooting-Empfehlung
@@ -1774,16 +2270,23 @@ elif tool == "🌍 Astro & Wetter Dashboard":
 
                 # Tages-Übersicht
                 with st.expander("📊 Stunden-Übersicht (heute)"):
-                    f_url = (f"http://api.openweathermap.org/data/2.5/forecast"
-                             f"?q={city}&appid={API_KEY}&units=metric&lang=de&cnt=8")
+                    f_url = (
+                        f"http://api.openweathermap.org/data/2.5/forecast"
+                        f"?q={city}&appid={API_KEY}&units=metric&lang=de&cnt=8"
+                    )
                     f_data = requests.get(f_url, timeout=8).json()
                     if f_data.get("cod") == "200":
                         items = f_data["list"]
-                        df_h  = pd.DataFrame({
-                            "Zeit":    [datetime.fromtimestamp(i["dt"]).strftime("%H:%M") for i in items],
-                            "Temp °C": [i["main"]["temp"] for i in items],
-                            "Wolken%": [i["clouds"]["all"] for i in items],
-                        })
+                        df_h = pd.DataFrame(
+                            {
+                                "Zeit": [
+                                    datetime.fromtimestamp(i["dt"]).strftime("%H:%M")
+                                    for i in items
+                                ],
+                                "Temp °C": [i["main"]["temp"] for i in items],
+                                "Wolken%": [i["clouds"]["all"] for i in items],
+                            }
+                        )
                         st.dataframe(df_h.set_index("Zeit"), use_container_width=True)
         except Exception as e:
             st.error(f"Fehler: {e}")
@@ -1804,74 +2307,86 @@ elif tool == "📄 PDF-Planer":
     with col2:
         p_subj = st.text_input("🎯 Motiv", value="Landschaft / Portrait")
         p_client = st.text_input("👤 Kunde / Auftraggeber", value="Privat")
-    
+
     # Ausrüstung & Settings
-    equip = st.text_area("🎒 Equipment-Liste (je Zeile ein Item)", 
-                         height=100,
-                         value="Kamera: Canon EOS R\nObjektiv: RF 24-70mm f/2.8\nStativ: Manfrotto\nFilter: ND 1000, Polfilter\nAkkus: 3x LP-E6NH")
-    
-    notes = st.text_area("📝 Notizen & Ablauf", 
-                         height=100,
-                         value="08:00 Aufbau\n08:30 Golden Hour\n10:00 Backup\n")
+    equip = st.text_area(
+        "🎒 Equipment-Liste (je Zeile ein Item)",
+        height=100,
+        value="Kamera: Canon EOS R\nObjektiv: RF 24-70mm f/2.8\nStativ: Manfrotto\nFilter: ND 1000, Polfilter\nAkkus: 3x LP-E6NH",
+    )
+
+    notes = st.text_area(
+        "📝 Notizen & Ablauf",
+        height=100,
+        value="08:00 Aufbau\n08:30 Golden Hour\n10:00 Backup\n",
+    )
 
     if st.button("📄 PDF Generieren & Herunterladen", type="primary"):
         try:
             from fpdf import FPDF
             import io
-            
+
             pdf = FPDF()
             pdf.add_page()
-            
+
             # Header
             pdf.set_font("Helvetica", "B", 24)
-            pdf.set_text_color(31, 111, 235) # Streamlit Blau
+            pdf.set_text_color(31, 111, 235)  # Streamlit Blau
             pdf.cell(0, 20, "SHOOTING PLAN", ln=True, align="C")
             pdf.line(10, 30, 200, 30)
-            
+
             # Meta Daten
             pdf.set_font("Helvetica", "B", 12)
             pdf.set_text_color(0, 0, 0)
             pdf.cell(0, 10, f"Projekt: {p_title}", ln=True)
-            pdf.cell(0, 8, f"Datum: {p_date.strftime('%d.%m.%Y')} | Ort: {p_loc}", ln=True)
+            pdf.cell(
+                0, 8, f"Datum: {p_date.strftime('%d.%m.%Y')} | Ort: {p_loc}", ln=True
+            )
             pdf.cell(0, 8, f"Motiv: {p_subj} | Kunde: {p_client}", ln=True)
             pdf.ln(5)
-            
+
             # Equipment
             pdf.set_font("Helvetica", "B", 14)
             pdf.set_fill_color(240, 246, 252)
             pdf.cell(0, 10, "  Ausruestung & Settings", ln=True, fill=True)
             pdf.set_font("Helvetica", size=11)
-            for line in equip.split('\n'):
+            for line in equip.split("\n"):
                 if line.strip():
                     pdf.cell(0, 7, f"- {line}", ln=True)
-            
+
             pdf.ln(5)
-            
+
             # Ablauf
             pdf.set_font("Helvetica", "B", 14)
             pdf.cell(0, 10, "  Ablauf & Notizen", ln=True, fill=True)
             pdf.set_font("Helvetica", size=11)
-            for line in notes.split('\n'):
+            for line in notes.split("\n"):
                 if line.strip():
                     pdf.multi_cell(0, 7, line)
-            
+
             # Footer
             pdf.set_y(-20)
             pdf.set_font("Helvetica", "I", 8)
             pdf.set_text_color(128, 128, 128)
-            pdf.cell(0, 10, "Erstellt mit Canon EOS R Pro Tool | Web Version", ln=True, align="C")
-            
+            pdf.cell(
+                0,
+                10,
+                "Erstellt mit Canon EOS R Pro Tool | Web Version",
+                ln=True,
+                align="C",
+            )
+
             # Speichern & Download
             pdf_output = pdf.output(dest="S").encode("latin-1", "replace")
             st.download_button(
                 label="⬇️ PDF Speichern",
                 data=pdf_output,
                 file_name=f"Shooting_Plan_{p_date.strftime('%Y%m%d')}.pdf",
-                mime="application/pdf"
+                mime="application/pdf",
             )
-            
+
         except Exception as e:
-                        st.error(f"Fehler beim Erstellen: {e}")
+            st.error(f"Fehler beim Erstellen: {e}")
 
 
 # ════════════════════════════════════════════════════════════════
@@ -1879,11 +2394,13 @@ elif tool == "📄 PDF-Planer":
 # ════════════════════════════════════════════════════════════════
 
 st.divider()
-st.markdown("""
+st.markdown(
+    """
 <div style='text-align:center; color:#8B949E; font-size:0.85em;'>
     📷 Canon EOS R – Pro Tool v7.0 (Optimiert) | 28 Tools<br>
     Mondphase: Jean-Meeus-Algorithmus | GPS: Query-Params-Methode<br>
     Alle Berechnungen sind Richtwerte – Praxistests empfohlen.
 </div>
-""", unsafe_allow_html=True)
-
+""",
+    unsafe_allow_html=True,
+)

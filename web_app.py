@@ -333,28 +333,46 @@ if st.sidebar.button("🏠 Home", use_container_width=True, type="primary" if st
 
 st.sidebar.divider()
 
+# 📸 KAMERA & RECHNER
 with st.sidebar.expander("📸 Kamera & Rechner", expanded=True):
-    for t in ["⚙️ Belichtung", "🕶️ ND Rechner", " Schärfentiefe", "🔦 Blitz", "📡 Rauschen", "🌡️ Weißabgleich", "🔄 Crop-Faktor", "📈 Histogramm", "🔭 Objektive"]:
+    calc_tools = [
+        "⚙️ Belichtung", "🕶️ ND Rechner", "📐 Schärfentiefe", "🔦 Blitz",
+        "📡 Rauschen", "🌡️ Weißabgleich", "🔄 Crop-Faktor", "📈 Histogramm", "🔭 Objektive"
+    ]
+    for t in calc_tools:
         if st.sidebar.button(t, use_container_width=True, type="primary" if st.session_state.tool == t else "secondary"):
             set_tool(t)
 
 st.sidebar.divider()
 
+# 🌤️ WETTER, ASTRO & GPS
 with st.sidebar.expander("🌤️ Wetter, Astro & GPS", expanded=True):
-    for t in ["☁️ Live-Wetter", "📅 5-Tage Prognose", "🌍 Astro & Wetter Dashboard", "📍 GPS-Standort", "🌙 Mond & Milchstraße", "🌠 Sternspuren", "🌙 Aktuelle Mond-Daten"]:
+    weather_tools = [
+        "☁️ Live-Wetter", "📅 5-Tage Prognose", "🌍 Astro & Wetter Dashboard",
+        "📍 GPS-Standort", "🌙 Mond & Milchstraße", "🌠 Sternspuren", "🌙 Aktuelle Mond-Daten"
+    ]
+    for t in weather_tools:
         if st.sidebar.button(t, use_container_width=True, type="primary" if st.session_state.tool == t else "secondary"):
             set_tool(t)
 
 st.sidebar.divider()
 
+# 📅 PLANUNG & WORKFLOW
 with st.sidebar.expander("📅 Planung & Workflow", expanded=False):
-    for t in ["📄 PDF-Planer", " Planer", "🗺️ Spots", "⏱️ Timelapse", "️ EXIF", "🤖 KI", "📋 Cheat Sheets", "⚖️ Vergleich", "🎨 Filter-Sim", " Video", "🎨 Bearbeitung", " Akku"]:
+    plan_tools = [
+        "📄 PDF-Planer", "📝 Planer", "🗺️ Spots", "⏱️ Timelapse",
+        "🖼️ EXIF", "🤖 KI", "📋 Cheat Sheets", "⚖️ Vergleich",
+        "🎨 Filter-Sim", "🎬 Video", "🎨 Bearbeitung", "🔋 Akku"
+    ]
+    for t in plan_tools:
         if st.sidebar.button(t, use_container_width=True, type="primary" if st.session_state.tool == t else "secondary"):
             set_tool(t)
 
 st.sidebar.divider()
 
-# ️ WICHTIG: Diese Zeile muss direkt vor deine if/elif-Blöcke!
+# ═══════════════════════════════════════════
+#  WICHTIG: Tool-Variable setzen für die if/elif-Blöcke darunter
+# ═══════════════════════════════════════════
 tool = st.session_state.tool
 if tool == "🏠 Home":
     st.header("Willkommen beim Canon EOS R Pro Tool!")

@@ -372,6 +372,11 @@ with st.sidebar.expander("📅 Planung & Workflow", expanded=False):
             set_tool(t)
 
 # ═══════════════════════════════════════════
+#  AKTUELLES TOOL AUS SESSION STATE HOLEN
+# ═══════════════════════════════════════════
+tool = st.session_state.tool
+
+# ═══════════════════════════════════════════
 #  HIER GEHT DEIN HAUPTCODE WEITER
 #  (if tool == "🏠 Home": ...)
 # ═══════════════════════════════════════════

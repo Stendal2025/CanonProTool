@@ -347,26 +347,26 @@ st.sidebar.divider()
 
 # 🌤️ WETTER, ASTRO & GPS
 with st.sidebar.expander("🌤️ Wetter, Astro & GPS", expanded=True):
-    weather_tools = [
-        "☁️ Live-Wetter", "📅 5-Tage Prognose", "🌍 Astro & Wetter Dashboard",
-        "📍 GPS-Standort", "🌙 Mond & Milchstraße", "🌠 Sternspuren", "🌙 Aktuelle Mond-Daten"
-    ]
-    for t in weather_tools:
-        if st.sidebar.button(t, use_container_width=True, type="primary" if st.session_state.tool == t else "secondary"):
-            set_tool(t)
+        weather_tools = [
+            "☁️ Live-Wetter", "📅 5-Tage Prognose", "🌍 Astro & Wetter Dashboard",
+            "📍 GPS-Standort", "🌙 Mond & Milchstraße", "🌠 Sternspuren", "🌙 Aktuelle Mond-Daten"
+        ]
+        for t in weather_tools:
+            if st.sidebar.button(t, use_container_width=True, type="primary" if st.session_state.tool == t else "secondary"):
+                set_tool(t)
 
 st.sidebar.divider()
 
 # 📅 PLANUNG & WORKFLOW
 with st.sidebar.expander("📅 Planung & Workflow", expanded=False):
-    plan_tools = [
-        "📄 PDF-Planer", "📝 Planer", "🗺️ Spots", "⏱️ Timelapse",
-        "🖼️ EXIF", "🤖 KI", "📋 Cheat Sheets", "⚖️ Vergleich",
-        "🎨 Filter-Sim", "🎬 Video", "🎨 Bearbeitung", "🔋 Akku"
-    ]
+        plan_tools = [
+            "📄 PDF-Planer", "📝 Planer", "🗺️ Spots", "⏱️ Timelapse",
+            "🖼️ EXIF", "🤖 KI", "📋 Cheat Sheets", "⚖️ Vergleich",
+            "🎨 Filter-Sim", "🎬 Video", "🎨 Bearbeitung", "🔋 Akku"
+        ]
     for t in plan_tools:
-        if st.sidebar.button(t, use_container_width=True, type="primary" if st.session_state.tool == t else "secondary"):
-            set_tool(t)
+            if st.sidebar.button(t, use_container_width=True, type="primary" if st.session_state.tool == t else "secondary"):
+                set_tool(t)
 
 st.sidebar.divider()
 

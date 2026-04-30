@@ -515,7 +515,7 @@ elif tool == "🕶️ ND Rechner":
 
     if st.button("✅ Berechnen", type="primary"):
         result_sec = calculate_nd(base_sec, nd_stops)
-        if result_sec >= 3600:
+        elif result_sec >= 3600:
             result_str = f"{result_sec/3600:.2f} Stunden"
         elif result_sec >= 60:
             result_str = f"{result_sec/60:.1f} Minuten"
@@ -564,7 +564,7 @@ elif tool == "📐 Schärfentiefe":
         - **Schärfentiefe:** {total_str}
         - **Hyperfokale Distanz:** {hyper:.1f} m
         """)
-        if distance >= hyper:
+        elif distance >= hyper:
             st.info(
                 "💡 Fokus jenseits der hyperfokalen Distanz – alles bis ∞ ist scharf!"
             )
@@ -577,8 +577,8 @@ elif tool == "📐 Schärfentiefe":
 #  📊 BELICHTUNG
 # ════════════════════════════════════════════════════════════════
 
-elif tool == "📊 Belichtung":
-    st.header("📊 Belichtungs-Bewerter")
+elif tool == "⚙️ Belichtung":
+    st.header("⚙️ Belichtung-Bewerter")
     SHUTTERS_BASIC = [
         "1/8000",
         "1/4000",
@@ -623,9 +623,9 @@ elif tool == "📊 Belichtung":
         - **ISO {iso} | f/{aperture} | {shutter_str}**
         """)
         # Belichtungsdreieck-Tipps
-        if iso >= 3200:
+        elif iso >= 3200:
             st.warning("💡 Hohes ISO – Rauschreduzierung in Post einplanen.")
-        if aperture >= 16:
+        elif aperture >= 16:
             st.info("💡 Kleine Blende – Beugungsunschärfe möglich (f/16+).")
 
 # ════════════════════════════════════════════════════════════════

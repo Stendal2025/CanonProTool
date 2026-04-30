@@ -343,7 +343,7 @@ with st.sidebar.expander("📸 Kamera & Rechner", expanded=True):
             if st.sidebar.button(t, use_container_width=True, type="primary" if st.session_state.tool == t else "secondary"):
                 set_tool(t)
 
-    st.sidebar.divider()
+st.sidebar.divider()
 
 # 🌤️ WETTER, ASTRO & GPS
 with st.sidebar.expander("🌤️ Wetter, Astro & GPS", expanded=True):

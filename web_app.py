@@ -1578,8 +1578,8 @@ elif tool == "📅 5-Tage Prognose":
         except Exception as e:
             st.error(f"Fehler: {e}")
 
-# ═══════════════════════════════════════════
-# 📍 GPS-STANDORT (Cloud-proof mit <a> Link)
+# ══════════════════════════════════════════
+# 📍 GPS-STANDORT (Mit Ortsname via OpenStreetMap)
 # ═══════════════════════════════════════════
 elif tool == "📍 GPS-Standort":
     st.header("📍 Standort automatisch erkennen")
@@ -1592,7 +1592,6 @@ elif tool == "📍 GPS-Standort":
         </button>
         <div id="gps-res" style="display:none; background:#161B22; padding:12px; border-radius:8px; text-align:center; border:1px solid #30363D;">
             <p id="gps-txt" style="color:#58A6FF; font-family:monospace; margin:0 0 12px 0; font-size:14px;"></p>
-            <!-- target="_parent" ist der Schlüssel für Streamlit Cloud -->
             <a id="gps-link" href="#" target="_parent" style="display:inline-block; padding:12px; background:#238636; color:white; text-decoration:none; border-radius:6px; font-weight:bold; font-size:15px;">
                 ✅ Koordinaten übernehmen
             </a>
@@ -1600,19 +1599,49 @@ elif tool == "📍 GPS-Standort":
     </div>
     <script>
     document.getElementById('gps-btn').onclick = () => {
-        if(!navigator.geolocation) return alert("Nicht unterstützt");
+        const txt = document.getElementById('gps-txt');
+        const res = document.getElementById('gps-res');
+        txt.textContent = "⏳ Standort wird ermittelt...";
+        res.style.display = "block";
+
+        if(!navigator.geolocation) {
+            txt.textContent = "❌ Geolocation nicht unterstützt";
+            return;
+        }
+
         navigator.geolocation.getCurrentPosition(pos => {
             const lat = pos.coords.latitude.toFixed(6);
             const lon = pos.coords.longitude.toFixed(6);
-            document.getElementById('gps-txt').textContent = lat + "," + lon;
-            document.getElementById('gps-res').style.display = "block";
-            document.getElementById('gps-link').href = "?lat=" + lat + "&lon=" + lon;
-        }, err => alert("❌ " + err.message), {enableHighAccuracy:true, timeout:10000});
+            txt.textContent = `✅ ${lat}, ${lon} (Ort wird gesucht...)`;
+
+            // Reverse Geocoding via OpenStreetMap (Nominatim)
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`, {
+                headers: { 'Accept-Language': 'de', 'User-Agent': 'CanonProTool/1.0' }
+            })
+            .then(r => r.json())
+            .then(data => {
+                let ort = "Unbekannter Ort";
+                if(data && data.address) {
+                    const a = data.address;
+                    ort = a.city || a.town || a.village || a.municipality || a.county || a.state || a.country || "Unbekannter Ort";
+                }
+                txt.textContent = `✅ ${lat}, ${lon} (nahe ${ort})`;
+                document.getElementById('gps-link').href = `?lat=${lat}&lon=${lon}`;
+            })
+            .catch(() => {
+                txt.textContent = `✅ ${lat}, ${lon}`;
+                document.getElementById('gps-link').href = `?lat=${lat}&lon=${lon}`;
+            });
+
+        }, err => {
+            txt.textContent = `❌ Fehler: ${err.message}`;
+        }, {enableHighAccuracy:true, timeout:10000});
     };
     </script>
     """
     components.html(gps_html, height=160)
 
+    # Python: Parameter lesen & State setzen
     lat_q = st.query_params.get("lat")
     lon_q = st.query_params.get("lon")
     if lat_q and lon_q:

@@ -1413,51 +1413,50 @@ elif tool == "🌙 Aktuelle Mond-Daten":
         except Exception as e:
             st.error(f"❌ {type(e).__name__}: {e}")
 
-# ════════════════════════════════════════════════════════════════
-#  ☁️ LIVE-WETTER
-# ════════════════════════════════════════════════════════════════
-
+# ═══════════════════════════════════════════
+# ☁️ LIVE-WETTER (Koordinaten-optimiert)
+# ═══════════════════════════════════════════
 elif tool == "☁️ Live-Wetter":
-    st.header("☁️ Live-Wetter für Fotografen")
-    city = st.text_input("📍 Stadt", value="Leipzig")
-    if st.button("🌤️ Wetter laden", type="primary"):
+    st.header("️ Live-Wetter für Fotografen")
+    default_val = st.session_state.get("gps_coords", "Berlin")
+    city_input = st.text_input(" Stadt oder Koordinaten (z.B. Berlin oder 52.52,13.40)", value=default_val)
+    
+    if st.button("️ Wetter laden", type="primary"):
         try:
             import requests
             API_KEY = st.secrets["OPENWEATHER_API_KEY"]
-            url  = (f"http://api.openweathermap.org/data/2.5/weather"
-                    f"?q={city}&appid={API_KEY}&units=metric&lang=de")
-            data = requests.get(url, timeout=8).json()
+            
+            lat, lon = None, None
+            if "," in city_input:
+                try:
+                    parts = city_input.replace(" ", "").split(",")
+                    lat, lon = float(parts[0]), float(parts[1])
+                except:
+                    st.error("❌ Ungültiges Format. Bitte: Breitengrad, Längengrad")
+                    st.stop()
+            
+            url = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API_KEY}&units=metric&lang=de" if lat else \
+                  f"http://api.openweathermap.org/data/2.5/weather?q={city_input}&appid={API_KEY}&units=metric&lang=de"
+            
+            res = requests.get(url)
+            data = res.json()
+            
             if data.get("cod") != 200:
-                st.error(f"❌ {data.get('message','Unbekannter Fehler')}")
+                st.error(f"❌ {data.get('message')}")
             else:
-                temp       = data["main"]["temp"]
-                feels_like = data["main"]["feels_like"]
-                humidity   = data["main"]["humidity"]
-                wind_speed = data["wind"]["speed"] * 3.6
-                clouds     = data["clouds"]["all"]
-                desc       = data["weather"][0]["description"]
-                icon       = data["weather"][0]["icon"]
-                sunrise    = datetime.fromtimestamp(data["sys"]["sunrise"]).strftime("%H:%M")
-                sunset     = datetime.fromtimestamp(data["sys"]["sunset"]).strftime("%H:%M")
-                foto_tip   = ("🌅 Klarer Himmel – Perfekt für Sunset & Astro!" if clouds < 20 else
-                              "⛅ Teilweise bewölkt – Ideal für Landschaften"   if clouds < 50 else
-                              "☁️ Stark bewölkt – Weiches Licht für Portrait")
-                if wind_speed > 40:
-                    foto_tip += "\n💨 Starker Wind! Stativ beschweren."
-                col1, col2, col3 = st.columns(3)
-                col1.metric("🌡️ Temperatur", f"{temp:.1f}°C", f"{feels_like:.1f}°C gefühlt")
-                col2.metric("💨 Wind",       f"{wind_speed:.1f} km/h")
-                col3.metric("💧 Luftfeucht.", f"{humidity}%")
-                st.success(f"""
-                ### 📸 {desc.capitalize()} | Bewölkung: {clouds}%
-                - Sonnenaufgang: {sunrise} | Untergang: {sunset}
+                temp = data["main"]["temp"]
+                clouds = data["clouds"]["all"]
+                wind = data["wind"]["speed"] * 3.6
+                desc = data["weather"][0]["description"]
+                icon = data["weather"][0]["icon"]
                 
-                💡 {foto_tip}
+                st.success(f"""
+                ### 📸 {desc.capitalize()}
+                🌡️ {temp:.1f}°C | 💨 {wind:.1f} km/h | ☁️ {clouds}% Wolken
                 """)
                 st.image(f"http://openweathermap.org/img/wn/{icon}@2x.png", width=80)
         except Exception as e:
-            st.error(f"❌ {e}")
-            st.info("💡 Prüfe OPENWEATHER_API_KEY in .streamlit/secrets.toml")
+            st.error(f"Fehler: {e}")
 
 # ════════════════════════════════════════════════════════════════
 #  📅 5-TAGE PROGNOSE
@@ -1503,7 +1502,7 @@ elif tool == "📅 5-Tage Prognose":
             st.error(f"Fehler: {e}")
 
 # ═══════════════════════════════════════════
-#  GPS-STANDORT (Optimierte Sichtbarkeit)
+# 📍 GPS-STANDORT (Klick-sicher für Cloud)
 # ═══════════════════════════════════════════
 elif tool == "📍 GPS-Standort":
     st.header("📍 Standort automatisch erkennen")
@@ -1511,50 +1510,45 @@ elif tool == "📍 GPS-Standort":
 
     gps_html = """
     <div style="font-family: sans-serif; padding: 10px; box-sizing: border-box;">
-        <button id="gps-btn" style="padding:12px 24px; background:#1F6FEB; color:white; border:none; border-radius:8px; cursor:pointer; font-size:16px; width:100%; margin-bottom: 10px;">
-             Standort abrufen
+        <button id="gps-btn" style="padding:12px; background:#1F6FEB; color:white; border:none; border-radius:8px; cursor:pointer; font-size:16px; width:100%; margin-bottom:10px;">
+            📍 Standort abrufen
         </button>
-        
-        <div id="gps-result" style="display:none; background:#161B22; padding:12px; border-radius:8px; border:1px solid #30363D; text-align: center;">
+        <div id="gps-result" style="display:none; background:#161B22; padding:12px; border-radius:8px; border:1px solid #30363D; text-align:center;">
             <p id="gps-coords" style="color:#58A6FF; font-family:monospace; font-size:15px; margin:0 0 12px 0;"></p>
-            
-            <a id="gps-apply" href="#" target="_top" style="display:block; padding:12px; background:#238636; color:white; text-decoration:none; border-radius:6px; font-weight:bold; font-size:15px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-                ✅ Koordinaten übernehmen & App aktualisieren
-            </a>
+            <button id="gps-apply" style="padding:12px; background:#238636; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; width:100%; font-size:15px;">
+                ✅ Koordinaten übernehmen
+            </button>
         </div>
     </div>
     <script>
     document.getElementById('gps-btn').onclick = function() {
-        if (!navigator.geolocation) { alert("Geolocation wird nicht unterstützt"); return; }
+        if (!navigator.geolocation) { alert("Nicht unterstützt"); return; }
         navigator.geolocation.getCurrentPosition(
             (pos) => {
                 const lat = pos.coords.latitude.toFixed(6);
                 const lon = pos.coords.longitude.toFixed(6);
-                
-                document.getElementById('gps-coords').textContent = "✅ Gefunden: " + lat + ", " + lon;
+                document.getElementById('gps-coords').textContent = "✅ " + lat + ", " + lon;
                 document.getElementById('gps-result').style.display = "block";
-                document.getElementById('gps-apply').href = "?lat=" + lat + "&lon=" + lon;
+                
+                document.getElementById('gps-apply').onclick = function() {
+                    window.parent.location.href = window.location.pathname + "?lat=" + lat + "&lon=" + lon;
+                };
             },
-            (err) => { alert("❌ Fehler: " + err.message); },
+            (err) => { alert("❌ " + err.message); },
             { enableHighAccuracy: true, timeout: 10000 }
         );
     };
     </script>
     """
-    # Höhe auf 200px erhöht, damit der Button immer sichtbar ist
-    components.html(gps_html, height=200)
+    components.html(gps_html, height=180)
 
-    # Python-Logik zum Übernehmen
     lat_q = st.query_params.get("lat")
     lon_q = st.query_params.get("lon")
     if lat_q and lon_q:
         st.session_state.gps_coords = f"{lat_q},{lon_q}"
         st.query_params.clear()
-        st.success(f"✅ GPS-Daten übernommen: `{st.session_state.gps_coords}`")
+        st.success(f"✅ GPS übernommen: `{st.session_state.gps_coords}`")
         st.rerun()
-
-    if st.session_state.get("gps_coords"):
-        st.info(f"📍 Aktiver Standort: `{st.session_state.gps_coords}`")
 
 # ════════════════════════════════════════════════════════════════
 #  🌍 ASTRO & WETTER DASHBOARD

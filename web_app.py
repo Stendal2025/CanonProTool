@@ -339,9 +339,9 @@ with st.sidebar.expander("📸 Kamera & Rechner", expanded=True):
                         "⚙️ Belichtung", "🕶️ ND Rechner", "📐 Schärfentiefe", "🔦 Blitz",
                         "📡 Rauschen", "🌡️ Weißabgleich", "🔄 Crop-Faktor", "📈 Histogramm", "🔭 Objektive"
     ]
-    for t in calc_tools:
-        if st.sidebar.button(t, use_container_width=True, type="primary" if st.session_state.tool == t else "secondary"):
-            set_tool(t)
+                    for t in calc_tools:
+                        if st.sidebar.button(t, use_container_width=True, type="primary" if st.session_state.tool == t else "secondary"):
+                            set_tool(t)
 
 st.sidebar.divider()
 
@@ -351,9 +351,9 @@ with st.sidebar.expander("🌤️ Wetter, Astro & GPS", expanded=True):
                         "☁️ Live-Wetter", "📅 5-Tage Prognose", "🌍 Astro & Wetter Dashboard",
                         "📍 GPS-Standort", "🌙 Mond & Milchstraße", "🌠 Sternspuren", "🌙 Aktuelle Mond-Daten"
     ]
-    for t in weather_tools:
-        if st.sidebar.button(t, use_container_width=True, type="primary" if st.session_state.tool == t else "secondary"):
-            set_tool(t)
+                    for t in weather_tools:
+                        if st.sidebar.button(t, use_container_width=True, type="primary" if st.session_state.tool == t else "secondary"):
+                            set_tool(t)
 
 st.sidebar.divider()
 
@@ -364,9 +364,9 @@ with st.sidebar.expander("📅 Planung & Workflow", expanded=False):
                         "🖼️ EXIF", "🤖 KI", "📋 Cheat Sheets", "⚖️ Vergleich",
                         "🎨 Filter-Sim", "🎬 Video", "🎨 Bearbeitung", "🔋 Akku"
     ]
-    for t in plan_tools:
-        if st.sidebar.button(t, use_container_width=True, type="primary" if st.session_state.tool == t else "secondary"):
-            set_tool(t)
+                    for t in plan_tools:
+                        if st.sidebar.button(t, use_container_width=True, type="primary" if st.session_state.tool == t else "secondary"):
+                            set_tool(t)
 
 st.sidebar.divider()
 

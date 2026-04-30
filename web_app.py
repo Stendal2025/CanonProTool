@@ -1414,27 +1414,32 @@ elif tool == "🌙 Aktuelle Mond-Daten":
             st.error(f"❌ {type(e).__name__}: {e}")
 
 # ═══════════════════════════════════════════
-# ☁️ LIVE-WETTER (Koordinaten-optimiert)
+# ☁️ LIVE-WETTER (Profi-Ansicht)
 # ═══════════════════════════════════════════
 elif tool == "☁️ Live-Wetter":
-    st.header("️ Live-Wetter für Fotografen")
-    default_val = st.session_state.get("gps_coords", "Berlin")
-    city_input = st.text_input(" Stadt oder Koordinaten (z.B. Berlin oder 52.52,13.40)", value=default_val)
+    st.header("☁️ Live-Wetter Analyse")
+    st.markdown("Detaillierte Daten & Shooting-Empfehlungen")
     
-    if st.button("️ Wetter laden", type="primary"):
+    # Input (GPS-Fallback nutzen)
+    default_val = st.session_state.get("gps_coords", "Berlin")
+    city_input = st.text_input(" Stadt oder Koordinaten (z.B. Berlin oder 50.46, 7.46)", value=default_val)
+    
+    if st.button("🔄 Analyse starten", type="primary"):
         try:
             import requests
             API_KEY = st.secrets["OPENWEATHER_API_KEY"]
-            
             lat, lon = None, None
+            
+            # Koordinaten erkennen
             if "," in city_input:
                 try:
-                    parts = city_input.replace(" ", "").split(",")
+                    parts = city_input.replace(" ","").split(",")
                     lat, lon = float(parts[0]), float(parts[1])
                 except:
-                    st.error("❌ Ungültiges Format. Bitte: Breitengrad, Längengrad")
+                    st.error("❌ Ungültiges Format.")
                     st.stop()
             
+            # API Call
             url = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API_KEY}&units=metric&lang=de" if lat else \
                   f"http://api.openweathermap.org/data/2.5/weather?q={city_input}&appid={API_KEY}&units=metric&lang=de"
             
@@ -1444,17 +1449,74 @@ elif tool == "☁️ Live-Wetter":
             if data.get("cod") != 200:
                 st.error(f"❌ {data.get('message')}")
             else:
+                # Daten extrahieren
                 temp = data["main"]["temp"]
-                clouds = data["clouds"]["all"]
+                feels_like = data["main"]["feels_like"]
+                humidity = data["main"]["humidity"]
+                pressure = data["main"]["pressure"]
+                visibility = data.get("visibility", 10000) / 1000  # km
                 wind = data["wind"]["speed"] * 3.6
+                wind_gust = data["wind"].get("gust", 0) * 3.6
+                clouds = data["clouds"]["all"]
                 desc = data["weather"][0]["description"]
                 icon = data["weather"][0]["icon"]
+                sunrise = datetime.fromtimestamp(data["sys"]["sunrise"]).strftime("%H:%M")
+                sunset = datetime.fromtimestamp(data["sys"]["sunset"]).strftime("%H:%M")
                 
-                st.success(f"""
-                ### 📸 {desc.capitalize()}
-                🌡️ {temp:.1f}°C | 💨 {wind:.1f} km/h | ☁️ {clouds}% Wolken
-                """)
-                st.image(f"http://openweathermap.org/img/wn/{icon}@2x.png", width=80)
+                # --- Layout ---
+                st.subheader(f"📸 {desc.capitalize()} | {temp:.1f}°C (gefühlt {feels_like:.1f}°C)")
+                st.image(f"http://openweathermap.org/img/wn/{icon}@2x.png", width=100)
+                
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("💨 Wind", f"{wind:.1f} km/h", delta=f"Böen: {wind_gust:.1f}" if wind_gust > 0 else None)
+                    st.metric("☁️ Bewölkung", f"{clouds}%")
+                    st.metric(" Luftfeuchtigkeit", f"{humidity}%")
+                with col2:
+                    st.metric("️ Sichtweite", f"{visibility:.1f} km")
+                    st.metric("🌡️ Luftdruck", f"{pressure} hPa")
+                    st.caption("Hoher Druck = oft stabiles Licht")
+                with col3:
+                    st.metric("🌅 Aufgang", sunrise)
+                    st.metric("🌇 Untergang", sunset)
+                    day_length = datetime.strptime(sunset, "%H:%M") - datetime.strptime(sunrise, "%H:%M")
+                    st.caption(f"Tageslänge: {str(day_length)[:5]} Std.")
+                
+                # --- Fotografen-Bewertung ---
+                st.divider()
+                st.subheader(" Fotografen-Check")
+                
+                score = 100
+                notes = []
+                
+                if clouds < 20:
+                    notes.append("🟢 Klarer Himmel – Top für Astro & Sunset")
+                elif clouds < 60:
+                    notes.append(" Wolken – Gut für Dramatik/Landschaft")
+                    score -= 20
+                else:
+                    notes.append(" Stark bewölkt – Diffuses Licht (Portrait/Makro)")
+                    score -= 40
+                    
+                if wind > 40:
+                    notes.append("⚠️ Starker Wind – Stativ beschweren!")
+                    score -= 30
+                elif wind > 20:
+                    notes.append(" Mäßiger Wind – Auf Verwacklung achten")
+                    score -= 10
+                    
+                if visibility < 5:
+                    notes.append("️ Schlechte Sicht (Nebel/Smog)")
+                    score -= 20
+                
+                # Ergebnis anzeigen
+                if score >= 80:
+                    st.success(f"⭐⭐⭐ **PERFEKT (Score: {score})**\n\n" + "\n".join(notes))
+                elif score >= 50:
+                    st.info(f"⭐⭐ **GUT (Score: {score})**\n\n" + "\n".join(notes))
+                else:
+                    st.warning(f"⭐ **SCHWIERIG (Score: {score})**\n\n" + "\n".join(notes))
+                    
         except Exception as e:
             st.error(f"Fehler: {e}")
 

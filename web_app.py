@@ -623,7 +623,7 @@ elif tool == "⚙️ Belichtung":
         - **ISO {iso} | f/{aperture} | {shutter_str}**
         """)
         # Belichtungsdreieck-Tipps
-        elif iso >= 3200:
+        if iso >= 3200:
             st.warning("💡 Hohes ISO – Rauschreduzierung in Post einplanen.")
         elif aperture >= 16:
             st.info("💡 Kleine Blende – Beugungsunschärfe möglich (f/16+).")

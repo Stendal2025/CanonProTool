@@ -1503,54 +1503,69 @@ elif tool == "📅 5-Tage Prognose":
             st.error(f"Fehler: {e}")
 
 # ═══════════════════════════════════════════
-# 📍 GPS-STANDORT (Streamlit 1.56 stabil)
+# 📍 GPS-STANDORT (st.components.v1.html - stabil)
 # ═══════════════════════════════════════════
 elif tool == "📍 GPS-Standort":
     st.header("📍 Standort automatisch erkennen")
     
-    # 1. URL-Parameter prüfen & State setzen (wird nach JS-Reload ausgelöst)
+    import streamlit.components.v1 as components
+    
+    # 1. URL-Parameter prüfen & State setzen
     lat_q = st.query_params.get("lat")
     lon_q = st.query_params.get("lon")
     if lat_q and lon_q:
         st.session_state.gps_coords = f"{lat_q},{lon_q}"
-        st.query_params.clear()  # URL säubern
-        st.rerun()               # Sauberer Neustart mit gesetztem State
+        st.query_params.clear()
+        st.rerun()
         
     if "gps_coords" not in st.session_state:
         st.session_state.gps_coords = ""
         
-    # Verstecktes Feld zur State-Visualisierung
-    st.text_input("Versteckt", value=st.session_state.gps_coords, key="gps_hidden", label_visibility="collapsed")
-
-    # 2. JS-Button mit zuverlässigem Hard-Reload
-    st.html("""
-    <button id="gps-btn" style="padding:12px 24px; background:#1F6FEB; color:white; border:none; border-radius:8px; cursor:pointer; font-size:16px;">
-        📍 Standort abrufen
-    </button>
-    <p id="gps-status" style="margin-top:10px; font-size:14px; color:#8B949E;"></p>
-    <script>
-    document.getElementById('gps-btn').onclick = () => {
-        const status = document.getElementById('gps-status');
-        if (!navigator.geolocation) { status.textContent = "❌ Nicht unterstützt"; return; }
-        status.textContent = "⏳ Wird angefragt... Bitte Zugriff erlauben.";
+    # 2. JS mit components.v1.html (funktioniert zuverlässig)
+    gps_html = """
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="UTF-8"></head>
+    <body>
+        <button id="gps-btn" style="padding:12px 24px; background:#1F6FEB; color:white; border:none; border-radius:8px; cursor:pointer; font-size:16px;">
+            📍 Standort abrufen
+        </button>
+        <p id="gps-status" style="margin-top:10px; font-size:14px; color:#8B949E;"></p>
         
-        navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                const lat = pos.coords.latitude.toFixed(6);
-                const lon = pos.coords.longitude.toFixed(6);
-                status.textContent = "✅ Standort erkannt! Seite wird neu geladen…";
-                
-                // Hard-Reload mit Query-Params (funktioniert in Streamlit 1.56 zuverlässig)
-                setTimeout(() => {
-                    window.location.search = `lat=${lat}&lon=${lon}`;
-                }, 800);
-            },
-            (err) => { status.textContent = "❌ " + err.message; },
-            { enableHighAccuracy: true, timeout: 10000 }
-        );
-    };
-    </script>
-    """)
+        <script>
+        document.getElementById('gps-btn').addEventListener('click', function() {
+            const status = document.getElementById('gps-status');
+            
+            if (!navigator.geolocation) {
+                status.textContent = "❌ Geolocation wird nicht unterstützt";
+                return;
+            }
+            
+            status.textContent = "⏳ Wird angefragt...";
+            
+            navigator.geolocation.getCurrentPosition(
+                function(pos) {
+                    const lat = pos.coords.latitude.toFixed(6);
+                    const lon = pos.coords.longitude.toFixed(6);
+                    status.textContent = "✅ Gefunden! Lade...";
+                    
+                    // Hard-Reload mit Query-Params
+                    setTimeout(function() {
+                        window.parent.location.search = 'lat=' + lat + '&lon=' + lon;
+                    }, 500);
+                },
+                function(err) {
+                    status.textContent = "❌ Fehler: " + err.message;
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        });
+        </script>
+    </body>
+    </html>
+    """
+    
+    components.html(gps_html, height=100)
 
     # 3. Ergebnis & Weiterleitung
     if st.session_state.gps_coords:
@@ -1559,7 +1574,7 @@ elif tool == "📍 GPS-Standort":
             st.session_state.dash_input = st.session_state.gps_coords
             st.rerun()
     else:
-        st.info("💡 Klicke den Button. Die App lädt einmal kurz neu, um die GPS-Daten sicher an Python zu übergeben.")
+        st.info("💡 Klicke den Button. Die App lädt einmal kurz neu, um die GPS-Daten zu übernehmen.")
 
 # ════════════════════════════════════════════════════════════════
 #  🌍 ASTRO & WETTER DASHBOARD

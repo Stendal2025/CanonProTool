@@ -1458,89 +1458,98 @@ elif tool == "☁️ Live-Wetter":
         except Exception as e:
             st.error(f"Fehler: {e}")
 
-# ════════════════════════════════════════════════════════════════
-#  📅 5-TAGE PROGNOSE
-# ════════════════════════════════════════════════════════════════
-
+# ═══════════════════════════════════════════
+# 📅 5-TAGE WETTERPROGNOSE (Koordinaten-fähig)
+# ═══════════════════════════════════════════
 elif tool == "📅 5-Tage Prognose":
     st.header("📅 5-Tage-Wettervorhersage")
-    city = st.text_input("📍 Stadt", value="Leipzig", key="forecast_city")
+    default_val = st.session_state.get("gps_coords", "Berlin")
+    city_input = st.text_input("📍 Stadt oder Koordinaten", value=default_val)
+    
     if st.button("📊 Vorhersage laden", type="primary"):
         try:
             import requests
             API_KEY = st.secrets["OPENWEATHER_API_KEY"]
-            url  = (f"http://api.openweathermap.org/data/2.5/forecast"
-                    f"?q={city}&appid={API_KEY}&units=metric&lang=de")
-            data = requests.get(url, timeout=8).json()
+            lat, lon = None, None
+            
+            # Koordinaten erkennen & formatieren
+            if "," in city_input:
+                try:
+                    parts = city_input.replace(" ","").split(",")
+                    lat, lon = float(parts[0]), float(parts[1])
+                except:
+                    st.error("❌ Ungültiges Format. Bitte: 52.52,13.40")
+                    st.stop()
+            
+            # Richtige API-URL wählen
+            url = f"http://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={API_KEY}&units=metric&lang=de" if lat else \
+                  f"http://api.openweathermap.org/data/2.5/forecast?q={city_input}&appid={API_KEY}&units=metric&lang=de"
+            
+            res = requests.get(url)
+            data = res.json()
+            
             if data.get("cod") != "200":
                 st.error(f"❌ {data.get('message')}")
             else:
-                times, temps = [], []
-                daily: dict[str, dict] = {}
+                times, temps, daily = [], [], {}
                 for item in data["list"]:
-                    dt  = datetime.fromtimestamp(item["dt"])
+                    dt = datetime.fromtimestamp(item["dt"])
                     times.append(dt.strftime("%d.%m. %H:%M"))
                     temps.append(item["main"]["temp"])
                     day = dt.strftime("%d.%m.")
                     if day not in daily:
-                        daily[day] = {"min": item["main"]["temp_min"],
-                                      "max": item["main"]["temp_max"],
-                                      "desc": item["weather"][0]["description"]}
+                        daily[day] = {"min": item["main"]["temp_min"], "max": item["main"]["temp_max"], "desc": item["weather"][0]["description"]}
                     else:
                         daily[day]["min"] = min(daily[day]["min"], item["main"]["temp_min"])
                         daily[day]["max"] = max(daily[day]["max"], item["main"]["temp_max"])
-                st.subheader("🌡️ Temperaturverlauf")
-                df_t = pd.DataFrame({"Zeit": times[:40], "Temperatur (°C)": temps[:40]})
-                st.line_chart(df_t.set_index("Zeit"), use_container_width=True)
+                
+                st.subheader("️ Temperaturverlauf")
+                df_temp = pd.DataFrame({"Uhrzeit": times[:40], "Temperatur": temps[:40]})
+                st.line_chart(df_temp.set_index("Uhrzeit"), use_container_width=True)
+                
                 st.subheader("📆 Tagesübersicht")
                 cols = st.columns(len(daily))
-                for i, (day, v) in enumerate(daily.items()):
+                for i, (day, vals) in enumerate(daily.items()):
                     with cols[i]:
-                        st.metric(day, f"{v['min']:.0f}° / {v['max']:.0f}°")
-                        st.caption(v["desc"].capitalize())
+                        st.metric(day, f"{vals['min']:.0f}° / {vals['max']:.0f}°")
+                        st.caption(vals["desc"].capitalize())
         except Exception as e:
             st.error(f"Fehler: {e}")
 
 # ═══════════════════════════════════════════
-# 📍 GPS-STANDORT (Klick-sicher für Cloud)
+# 📍 GPS-STANDORT (Cloud-proof mit <a> Link)
 # ═══════════════════════════════════════════
 elif tool == "📍 GPS-Standort":
     st.header("📍 Standort automatisch erkennen")
     import streamlit.components.v1 as components
 
     gps_html = """
-    <div style="font-family: sans-serif; padding: 10px; box-sizing: border-box;">
-        <button id="gps-btn" style="padding:12px; background:#1F6FEB; color:white; border:none; border-radius:8px; cursor:pointer; font-size:16px; width:100%; margin-bottom:10px;">
+    <div style="padding:10px; box-sizing:border-box; font-family:sans-serif;">
+        <button id="gps-btn" style="padding:12px; background:#1F6FEB; color:white; border:none; border-radius:8px; cursor:pointer; width:100%; margin-bottom:10px; font-size:16px;">
             📍 Standort abrufen
         </button>
-        <div id="gps-result" style="display:none; background:#161B22; padding:12px; border-radius:8px; border:1px solid #30363D; text-align:center;">
-            <p id="gps-coords" style="color:#58A6FF; font-family:monospace; font-size:15px; margin:0 0 12px 0;"></p>
-            <button id="gps-apply" style="padding:12px; background:#238636; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; width:100%; font-size:15px;">
+        <div id="gps-res" style="display:none; background:#161B22; padding:12px; border-radius:8px; text-align:center; border:1px solid #30363D;">
+            <p id="gps-txt" style="color:#58A6FF; font-family:monospace; margin:0 0 12px 0; font-size:14px;"></p>
+            <!-- target="_parent" ist der Schlüssel für Streamlit Cloud -->
+            <a id="gps-link" href="#" target="_parent" style="display:inline-block; padding:12px; background:#238636; color:white; text-decoration:none; border-radius:6px; font-weight:bold; font-size:15px;">
                 ✅ Koordinaten übernehmen
-            </button>
+            </a>
         </div>
     </div>
     <script>
-    document.getElementById('gps-btn').onclick = function() {
-        if (!navigator.geolocation) { alert("Nicht unterstützt"); return; }
-        navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                const lat = pos.coords.latitude.toFixed(6);
-                const lon = pos.coords.longitude.toFixed(6);
-                document.getElementById('gps-coords').textContent = "✅ " + lat + ", " + lon;
-                document.getElementById('gps-result').style.display = "block";
-                
-                document.getElementById('gps-apply').onclick = function() {
-                    window.parent.location.href = window.location.pathname + "?lat=" + lat + "&lon=" + lon;
-                };
-            },
-            (err) => { alert("❌ " + err.message); },
-            { enableHighAccuracy: true, timeout: 10000 }
-        );
+    document.getElementById('gps-btn').onclick = () => {
+        if(!navigator.geolocation) return alert("Nicht unterstützt");
+        navigator.geolocation.getCurrentPosition(pos => {
+            const lat = pos.coords.latitude.toFixed(6);
+            const lon = pos.coords.longitude.toFixed(6);
+            document.getElementById('gps-txt').textContent = lat + "," + lon;
+            document.getElementById('gps-res').style.display = "block";
+            document.getElementById('gps-link').href = "?lat=" + lat + "&lon=" + lon;
+        }, err => alert("❌ " + err.message), {enableHighAccuracy:true, timeout:10000});
     };
     </script>
     """
-    components.html(gps_html, height=180)
+    components.html(gps_html, height=160)
 
     lat_q = st.query_params.get("lat")
     lon_q = st.query_params.get("lon")

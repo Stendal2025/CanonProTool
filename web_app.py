@@ -317,47 +317,64 @@ st.title("📷 CANON EOS R – PRO TOOL")
 st.markdown("**Web Version** | 28 Photography Tools")
 st.divider()
 
-# ════════════════════════════════════════════════════════════════
-#  SIDEBAR-NAVIGATION
-# ════════════════════════════════════════════════════════════════
+# ═══════════════════════════════════════════
+#  SIDEBAR NAVIGATION (Gruppiert)
+# ═══════════════════════════════════════════
 
-TOOLS = [
-    "🏠 Home",
-    "🕶️ ND Rechner",
-    "📐 Schärfentiefe",
-    "📊 Belichtung",
-    "🌅 Golden Hour",
-    "🔦 Blitz",
-    "🤖 KI",
-    "🌡️ Weißabgleich",
-    "📋 Cheat Sheets",
-    "🔄 Crop-Faktor",
-    "🖼️ EXIF",
-    "⏱️ Timelapse",
-    "📝 Planer",
-    "⚖️ Vergleich",
-    "🔭 Objektive",
-    "🎬 Video",
-    "🔋 Akku",
-    "📡 Rauschen",
-    "🗺️ Spots",
-    "☁️ Wetter",
-    "📈 Histogramm",
-    "🎨 Filter-Sim",
-    "🌙 Mond & Milchstraße",
-    "🌠 Sternspuren",
-    "🎨 Bearbeitung",
-    "🌙 Aktuelle Mond-Daten",
-    "☁️ Live-Wetter",
-    "📅 5-Tage Prognose",
-    "🌍 Astro & Wetter Dashboard",
-    "📍 GPS-Standort",
-    "📄 PDF-Planer"
-]
+# Initialisierung (wichtig, damit die Auswahl gespeichert bleibt)
+if "tool" not in st.session_state:
+    st.session_state.tool = "🏠 Home"
 
-st.sidebar.title("🔧 Tools")
-tool = st.sidebar.radio("Wähle ein Werkzeug:", TOOLS, index=0)
+def set_tool(t):
+    st.session_state.tool = t
 
+st.sidebar.title("🔧 Navigation")
+
+# 1. HOME
+if st.sidebar.button("🏠 Home", use_container_width=True, type="primary" if st.session_state.tool == "🏠 Home" else "secondary"):
+    set_tool("🏠 Home")
+
+st.sidebar.divider()
+
+# 2. KAMERA & RECHNER
+with st.sidebar.expander("📸 Kamera & Berechnung", expanded=True):
+    calc_tools = [
+        " Belichtung", "🕶️ ND Rechner", "📐 Schärfentiefe", "🔦 Blitz",
+        " Rauschen", "🌡️ Weißabgleich", "🔄 Crop-Faktor", " Histogramm", "🔭 Objektive"
+    ]
+    for t in calc_tools:
+        if st.sidebar.button(t, use_container_width=True, type="primary" if st.session_state.tool == t else "secondary"):
+            set_tool(t)
+
+st.sidebar.divider()
+
+# 3. WETTER, ASTRO & GPS
+with st.sidebar.expander("🌤️ Wetter, Astro & GPS", expanded=True):
+    weather_tools = [
+        "☁️ Live-Wetter", " 5-Tage Prognose", " Astro & Wetter Dashboard",
+        " GPS-Standort", "🌙 Mond & Milchstraße", "🌠 Sternspuren", "🌙 Aktuelle Mond-Daten"
+    ]
+    for t in weather_tools:
+        if st.sidebar.button(t, use_container_width=True, type="primary" if st.session_state.tool == t else "secondary"):
+            set_tool(t)
+
+st.sidebar.divider()
+
+# 4. PLANUNG & TOOLS
+with st.sidebar.expander("📅 Planung & Workflow", expanded=False):
+    plan_tools = [
+        "📄 PDF-Planer", "📝 Planer", "🗺️ Spots", "⏱️ Timelapse",
+        "🖼️ EXIF", " KI", "📋 Cheat Sheets", "⚖️ Vergleich",
+        " Filter-Sim", "🎬 Video", "🎨 Bearbeitung", "🔋 Akku"
+    ]
+    for t in plan_tools:
+        if st.sidebar.button(t, use_container_width=True, type="primary" if st.session_state.tool == t else "secondary"):
+            set_tool(t)
+
+# ═══════════════════════════════════════════
+#  HIER GEHT DEIN HAUPTCODE WEITER
+#  (if tool == "🏠 Home": ...)
+# ═══════════════════════════════════════════
 # ════════════════════════════════════════════════════════════════
 #  🏠 HOME
 # ════════════════════════════════════════════════════════════════

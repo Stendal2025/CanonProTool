@@ -1502,44 +1502,64 @@ elif tool == "📅 5-Tage Prognose":
         except Exception as e:
             st.error(f"Fehler: {e}")
 
-# ════════════════════════════════════════════════════════════════
-#  📍 GPS-STANDORT  (NEU: Query-Params-Methode)
-# ════════════════════════════════════════════════════════════════
-
+# ═══════════════════════════════════════════
+# 📍 GPS-STANDORT (Streamlit 1.56 stabil)
+# ═══════════════════════════════════════════
 elif tool == "📍 GPS-Standort":
-    st.header("📍 Automatische Standort-Erkennung")
-    st.markdown("""
-    Der Button ruft den GPS-Standort deines Geräts ab und überträgt ihn
-    sicher per URL-Parameter an die App – **kein iframe-Trick, kein Reload-Loop**.
+    st.header("📍 Standort automatisch erkennen")
+    
+    # 1. URL-Parameter prüfen & State setzen (wird nach JS-Reload ausgelöst)
+    lat_q = st.query_params.get("lat")
+    lon_q = st.query_params.get("lon")
+    if lat_q and lon_q:
+        st.session_state.gps_coords = f"{lat_q},{lon_q}"
+        st.query_params.clear()  # URL säubern
+        st.rerun()               # Sauberer Neustart mit gesetztem State
+        
+    if "gps_coords" not in st.session_state:
+        st.session_state.gps_coords = ""
+        
+    # Verstecktes Feld zur State-Visualisierung
+    st.text_input("Versteckt", value=st.session_state.gps_coords, key="gps_hidden", label_visibility="collapsed")
+
+    # 2. JS-Button mit zuverlässigem Hard-Reload
+    st.html("""
+    <button id="gps-btn" style="padding:12px 24px; background:#1F6FEB; color:white; border:none; border-radius:8px; cursor:pointer; font-size:16px;">
+        📍 Standort abrufen
+    </button>
+    <p id="gps-status" style="margin-top:10px; font-size:14px; color:#8B949E;"></p>
+    <script>
+    document.getElementById('gps-btn').onclick = () => {
+        const status = document.getElementById('gps-status');
+        if (!navigator.geolocation) { status.textContent = "❌ Nicht unterstützt"; return; }
+        status.textContent = "⏳ Wird angefragt... Bitte Zugriff erlauben.";
+        
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                const lat = pos.coords.latitude.toFixed(6);
+                const lon = pos.coords.longitude.toFixed(6);
+                status.textContent = "✅ Standort erkannt! Seite wird neu geladen…";
+                
+                // Hard-Reload mit Query-Params (funktioniert in Streamlit 1.56 zuverlässig)
+                setTimeout(() => {
+                    window.location.search = `lat=${lat}&lon=${lon}`;
+                }, 800);
+            },
+            (err) => { status.textContent = "❌ " + err.message; },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    };
+    </script>
     """)
 
-    lat_gps, lon_gps = gps_js_widget()
-
-    if lat_gps and lon_gps:
-        st.success(f"✅ Standort erkannt: **{lat_gps:.5f}°N, {lon_gps:.5f}°O**")
-        st.session_state["gps_lat"] = lat_gps
-        st.session_state["gps_lon"] = lon_gps
-
-        col1, col2 = st.columns(2)
-        if col1.button("🌍 → Astro & Wetter Dashboard", type="primary"):
-            st.session_state["dash_city"] = f"{lat_gps},{lon_gps}"
-            st.query_params.clear()
+    # 3. Ergebnis & Weiterleitung
+    if st.session_state.gps_coords:
+        st.success(f"✅ Koordinaten erkannt: `{st.session_state.gps_coords}`")
+        if st.button("🌤️ Zum Astro & Wetter Dashboard", type="primary"):
+            st.session_state.dash_input = st.session_state.gps_coords
             st.rerun()
-        if col2.button("🌙 → Mond-Daten für diesen Ort"):
-            st.info("Wechsle zu '🌙 Aktuelle Mond-Daten' und wähle eine nahe Stadt.")
     else:
-        st.info("""
-        💡 **Hinweis:** Der Browser fragt nach der Erlaubnis für den Standortzugriff.
-        Falls du die Anfrage ablehnst, kannst du im Dashboard den Ort manuell eingeben.
-        """)
-        st.markdown("**Oder wähle direkt eine Stadt:**")
-        city_sel = st.selectbox("Stadt", CITY_LIST)
-        if st.button("✅ Diese Stadt verwenden"):
-            lat, lon = CITY_COORDS[city_sel]
-            st.session_state["gps_lat"] = lat
-            st.session_state["gps_lon"] = lon
-            st.session_state["dash_city"] = city_sel
-            st.success(f"✅ {city_sel} ausgewählt ({lat}°N, {lon}°O)")
+        st.info("💡 Klicke den Button. Die App lädt einmal kurz neu, um die GPS-Daten sicher an Python zu übergeben.")
 
 # ════════════════════════════════════════════════════════════════
 #  🌍 ASTRO & WETTER DASHBOARD

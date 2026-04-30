@@ -564,7 +564,7 @@ elif tool == "📐 Schärfentiefe":
         - **Schärfentiefe:** {total_str}
         - **Hyperfokale Distanz:** {hyper:.1f} m
         """)
-        elif distance >= hyper:
+        if distance >= hyper:
             st.info(
                 "💡 Fokus jenseits der hyperfokalen Distanz – alles bis ∞ ist scharf!"
             )

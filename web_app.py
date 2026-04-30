@@ -1503,51 +1503,55 @@ elif tool == "📅 5-Tage Prognose":
             st.error(f"Fehler: {e}")
 
 # ═══════════════════════════════════════════
-#  GPS-STANDORT (1-Klick Cloud-Optimiert)
+#  GPS-STANDORT (Optimierte Sichtbarkeit)
 # ═══════════════════════════════════════════
 elif tool == "📍 GPS-Standort":
     st.header("📍 Standort automatisch erkennen")
     import streamlit.components.v1 as components
 
-    # HTML/JS mit sicherem "target=_top" Link
     gps_html = """
-    <button id="gps-btn" style="padding:12px 24px; background:#1F6FEB; color:white; border:none; border-radius:8px; cursor:pointer; font-size:16px;">
-        📍 Standort abrufen
-    </button>
-    <div id="gps-result" style="margin-top:15px; display:none;">
-        <p id="gps-coords" style="font-family:monospace; background:#f0f6fc; padding:8px; border-radius:6px; font-size:14px;"></p>
-        <a id="gps-apply" href="#" target="_top" style="display:inline-block; margin-top:10px; padding:10px 20px; background:#2ea043; color:white; text-decoration:none; border-radius:6px; font-weight:bold;">
-            ✅ Koordinaten übernehmen & App aktualisieren
-        </a>
+    <div style="font-family: sans-serif; padding: 10px; box-sizing: border-box;">
+        <button id="gps-btn" style="padding:12px 24px; background:#1F6FEB; color:white; border:none; border-radius:8px; cursor:pointer; font-size:16px; width:100%; margin-bottom: 10px;">
+             Standort abrufen
+        </button>
+        
+        <div id="gps-result" style="display:none; background:#161B22; padding:12px; border-radius:8px; border:1px solid #30363D; text-align: center;">
+            <p id="gps-coords" style="color:#58A6FF; font-family:monospace; font-size:15px; margin:0 0 12px 0;"></p>
+            
+            <a id="gps-apply" href="#" target="_top" style="display:block; padding:12px; background:#238636; color:white; text-decoration:none; border-radius:6px; font-weight:bold; font-size:15px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                ✅ Koordinaten übernehmen & App aktualisieren
+            </a>
+        </div>
     </div>
     <script>
     document.getElementById('gps-btn').onclick = function() {
-        if (!navigator.geolocation) { alert("Nicht unterstützt"); return; }
+        if (!navigator.geolocation) { alert("Geolocation wird nicht unterstützt"); return; }
         navigator.geolocation.getCurrentPosition(
             (pos) => {
                 const lat = pos.coords.latitude.toFixed(6);
                 const lon = pos.coords.longitude.toFixed(6);
+                
                 document.getElementById('gps-coords').textContent = "✅ Gefunden: " + lat + ", " + lon;
                 document.getElementById('gps-result').style.display = "block";
-                // Link setzt Query-Params für die Haupt-App
                 document.getElementById('gps-apply').href = "?lat=" + lat + "&lon=" + lon;
             },
-            (err) => { alert("❌ " + err.message); },
+            (err) => { alert("❌ Fehler: " + err.message); },
             { enableHighAccuracy: true, timeout: 10000 }
         );
     };
     </script>
     """
-    components.html(gps_html, height=120)
+    # Höhe auf 200px erhöht, damit der Button immer sichtbar ist
+    components.html(gps_html, height=200)
 
-    # Python: Parameter lesen & State setzen
+    # Python-Logik zum Übernehmen
     lat_q = st.query_params.get("lat")
     lon_q = st.query_params.get("lon")
     if lat_q and lon_q:
         st.session_state.gps_coords = f"{lat_q},{lon_q}"
-        st.query_params.clear()  # URL säubern
+        st.query_params.clear()
         st.success(f"✅ GPS-Daten übernommen: `{st.session_state.gps_coords}`")
-        st.rerun()               # Sauberer Neustart
+        st.rerun()
 
     if st.session_state.get("gps_coords"):
         st.info(f"📍 Aktiver Standort: `{st.session_state.gps_coords}`")

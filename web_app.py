@@ -318,10 +318,8 @@ st.markdown("**Web Version** | 28 Photography Tools")
 st.divider()
 
 # ═══════════════════════════════════════════
-#  SIDEBAR NAVIGATION (Gruppiert)
+#  SIDEBAR NAVIGATION (Gruppiert & Sauber)
 # ═══════════════════════════════════════════
-
-# Initialisierung (wichtig, damit die Auswahl gespeichert bleibt)
 if "tool" not in st.session_state:
     st.session_state.tool = "🏠 Home"
 
@@ -330,60 +328,34 @@ def set_tool(t):
 
 st.sidebar.title("🔧 Navigation")
 
-# 1. HOME
 if st.sidebar.button("🏠 Home", use_container_width=True, type="primary" if st.session_state.tool == "🏠 Home" else "secondary"):
     set_tool("🏠 Home")
 
 st.sidebar.divider()
 
-# 2. KAMERA & RECHNER
-with st.sidebar.expander("📸 Kamera & Berechnung", expanded=True):
-    calc_tools = [
-        " Belichtung", "🕶️ ND Rechner", "📐 Schärfentiefe", "🔦 Blitz",
-        " Rauschen", "🌡️ Weißabgleich", "🔄 Crop-Faktor", " Histogramm", "🔭 Objektive"
-    ]
-    for t in calc_tools:
+with st.sidebar.expander("📸 Kamera & Rechner", expanded=True):
+    for t in ["⚙️ Belichtung", "🕶️ ND Rechner", " Schärfentiefe", "🔦 Blitz", "📡 Rauschen", "🌡️ Weißabgleich", "🔄 Crop-Faktor", "📈 Histogramm", "🔭 Objektive"]:
         if st.sidebar.button(t, use_container_width=True, type="primary" if st.session_state.tool == t else "secondary"):
             set_tool(t)
 
 st.sidebar.divider()
 
-# 3. WETTER, ASTRO & GPS
 with st.sidebar.expander("🌤️ Wetter, Astro & GPS", expanded=True):
-    weather_tools = [
-        "☁️ Live-Wetter", " 5-Tage Prognose", " Astro & Wetter Dashboard",
-        " GPS-Standort", "🌙 Mond & Milchstraße", "🌠 Sternspuren", "🌙 Aktuelle Mond-Daten"
-    ]
-    for t in weather_tools:
+    for t in ["☁️ Live-Wetter", "📅 5-Tage Prognose", "🌍 Astro & Wetter Dashboard", "📍 GPS-Standort", "🌙 Mond & Milchstraße", "🌠 Sternspuren", "🌙 Aktuelle Mond-Daten"]:
         if st.sidebar.button(t, use_container_width=True, type="primary" if st.session_state.tool == t else "secondary"):
             set_tool(t)
 
 st.sidebar.divider()
 
-# 4. PLANUNG & TOOLS
 with st.sidebar.expander("📅 Planung & Workflow", expanded=False):
-    plan_tools = [
-        "📄 PDF-Planer", "📝 Planer", "🗺️ Spots", "⏱️ Timelapse",
-        "🖼️ EXIF", " KI", "📋 Cheat Sheets", "⚖️ Vergleich",
-        " Filter-Sim", "🎬 Video", "🎨 Bearbeitung", "🔋 Akku"
-    ]
-    for t in plan_tools:
+    for t in ["📄 PDF-Planer", " Planer", "🗺️ Spots", "⏱️ Timelapse", "️ EXIF", "🤖 KI", "📋 Cheat Sheets", "⚖️ Vergleich", "🎨 Filter-Sim", " Video", "🎨 Bearbeitung", " Akku"]:
         if st.sidebar.button(t, use_container_width=True, type="primary" if st.session_state.tool == t else "secondary"):
             set_tool(t)
 
-# ═══════════════════════════════════════════
-#  AKTUELLES TOOL AUS SESSION STATE HOLEN
-# ═══════════════════════════════════════════
+st.sidebar.divider()
+
+# ️ WICHTIG: Diese Zeile muss direkt vor deine if/elif-Blöcke!
 tool = st.session_state.tool
-
-# ═══════════════════════════════════════════
-#  HIER GEHT DEIN HAUPTCODE WEITER
-#  (if tool == "🏠 Home": ...)
-# ═══════════════════════════════════════════
-# ════════════════════════════════════════════════════════════════
-#  🏠 HOME
-# ════════════════════════════════════════════════════════════════
-
 if tool == "🏠 Home":
     st.header("Willkommen beim Canon EOS R Pro Tool!")
     st.markdown("""

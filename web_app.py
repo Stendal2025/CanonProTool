@@ -1238,11 +1238,13 @@ elif tool == "📍 GPS-Standort":
     st.header("📍 Standort automatisch erkennen")
     import streamlit.components.v1 as components
 
-    # Session State für GPS initialisieren
+    # Session State initialisieren
     if "gps_coords" not in st.session_state:
         st.session_state.gps_coords = None
+    if "gps_temp_coords" not in st.session_state:
+        st.session_state.gps_temp_coords = None  # Temporär für Auto-Fill
 
-    # GPS-HTML mit JavaScript
+    # GPS-HTML
     gps_html = """
     <div style="padding:10px; box-sizing:border-box; font-family:sans-serif;">
         <button id="gps-btn" style="padding:12px; background:#1F6FEB; color:white; border:none; border-radius:8px; cursor:pointer; width:100%; margin-bottom:10px; font-size:16px;">
@@ -1250,7 +1252,7 @@ elif tool == "📍 GPS-Standort":
         </button>
         <div id="gps-res" style="display:none; background:#161B22; padding:12px; border-radius:8px; text-align:center; border:1px solid #30363D;">
             <p id="gps-txt" style="color:#58A6FF; font-family:monospace; margin:0 0 12px 0; font-size:14px;"></p>
-            <a id="gps-link" href="#" style="display:inline-block; padding:12px; background:#238636; color:white; text-decoration:none; border-radius:6px; font-weight:bold; font-size:15px; cursor:pointer;">
+            <a id="gps-link" href="#" style="display:inline-block; padding:12px; background:#238636; color:white; text-decoration:none; border-radius:6px; font-weight:bold; font-size:15px;">
                 ✅ Koordinaten übernehmen
             </a>
         </div>
@@ -1283,7 +1285,6 @@ elif tool == "📍 GPS-Standort":
                     ort = a.city || a.town || a.village || a.municipality || a.county || a.state || a.country || "Unbekannter Ort";
                 }
                 txt.textContent = `✅ ${lat}, ${lon} (nahe ${ort})`;
-                // HIER: Link auf die aktuelle Seite mit Query-Params setzen
                 const baseUrl = window.location.href.split('?')[0];
                 document.getElementById('gps-link').href = baseUrl + "?lat=" + lat + "&lon=" + lon;
             })
@@ -1299,29 +1300,39 @@ elif tool == "📍 GPS-Standort":
     };
     </script>
     """
-    components.html(gps_html, height=180)
+    components.html(gps_html, height=220)
 
-    # Query-Params prüfen (wird nach Klick auf "Koordinaten übernehmen" gesetzt)
+    # Query-Params prüfen
     lat_q = st.query_params.get("lat")
     lon_q = st.query_params.get("lon")
     if lat_q and lon_q:
         st.session_state.gps_coords = f"{lat_q},{lon_q}"
+        st.session_state.gps_temp_coords = f"{lat_q},{lon_q}"  # Auch für Auto-Fill speichern
         st.query_params.clear()
         st.success(f"✅ GPS übernommen: `{st.session_state.gps_coords}`")
         st.cache_data.clear()
         st.rerun()
 
-    # Manuelle Eingabe als Alternative
+    # Manuelle Eingabe mit Auto-Fill aus GPS-Result
     st.divider()
-    st.markdown("### 📍 Oder manuell eingeben:")
+    st.markdown("### 📍 Koordinaten übernehmen")
+    
+    # Automatisch ausfüllen, wenn temporäre Koordinaten da sind
+    default_coords = st.session_state.get("gps_temp_coords", "50.43,7.47")
+    if "," in default_coords:
+        default_lat, default_lon = default_coords.split(",")
+    else:
+        default_lat, default_lon = "50.43", "7.47"
+    
     col1, col2 = st.columns(2)
     with col1:
-        manual_lat = st.text_input("Breitengrad", value="50.43")
+        manual_lat = st.text_input("Breitengrad", value=default_lat)
     with col2:
-        manual_lon = st.text_input("Längengrad", value="7.47")
+        manual_lon = st.text_input("Längengrad", value=default_lon)
     
-    if st.button("✅ Manuell übernehmen", use_container_width=True):
+    if st.button("✅ Übernehmen", use_container_width=True, type="primary"):
         st.session_state.gps_coords = f"{manual_lat},{manual_lon}"
+        st.session_state.gps_temp_coords = f"{manual_lat},{manual_lon}"
         st.success(f" Standort gesetzt: `{st.session_state.gps_coords}`")
         st.cache_data.clear()
         st.rerun()
@@ -1332,6 +1343,7 @@ elif tool == "📍 GPS-Standort":
         st.success(f"### ✅ Aktueller Standort: `{st.session_state.gps_coords}`")
         if st.button("🗑️ Standort löschen"):
             st.session_state.gps_coords = None
+            st.session_state.gps_temp_coords = None
             st.cache_data.clear()
             st.rerun()
 

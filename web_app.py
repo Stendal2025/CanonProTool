@@ -115,7 +115,7 @@ def copy_button(text_to_copy: str, label: str = " Kopieren"):
         }}, 2000);
     }}
     </script>
-    """, height=40)
+    """, height=50)
 def parse_shutter(s: str) -> float:
     return SHUTTER_MAP.get(s, 1 / 125)
 
@@ -501,16 +501,18 @@ elif tool == "🕶️ ND Rechner":
     st.header("🕶️ ND Filter Rechner")
     col1, col2 = st.columns(2)
     with col1:
-        base_str  = st.selectbox("Basiszeit (ohne ND)", SHUTTERS_ALL, index=6)
-        base_sec  = parse_shutter(base_str)
+        base_str = st.selectbox("Basiszeit (ohne ND)", SHUTTERS_ALL, index=6)
+        base_sec = parse_shutter(base_str)
     with col2:
-        nd_stops  = st.slider("ND Stops", 1, 15, 3, help="ND8=3 | ND64=6 | ND1000=10 | ND32768=15")
+        nd_stops = st.slider("ND Stops", 1, 15, 3, help="ND8=3 | ND64=6 | ND1000=10")
 
     nd_factor = 2 ** nd_stops
     st.caption(f"Gewählter Filter: **ND{nd_factor}** ({nd_stops} Stops)")
 
     if st.button("✅ Berechnen", type="primary", key="calc_nd"):
         result_sec = calculate_nd(base_sec, nd_stops)
+        
+        # Formatierung
         if result_sec >= 3600:
             result_str = f"{result_sec/3600:.2f} Stunden"
         elif result_sec >= 60:
@@ -520,27 +522,23 @@ elif tool == "🕶️ ND Rechner":
         else:
             result_str = f"1/{int(round(1/result_sec))}s"
 
+        # ✅ Ergebnis anzeigen (NUR EINMAL!)
         st.success(f"""
-        ### Ergebnis:
+        ### 🎯 Ergebnis
         - **ND Filter:** ND{nd_factor} ({nd_stops} Stops)
-        - **Neue Belichtungszeit:** {result_str}
-        - **Von:** {base_str} → **Zu:** {result_str}
+        - **Alte Zeit:** {base_str}
+        - **Neue Zeit:** **{result_str}**
         """)
+
+        # Warnungen
         if result_sec > 300:
             st.warning("⚠️ Sehr lange Belichtung – Stativ + Fernauslöser empfohlen.")
         if result_sec > 900:
             st.warning("⚠️ Über 15 Minuten – Sensorrauschen durch Wärme möglich!")
-        
-        # Ergebnis formatieren (wie zuvor)
-        if result_sec >= 3600: result_str = f"{result_sec/3600:.2f} Stunden"
-        elif result_sec >= 60: result_str = f"{result_sec/60:.1f} Minuten"
-        else: result_str = f"{result_sec:.1f} Sekunden"
 
-        st.success(f"### Ergebnis: Neue Belichtungszeit ist {result_str}")
-        
-        #  HIER DEN NEUEN BUTTON EINFÜGEN 👇
-        copy_text = f"ND{2**nd_stops} | {base_str} -> {result_str}"
-        copy_button(copy_text, label=f"📋 '{copy_text}' kopieren")
+        # 📋 Kopier-Button (erscheint direkt unter dem Ergebnis)
+        copy_text = f"ND{nd_factor} | {base_str} → {result_str}"
+        copy_button(copy_text, label="📋 Ergebnis kopieren")
 
 # ════════════════════════════════════════════════════════════════
 #  🔬 FOCUS STACKING ASSISTANT

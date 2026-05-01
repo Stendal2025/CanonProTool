@@ -298,23 +298,20 @@ def render_status_bar():
         except:
             temp, desc = "--", "Daten n/a"
 
-    # Mobile-optimiertes Layout
+    # Einfaches, universelles Layout (funktioniert auf Mobile & Desktop)
     st.markdown("""
-    <div class='status-bar-mobile' style='background:#0D1117; padding:10px; margin-bottom:15px; border-radius:8px; border:1px solid #21262D;'>
+    <div style='background:#0D1117; padding:10px; margin-bottom:15px; border-radius:8px; border:1px solid #21262D;'>
     """, unsafe_allow_html=True)
     
-    # Auf Mobile: 2 Spalten, auf Desktop: 4 Spalten
-    if st.runtime.server.get_option("server.headless"):  # Oder User-Agent prüfen
-        c1, c2 = st.columns(2)
-        c1.markdown(f"📍 **Standort**<br><small style='color:#8B949E'>{loc_display}</small>", unsafe_allow_html=True)
-        c2.markdown(f"☁️ **Wetter**<br><small style='color:#8B949E'>{temp} | {desc}</small>", unsafe_allow_html=True)
-    else:
-        c1, c2, c3, c4 = st.columns([2.5, 2.5, 2.5, 1])
-        c1.markdown(f"📍 **Standort**<br><small style='color:#8B949E'>{loc_display}</small>", unsafe_allow_html=True)
-        c2.markdown(f"☁️ **Wetter**<br><small style='color:#8B949E'>{temp} | {desc}</small>", unsafe_allow_html=True)
-        c3.markdown(f"📷 **Status**<br><small style='color:#8B949E'>Live</small>", unsafe_allow_html=True)
-        if c4.button("🔄", use_container_width=True, key="sb_refresh"):
-            st.cache_data.clear()
+    # Immer 4 Spalten – Streamlit passt sie automatisch an die Bildschirmgröße an
+    c1, c2, c3, c4 = st.columns([2.5, 2.5, 2.5, 1])
+    c1.markdown(f"📍 **Standort**<br><small style='color:#8B949E'>{loc_display}</small>", unsafe_allow_html=True)
+    c2.markdown(f"☁️ **Wetter**<br><small style='color:#8B949E'>{temp} | {desc}</small>", unsafe_allow_html=True)
+    c3.markdown(f"📷 **Status**<br><small style='color:#8B949E'>Live</small>", unsafe_allow_html=True)
+    
+    # Refresh-Button
+    if c4.button("🔄", use_container_width=True, key="sb_refresh"):
+        st.cache_data.clear()
         
     st.markdown("</div>", unsafe_allow_html=True)
 

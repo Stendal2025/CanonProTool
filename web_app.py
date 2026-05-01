@@ -1315,41 +1315,117 @@ elif tool == "🌙 Aktuelle Mond-Daten":
             st.error(f"❌ {type(e).__name__}: {e}")
 
 # ════════════════════════════════════════════════════════════════
-#  🌊 GEZEITEN & TIDE-RECHNER
+#  🌊 GEZEITEN & TIDE-RECHNER (Verbesserte Koordinaten-Eingabe)
 # ═══════════════════════════════════════════════════════════════
 
 elif tool == "🌊 Gezeiten & Tide-Rechner":
     st.header("🌊 Gezeiten & Tide-Rechner")
     st.markdown("Ebbe & Flut für Küstenfotografie & Tauchplanung")
 
-    # 📍 Standort (GPS-Fallback)
-    default_coords = st.session_state.get("gps_coords", "54.32, 13.09")
-    coords_input = st.text_input(
-        "📍 Koordinaten (Breitengrad, Längengrad)",
-        value=default_coords,
-        help="Format: 54.32, 13.09 (z. B. Rügen)"
+    # 📍 Standort-Auswahl (einfacher als manuelle Eingabe)
+    KUESTEN_ORTE = {
+        "Rügen (Deutschland)": "54.32, 13.09",
+        "Sylt (Deutschland)": "54.91, 8.31",
+        "Norddeich (Deutschland)": "53.60, 7.15",
+        "Cuxhaven (Deutschland)": "53.87, 8.70",
+        "Norderney (Deutschland)": "53.71, 7.15",
+        "Amrum (Deutschland)": "54.63, 8.33",
+        "St. Peter-Ording (Deutschland)": "54.31, 8.62",
+        "Ostende (Belgien)": "51.23, 2.93",
+        "Dünkirchen (Frankreich)": "51.03, 2.38",
+        "Le Havre (Frankreich)": "49.49, 0.11",
+        "Brest (Frankreich)": "48.39, -4.49",
+        "Liverpool (UK)": "53.41, -3.00",
+        "Brighton (UK)": "50.82, -0.14",
+        "Amsterdam (Niederlande)": "52.37, 4.90",
+    }
+
+    eingabe_methode = st.radio(
+        "📍 Standort wählen:",
+        ["🏖️ Bekannter Küstenort", "📍 Eigene Koordinaten", "📍 GPS-Standort nutzen"],
+        index=0
     )
+
+    lat, lon = None, None
+
+    if eingabe_methode == "🏖️ Bekannter Küstenort":
+        ort_name = st.selectbox("Wähle einen Ort:", list(KUESTEN_ORTE.keys()))
+        lat_str, lon_str = KUESTEN_ORTE[ort_name].split(",")
+        lat, lon = float(lat_str.strip()), float(lon_str.strip())
+        st.info(f"📍 Gewählt: **{ort_name}** ({lat:.4f}, {lon:.4f})")
+
+    elif eingabe_methode == "📍 Eigene Koordinaten":
+        default_coords = st.session_state.get("gps_coords", "54.32, 13.09")
+        coords_input = st.text_input(
+            "Koordinaten eingeben (Breitengrad, Längengrad)",
+            value=default_coords,
+            help="Beispiel: 54.32, 13.09 oder 54.32,13.09"
+        )
+        
+        if st.button(" Koordinaten prüfen"):
+            try:
+                if not coords_input or "," not in coords_input:
+                    st.error("❌ Bitte gib Koordinaten im Format ein: **54.32, 13.09**")
+                    st.info("💡 Tipp: Verwende ein Komma (,) zwischen Breite und Länge")
+                    st.stop()
+                
+                # Komma finden und aufteilen
+                clean_input = coords_input.strip().replace(" ", "")
+                parts = clean_input.split(",")
+                
+                if len(parts) != 2:
+                    st.error("❌ Genau 2 Werte erwartet: Breitengrad, Längengrad")
+                    st.stop()
+                
+                lat = float(parts[0])
+                lon = float(parts[1])
+                
+                # Bereich prüfen
+                if not (-90 <= lat <= 90):
+                    st.error(f"❌ Breitengrad muss zwischen -90 und 90 liegen (dein Wert: {lat})")
+                    st.stop()
+                if not (-180 <= lon <= 180):
+                    st.error(f"❌ Längengrad muss zwischen -180 und 180 liegen (dein Wert: {lon})")
+                    st.stop()
+                
+                st.success(f"✅ Koordinaten gültig: {lat:.4f}, {lon:.4f}")
+                
+            except ValueError:
+                st.error("❌ Bitte nur Zahlen eingeben! Beispiel: 54.32, 13.09")
+            except Exception as e:
+                st.error(f"❌ Fehler: {e}")
+            st.stop()
+
+    else:  # GPS-Standort
+        if "gps_coords" in st.session_state and st.session_state.gps_coords:
+            try:
+                lat, lon = map(float, st.session_state.gps_coords.split(","))
+                st.success(f"✅ GPS-Standort übernommen: {lat:.4f}, {lon:.4f}")
+            except:
+                st.warning("⚠️ GPS-Daten nicht verfügbar. Bitte andere Methode wählen.")
+                lat, lon = 54.32, 13.09  # Fallback
+        else:
+            st.warning("⚠️ Kein GPS-Standort gespeichert. Bitte zuerst 📍 GPS-Standort Tool nutzen.")
+            lat, lon = 54.32, 13.09  # Fallback
 
     # 📅 Datum
     col1, col2 = st.columns(2)
     with col1:
         tide_date = st.date_input("📅 Datum", value=datetime.now().date())
     with col2:
-        st.caption("🔑 API: WorldTides.info (kostenloser Key)")
+        st.caption("🔑 API: WorldTides.info")
 
     if st.button("🌊 Gezeiten abrufen", type="primary"):
-        try:
-            # Koordinaten parsen
-            if "," not in coords_input:
-                st.error("❌ Bitte Koordinaten im Format: 54.32, 13.09")
-                st.stop()
-            lat, lon = map(float, coords_input.replace(" ", "").split(","))
+        if lat is None or lon is None:
+            st.error("❌ Bitte zuerst gültige Koordinaten eingaben oder prüfen!")
+            st.stop()
 
+        try:
             # API-Key prüfen
             try:
                 API_KEY = st.secrets["WORLD_TIDES_API_KEY"]
             except KeyError:
-                st.warning("️ **API-Key nicht hinterlegt!**")
+                st.warning("⚠️ **API-Key nicht hinterlegt!**")
                 st.info("""
                 🔑 **So bekommst du einen kostenlosen Key:**
                 1. Gehe zu [worldtides.info](https://www.worldtides.info/)
@@ -1367,7 +1443,8 @@ elif tool == "🌊 Gezeiten & Tide-Rechner":
             data = res.json()
 
             if res.status_code != 200 or data.get("status") != 200:
-                st.error(f"❌ API-Fehler: {data.get('error', 'Unbekannt')}")
+                st.error(f"❌ API-Fehler: {data.get('error', 'Unbekannter Fehler')}")
+                st.info(f"📍 Koordinaten: {lat:.4f}, {lon:.4f}")
             else:
                 extremes = data.get("extremes", [])
                 if not extremes:
@@ -1379,14 +1456,14 @@ elif tool == "🌊 Gezeiten & Tide-Rechner":
                     df = pd.DataFrame([
                         {
                             "Zeit": datetime.fromtimestamp(e["dt"]).strftime("%H:%M"),
-                            "Typ": "🌊 Hochwasser" if e["type"] == "High" else "️ Niedrigwasser",
+                            "Typ": "🌊 Hochwasser" if e["type"] == "High" else "🏖️ Niedrigwasser",
                             "Höhe": f"{e['height']:.2f} m",
                             "Foto-Tipp": get_tide_photo_tip(e["type"])
                         } for e in extremes
                     ])
                     st.dataframe(df, use_container_width=True, hide_index=True)
 
-                    # Zusammenfassung & Tipps
+                    # Zusammenfassung
                     low_tides = [e for e in extremes if e["type"] == "Low"]
                     high_tides = [e for e in extremes if e["type"] == "High"]
                     
@@ -1397,6 +1474,7 @@ elif tool == "🌊 Gezeiten & Tide-Rechner":
                         
         except Exception as e:
             st.error(f"❌ Fehler: {type(e).__name__}: {e}")
+            st.info("💡 Prüfe deine Internetverbindung und API-Key")
 
 # ── 📄 PDF-PLANER ────────────────────────────────────────────────
 elif tool == "📄 PDF-Planer":

@@ -197,6 +197,33 @@ def get_best_photo_times(sun_data: dict, moon_phase: float) -> str:
         lines.append("🌌 Milchstraße: 22:30 – 04:00 (dunkle Nacht!)")
     return "\n".join(lines)
 
+# ═══════════════════════════════════════════
+#  📱 PWA & HOME-SCREEN CONFIGURATION
+# ══════════════════════════════════════════
+import streamlit.components.v1 as components
+
+components.html("""
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1F6FEB">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Canon Pro">
+<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3608/3608166.png">
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(console.error);
+  }
+</script>
+""", height=0)
+
+# Dein bestehendes st.set_page_config darunter lassen:
+st.set_page_config(
+    page_title="Canon EOS R Pro Tool",
+    page_icon="📷",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
 
 # ════════════════════════════════════════════════════════════════
 #  APP-KONFIGURATION & CSS

@@ -471,13 +471,12 @@ elif tool == "🎛️ ND Stacking":
     with col3:
         filter_b = st.selectbox("🔶 Filter B", [f[0] for f in ND_FILTERS], index=0)
     
-    # Optional: Dritter Filter
-    with st.expander("➕ Dritten Filter hinzufügen (optional)"):
-        filter_c = st.selectbox("🔺 Filter C", [f[0] for f in ND_FILTERS], index=0, key="stack_c")
-        use_c = st.checkbox("Filter C aktivieren", value=False)
-    else:
-        filter_c = "Kein Filter"
-        use_c = False
+    # ✅ RICHTIG:
+filter_c = "Kein Filter"
+use_c = False
+with st.expander("➕ Dritten Filter hinzufügen (optional)"):
+    filter_c = st.selectbox("🔺 Filter C", [f[0] for f in ND_FILTERS], index=0, key="stack_c")
+    use_c = st.checkbox("Filter C aktivieren", value=False)
     
     # 🧮 Berechnung
     if st.button("✅ Stacking berechnen", type="primary"):

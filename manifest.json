@@ -1,0 +1,15 @@
+{
+  "name": "Canon EOS R Pro Tool",
+  "short_name": "Canon Pro",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0E14",
+  "theme_color": "#1F6FEB",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3608/3608166.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

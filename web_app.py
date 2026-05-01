@@ -1220,76 +1220,82 @@ elif tool == "🌍 Astro & Wetter Dashboard":
 
 # ── 📍 GPS-STANDORT ──────────────────────────────────────────────
 elif tool == "📍 GPS-Standort":
-    st.header("📍 Standort automatisch erkennen")
+    st.header("📍 GPS-Standort")
+    st.markdown("Automatische Standorterkennung für präzise Berechnungen")
 
+    # Initialisiere Session State falls nicht vorhanden
+    if "gps_coords" not in st.session_state:
+        st.session_state.gps_coords = None
+
+    # HTML für GPS-Erkennung (Browser-API)
     gps_html = """
-    <div style="padding:10px;box-sizing:border-box;font-family:sans-serif;">
-        <button id="gps-btn" style="padding:12px;background:#1F6FEB;color:white;
-            border:none;border-radius:8px;cursor:pointer;width:100%;
-            margin-bottom:10px;font-size:16px;">
-            📍 Standort abrufen
-        </button>
-        <div id="gps-res" style="display:none;background:#161B22;padding:12px;
-            border-radius:8px;text-align:center;border:1px solid #30363D;">
-            <p id="gps-txt" style="color:#58A6FF;font-family:monospace;
-                margin:0 0 12px 0;font-size:14px;"></p>
-            <a id="gps-link" href="#" target="_parent"
-                style="display:inline-block;padding:12px;background:#238636;
-                color:white;text-decoration:none;border-radius:6px;
-                font-weight:bold;font-size:15px;">
-                ✅ Koordinaten übernehmen
-            </a>
-        </div>
-    </div>
     <script>
-    document.getElementById('gps-btn').onclick = () => {
-        const txt = document.getElementById('gps-txt');
-        const res = document.getElementById('gps-res');
-        txt.textContent = "⏳ Standort wird ermittelt...";
-        res.style.display = "block";
-        if (!navigator.geolocation) {
-            txt.textContent = "❌ Geolocation nicht unterstützt";
-            return;
+    function getLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const lat = pos.coords.latitude.toFixed(6);
+                    const lon = pos.coords.longitude.toFixed(6);
+                    // URL-Parameter setzen und Seite neu laden
+                    const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + "?lat=" + lat + "&lon=" + lon;
+                    window.location.href = newUrl;
+                },
+                (err) => {
+                    alert("GPS-Fehler: " + err.message);
+                }
+            );
+        } else {
+            alert("Geolocation wird von diesem Browser nicht unterstützt");
         }
-        navigator.geolocation.getCurrentPosition(pos => {
-            const lat = pos.coords.latitude.toFixed(6);
-            const lon = pos.coords.longitude.toFixed(6);
-            txt.textContent = `✅ ${lat}, ${lon} (Ort wird gesucht...)`;
-            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`, {
-                headers: { 'Accept-Language': 'de', 'User-Agent': 'CanonProTool/1.0' }
-            })
-            .then(r => r.json())
-            .then(data => {
-                const a   = data.address || {};
-                const ort = a.city || a.town || a.village || a.county || a.state || "Unbekannt";
-                txt.textContent = `✅ ${lat}, ${lon} (nahe ${ort})`;
-                document.getElementById('gps-link').href = `?lat=${lat}&lon=${lon}`;
-            })
-            .catch(() => {
-                txt.textContent = `✅ ${lat}, ${lon}`;
-                document.getElementById('gps-link').href = `?lat=${lat}&lon=${lon}`;
-            });
-        }, err => {
-            const msgs = {1:'Zugriff verweigert.',2:'Position nicht verfügbar.',3:'Timeout.'};
-            txt.textContent = `❌ ${msgs[err.code] || err.message}`;
-        }, {enableHighAccuracy:true, timeout:10000});
-    };
+    }
     </script>
+    <button onclick="getLocation()" style="width:100%; padding:15px; background:#1F6FEB; color:white; border:none; border-radius:8px; font-size:16px; font-weight:bold; cursor:pointer;">
+        📍 Standort abrufen
+    </button>
     """
-    components.html(gps_html, height=160)
+    st.components.html(gps_html, height=80)
 
+    # Prüfe URL-Parameter (wird nach GPS-Klick gesetzt)
     lat_q = st.query_params.get("lat")
     lon_q = st.query_params.get("lon")
+    
     if lat_q and lon_q:
+        # Koordinaten in Session State speichern
         st.session_state.gps_coords = f"{lat_q},{lon_q}"
         st.query_params.clear()
         st.success(f"✅ GPS übernommen: `{st.session_state.gps_coords}`")
+        st.info("🔄 Seite wird neu geladen...")
         st.rerun()
-    elif st.session_state.gps_coords != "Berlin":
-        st.info(f"📍 Aktueller Standort: `{st.session_state.gps_coords}`")
-        if st.button("🗑️ Standort zurücksetzen"):
-            st.session_state.gps_coords = "Berlin"
-            st.rerun()
+
+    # Zeige aktuelle Koordinaten an (falls gesetzt)
+    if st.session_state.gps_coords:
+        st.divider()
+        st.subheader("📍 Aktueller Standort")
+        st.info(f"**Koordinaten:** `{st.session_state.gps_coords}`")
+        
+        # Koordinaten parsen für Anzeige
+        try:
+            lat, lon = map(float, st.session_state.gps_coords.split(","))
+            st.markdown(f"""
+            - **Breitengrad:** {lat:.6f}
+            - **Längengrad:** {lon:.6f}
+            """)
+        except:
+            pass
+        
+        # Buttons
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("📋 Koordinaten kopieren", use_container_width=True):
+                st.write(f"✅ Kopiert: `{st.session_state.gps_coords}`")
+                st.code(st.session_state.gps_coords)
+        with col2:
+            if st.button("🗑️ Standort zurücksetzen", use_container_width=True):
+                st.session_state.gps_coords = None
+                st.success("📍 Standort zurückgesetzt")
+                st.rerun()
+    else:
+        st.info("💡 Klicke auf '📍 Standort abrufen' und erlaube den GPS-Zugriff im Browser")
 
 # ════════════════════════════════════════════════════════════════
 #  🌙 MOND & MILCHSTRAßE (Koordinaten-Fix)

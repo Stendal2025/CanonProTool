@@ -509,7 +509,7 @@ elif tool == "🕶️ ND Rechner":
     nd_factor = 2 ** nd_stops
     st.caption(f"Gewählter Filter: **ND{nd_factor}** ({nd_stops} Stops)")
 
-    if st.button("✅ Berechnen", type="primary"):
+    if st.button("✅ Berechnen", type="primary", key="calc_nd"):
         result_sec = calculate_nd(base_sec, nd_stops)
         if result_sec >= 3600:
             result_str = f"{result_sec/3600:.2f} Stunden"
@@ -530,11 +530,6 @@ elif tool == "🕶️ ND Rechner":
             st.warning("⚠️ Sehr lange Belichtung – Stativ + Fernauslöser empfohlen.")
         if result_sec > 900:
             st.warning("⚠️ Über 15 Minuten – Sensorrauschen durch Wärme möglich!")
-
-    # ... (Dein bestehender ND-Rechner Code) ...
-    
-    # ✅ NEU (eindeutiger Key)
-    if st.button("✅ Kopieren", type="primary", key="calc_nd"):
         
         # Ergebnis formatieren (wie zuvor)
         if result_sec >= 3600: result_str = f"{result_sec/3600:.2f} Stunden"

@@ -198,7 +198,7 @@ def get_best_photo_times(sun_data: dict, moon_phase: float) -> str:
     return "\n".join(lines)
 
 # ═══════════════════════════════════════════
-#  📱 PWA & HOME-SCREEN CONFIGURATION
+#  📱 PWA & HOME-SCREEN (iOS-Optimiert)
 # ══════════════════════════════════════════
 import streamlit.components.v1 as components
 
@@ -208,18 +208,12 @@ components.html("""
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Canon Pro">
-<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3608/3608166.png">
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch(console.error);
-  }
-</script>
+<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2983/2983796.png">
 """, height=0)
 
-# Dein bestehendes st.set_page_config darunter lassen:
 st.set_page_config(
     page_title="Canon EOS R Pro Tool",
-    page_icon="📷",
+    page_icon="📷",  # Moderne iOS-PWA-Unterstützung
     layout="wide",
     initial_sidebar_state="expanded",
 )

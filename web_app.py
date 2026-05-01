@@ -265,45 +265,57 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 # ═══════════════════════════════════════════
-#   LIVE STATUS BAR
+#   LIVE STATUS BAR (Minimal-Fix)
 # ══════════════════════════════════════════
 def render_status_bar():
-    # Sichere Fallbacks, falls GPS noch nicht gesetzt ist
-    loc = st.session_state.get("gps_coords")
-    display_loc = loc if loc else " Nicht gesetzt"
+    # 1️⃣ GPS-Daten aus Session State holen (wird vom GPS-Tool gesetzt)
+    gps = st.session_state.get("gps_coords")
     
-    # Wetter nur holen, wenn gültige Koordinaten vorliegen
-    temp, desc = "--", "GPS setzen"
-    if loc and "," in loc:
+    # 2️⃣ Anzeige-Text vorbereiten
+    if gps and "," in gps:
         try:
-            lat, lon = map(float, loc.split(","))
+            lat, lon = gps.split(",")
+            loc_display = f"{float(lat):.4f}, {float(lon):.4f}"  # Kurzformat
+        except:
+            loc_display = gps  # Fallback
+    else:
+        loc_display = "📍 Nicht gesetzt"
+    
+    # 3️⃣ Wetter nur laden, wenn gültige Koordinaten da sind
+    temp, desc = "--", "Warten auf GPS"
+    if gps and "," in gps:
+        try:
+            lat, lon = map(float, gps.split(","))
             key = st.secrets.get("OPENWEATHER_API_KEY")
             if key:
-                r = requests.get(f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={key}&units=metric&lang=de", timeout=3)
+                r = requests.get(
+                    f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={key}&units=metric&lang=de", 
+                    timeout=3
+                )
                 if r.status_code == 200:
                     d = r.json()
                     temp = f"{d['main']['temp']:.1f}°C"
                     desc = d['weather'][0]['description'].capitalize()
         except:
-            temp, desc = "Fehler", "Daten n/a"
+            temp, desc = "--", "Daten n/a"
 
-    # Layout rendern
+    # 4️⃣ UI rendern
     st.markdown("""
     <div style='background:#0D1117; padding:10px 5px; margin-bottom:10px; border-radius:8px; border:1px solid #21262D;'>
     """, unsafe_allow_html=True)
     
     c1, c2, c3, c4 = st.columns([2.5, 2.5, 2.5, 1])
-    c1.markdown(f"📍 **Standort**<br><small style='color:#8B949E; font-size:12px;'>{display_loc}</small>", unsafe_allow_html=True)
+    c1.markdown(f"📍 **Standort**<br><small style='color:#8B949E; font-size:12px;'>{loc_display}</small>", unsafe_allow_html=True)
     c2.markdown(f"☁️ **Wetter**<br><small style='color:#8B949E; font-size:12px;'>{temp} | {desc}</small>", unsafe_allow_html=True)
-    c3.markdown(f"📷 **Status**<br><small style='color:#8B949E; font-size:12px;'>Live-Modus</small>", unsafe_allow_html=True)
+    c3.markdown(f"📷 **Status**<br><small style='color:#8B949E; font-size:12px;'>Live</small>", unsafe_allow_html=True)
     
-    # Refresh-Button (ohne callback, löst automatisch Rerun aus)
-    if c4.button("🔄", use_container_width=True, key="status_refresh_btn"):
-        st.cache_data.clear()  # Wetter-Cache leeren
+    # Refresh-Button (leert Cache für frische Wetterdaten)
+    if c4.button("🔄", use_container_width=True, key="sb_refresh"):
+        st.cache_data.clear()
         
     st.markdown("</div>", unsafe_allow_html=True)
 
-# ⚠️ WICHTIG: Die Funktion muss HIER aufgerufen werden!
+# ⚠️ Diese Zeile MUSS nach der Definition und VOR der Sidebar stehen:
 render_status_bar()
 
 st.markdown("""

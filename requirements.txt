@@ -6,3 +6,4 @@ astral
 pytz
 requests
 fpdf
+fpdf2

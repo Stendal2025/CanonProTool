@@ -539,6 +539,9 @@ with st.sidebar:
         if st.button("📸 Kamera-Vergleich", use_container_width=True):
             st.session_state.tool = "📸 Kamera-Vergleich"
             st.rerun()
+        if st.button("📤 PDF Export", use_container_width=True):
+            st.session_state.tool = "📤 PDF Export"
+            st.rerun()
         # ... weitere Tools aus Ordner 3 ...
 
     st.divider()

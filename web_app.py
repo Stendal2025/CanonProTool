@@ -383,72 +383,61 @@ tool = st.session_state.tool
 # ════════════════════════════════════════════════════════════════
 
 # ═══════════════════════════════════════════
-#  📱 MOBILE DASHBOARD (Home-Screen Ersatz)
+#  📱 MOBILE DASHBOARD (Startseite)
 # ══════════════════════════════════════════
-elif tool == "🏠 Home":
-    # 🎨 Dashboard-CSS für App-ähnliche Kacheln
+if tool == "🏠 Home":
+    # 🎨 CSS für die Kacheln
     st.markdown("""
     <style>
     .dash-card > button {
-        height: 85px !important;
-        font-size: 15px !important;
-        font-weight: 500 !important;
-        border-radius: 14px !important;
+        height: 80px !important;
+        font-size: 14px !important;
+        border-radius: 12px !important;
         background-color: #161B22 !important;
         color: #F0F6FC !important;
         border: 1px solid #30363D !important;
         white-space: pre-line !important;
-        line-height: 1.3 !important;
-        transition: all 0.2s ease !important;
+        line-height: 1.2 !important;
+        transition: all 0.2s !important;
     }
     .dash-card > button:hover {
         background-color: #1F6FEB !important;
         border-color: #58A6FF !important;
         transform: translateY(-2px) !important;
-        box-shadow: 0 4px 12px rgba(31, 111, 235, 0.3) !important;
-    }
-    .dash-card > button:active {
-        transform: scale(0.98) !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-    st.header("📸 Canon Pro Tool")
-    st.markdown("🚀 **Schnellzugriff** – Tippe auf eine Kachel, um direkt zu starten")
+    st.header(" Canon Pro Tool")
+    st.markdown(" **Schnellzugriff** – Tippe auf eine Kachel")
 
-    #  Dashboard-Tools (Icon + Name + Kurzbeschreibung)
+    # ✅ WICHTIG: Namen müssen EXAKT so heißen wie in der Sidebar!
     dash_tools = [
-        ("️ Belichtung", "EV-Werte & Dreieck"),
+        ("⚙️ Belichtung", "EV-Werte & Dreieck"),
         ("🕶️ ND Rechner", "Filter & Stacking"),
-        (" Schärfentiefe", "DoF & Hyperfokal"),
-        ("🌍 Astro & Wetter", "Planung & Live-Daten"),
+        ("📐 Schärfentiefe", "DoF & Hyperfokal"),
+        ("🌍 Astro & Wetter Dashboard", "Planung & Live-Daten"),
         ("🌙 Mond & Milchstraße", "Phasen & Sichtbarkeit"),
-        ("🌊 Gezeiten", "Ebbe, Flut & Foto-Tipps"),
-        ("📝 Planer & Spots", "Logbuch & Locations"),
-        ("🤿 Unterwasser", "Canon & Apexcam"),
+        ("🌊 Gezeiten & Tide-Rechner", "Ebbe, Flut & Foto-Tipps"),
+        ("📝 Planer", "Logbuch & Locations"),
+        ("🤿 Unterwasser-Modus", "Canon & Apexcam"),
         ("🔬 Focus Stacking", "Makro & Landschaft"),
         ("🎛️ ND Stacking", "Multi-Filter Berechnung"),
     ]
 
-    # 📱 2-Spalten-Grid (optimal für Mobile)
+    # 📱 2-Spalten-Grid
     cols = st.columns(2)
     for i, (name, desc) in enumerate(dash_tools):
         with cols[i % 2]:
-            # Container für CSS-Klasse
             with st.container():
                 st.markdown('<div class="dash-card">', unsafe_allow_html=True)
-                if st.button(f"{name}\n{desc}", use_container_width=True, type="secondary", key=f"home_{name}"):
+                if st.button(f"{name}\n{desc}", use_container_width=True, type="secondary", key=f"dash_{name}"):
                     st.session_state.tool = name
                     st.rerun()
                 st.markdown('</div>', unsafe_allow_html=True)
 
     st.divider()
-    st.markdown("""
-    💡 **Tipp:**  
-    • Die **linke Sidebar** enthält alle 28 Tools & Einstellungen  
-    • GPS-Daten werden automatisch übernommen  
-    • Alle Berechnungen sind offline-fähig (gecacht)
-    """)
+    st.caption("💡 Tipp: Nutze die Sidebar für alle 30 Tools.")
 # ── ⚙️ BELICHTUNG ────────────────────────────────────────────────
 elif tool == "⚙️ Belichtung":
     st.header("⚙️ Belichtung-Bewerter")

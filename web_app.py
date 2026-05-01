@@ -314,6 +314,7 @@ NAV_GROUPS = [
             "🎬 Video",
             "🎨 Bearbeitung",
             "🔋 Akku",
+            "🤿 Unterwasser-Modus",
         ],
     },
 ]
@@ -2164,6 +2165,112 @@ elif tool == "🔋 Akku":
             st.warning("⚠️ Hoher Verbrauch – Ersatzakku einpacken!")
         akkus = math.ceil((8 * 60 * spm) / max(shots, 1))
         st.info(f"💡 Für 8h Shooting: ca. **{akkus} Akkus** empfohlen")
+
+# ════════════════════════════════════════════════════════════════
+#  🤿 UNTERWASSER-FOTOGRAFIE ASSISTANT (Canon + Apexcam)
+# ═══════════════════════════════════════════════════════════════
+
+elif tool == "🤿 Unterwasser-Modus":
+    st.header("🤿 Unterwasser-Fotografie Assistant")
+    st.markdown("Settings & Tipps für Canon EOS R & Apexcam ActionCam")
+
+    # 📍 Basis-Daten (für beide Kameras relevant)
+    col1, col2 = st.columns(2)
+    with col1:
+        depth = st.slider(" Tiefe (m)", 0, 60, 5)
+        visibility = st.slider("👁️ Sichtweite (m)", 1, 30, 10)
+    with col2:
+        water_type = st.selectbox("💧 Wasser-Typ", ["Tropisch/Klar", "Gemäßigt", "Trüb/Kalt"])
+        use_flash = st.checkbox("💡 Blitz/Licht nutzen", value=True)
+
+    # ────────────────────────────────────────────────────────────
+    #  TAB-ANSICHT FÜR KAMERA-SPEZIFISCHE TIPPS
+    # ────────────────────────────────────────────────────────────
+    tab1, tab2 = st.tabs(["📷 Canon EOS R (Pro)", "🏄 Apexcam (Action)"])
+
+    # >>> CANON EOS R TAB <<<
+    with tab1:
+        st.subheader("📷 Canon EOS R Settings")
+        c1, c2 = st.columns(2)
+        
+        # 1. Weißabgleich Logik
+        if use_flash:
+            wb_val = "4800K – 5200K (Blitz)"
+        else:
+            base_wb = {"Tropisch/Klar": 5600, "Gemäßigt": 6000, "Trüb/Kalt": 6500}
+            wb_val = f"{min(base_wb[water_type] + (depth * 25), 8000)}K"
+            
+        c1.metric("⚖️ Weißabgleich", wb_val)
+        c1.metric(" Bildformat", "RAW + JPEG (Fine)")
+        
+        # 2. Fokus-Tipps
+        c2.markdown("""
+        **Fokus-Strategie:**
+        ✅ **Focus Peaking (Rot)** aktivieren
+        ✅ **MF Assist** (Lupe) nutzen
+        ✅ **Back-Button Focus** für schnellen Wechsel
+        """)
+
+        if use_flash:
+             st.success("💡 **Blitz-Tipp:** Strobe-Arme auf 45° stellen, um Rückstreuung (Backscatter) zu vermeiden.")
+        else:
+            st.warning(" **Ohne Blitz:** Roter Filter ab 5m Tiefe dringend empfohlen!")
+
+    # >>> APEXCAM TAB <<<
+    with tab2:
+        st.subheader("🏄 Apexcam ActionCam Settings")
+        st.info("🔹 Klein, wendig, perfekt für B-Roll & enge Höhlen.")
+        
+        col_v, col_w = st.columns(2)
+        with col_v:
+            st.markdown("**🎥 Video Einstellungen**")
+            st.write("🎞️ **Auflösung:** 4K / 60fps")
+            st.caption("(60fps macht Bewegungen flüssiger & leichtes Zeitlupen-Potenzial)")
+            st.write("📷 **Foto:** SuperPhoto (HDR)")
+            
+        with col_w:
+            st.markdown("** Stabilisierung & Licht**")
+            st.write("🌊 **Anti-Shake:** EIS auf 'HOCH' stellen!")
+            st.caption("(Wasserströmung wackelt stark, EIS ist Pflicht)")
+            st.write(" **Filter:** Roter Dome-Filter ab 3m")
+
+        # Apexcam Spezifika
+        with st.expander("🐙 Apexcam Profi-Tipps"):
+            st.markdown("""
+            1. **Get Close or Go Home:** ActionCams haben kleine Sensoren. Geh nah ran (<1m), sonst wird alles grau/blau.
+            2. **Housing prüfen:** Die Apexcam M80 Air ist 40m wasserdicht *nackt*, aber für Fotos immer das Gehäuse nutzen!
+            3. **Touchscreen nass:** Deaktiviere "Touch Lock" oder nutze den "Mode"-Knopf am Gehäuse, da der Screen nass oft "spinnt".
+            4. **Akku:** Kälteschutz (Neopren-Hülle) hilft bei kaltem Wasser.
+            """)
+            
+        if visibility < 5:
+            st.warning("⚠️ Trübes Wasser: Apexcam leidet hier mehr als die Canon. Nutze Weitwinkel-Makro-Linse (Wet Lens)!")
+
+    # ────────────────────────────────────────────────────────────
+    #  GLOBALE UNTERWASSER-DATEN (Für beide Kameras)
+    # ────────────────────────────────────────────────────────────
+    st.divider()
+    st.subheader("🌊 Umgebungs-Analyse")
+    
+    # Farbverlust (Physik)
+    if depth <= 3: lost_colors = "Keine"
+    elif depth <= 8: lost_colors = "Rot"
+    elif depth <= 15: lost_colors = "Rot, Orange"
+    else: lost_colors = "Rot, Orange, Gelb, Grün"
+    
+    st.metric("🎨 Verlorene Farben ab dieser Tiefe", lost_colors)
+    
+    # Checkliste
+    with st.expander("✅ Pre-Dive Checkliste"):
+        checks = [
+            "O-Ring reinigen & einfetten",
+            "Speicherkarte formatiert?",
+            "Akku voll (Kälte-Reserve einkalkulieren)",
+            "Gehäuse-Vakuumtest gemacht?",
+            "Objektiv trocken? (Keine Fingerabdrücke)"
+        ]
+        for c in checks:
+            st.checkbox(c, key=f"uw_{c}")
 
 # ════════════════════════════════════════════════════════════════
 #  FOOTER

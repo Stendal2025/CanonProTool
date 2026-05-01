@@ -533,8 +533,8 @@ elif tool == "🕶️ ND Rechner":
 
     # ... (Dein bestehender ND-Rechner Code) ...
     
-    if st.button("✅ Berechnen", type="primary"):
-        result_sec = calculate_nd(base_sec, nd_stops)
+    # ✅ NEU (eindeutiger Key)
+        if st.button("✅ Berechnen", type="primary", key="calc_nd"):
         
         # Ergebnis formatieren (wie zuvor)
         if result_sec >= 3600: result_str = f"{result_sec/3600:.2f} Stunden"

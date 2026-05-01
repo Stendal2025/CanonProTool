@@ -367,6 +367,14 @@ if "gps_coords" not in st.session_state:
 def set_tool(t: str):
     st.session_state.tool = t
 
+# ═══════════════════════════════════════════
+#  NAVIGATION STATE (MUSS VOR SIDEBAR STEHEN!)
+# ══════════════════════════════════════════
+if "tool" not in st.session_state:
+    st.session_state.tool = "🏠 Home"  # Standard-Startseite
+
+tool = st.session_state.tool  # ✅ Jetzt ist `tool` definiert!
+
 
 # ════════════════════════════════════════════════════════════════
 #  SIDEBAR NAVIGATION (Optimiert für iPhone)

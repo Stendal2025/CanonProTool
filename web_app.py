@@ -1221,11 +1221,13 @@ elif tool == "🌍 Astro & Wetter Dashboard":
 # ── 📍 GPS-STANDORT ──────────────────────────────────────────────
 elif tool == "📍 GPS-Standort":
     st.header("📍 GPS-Standort")
-    st.markdown("Automatische Standorterkennung für präzise Berechnungen")
+    st.markdown("Automatische Standorterkennung")
 
+    # Session State initialisieren
     if "gps_coords" not in st.session_state:
         st.session_state.gps_coords = None
 
+    # GPS-Button mit JavaScript
     gps_html = """
     <script>
     function getLocation() {
@@ -1234,50 +1236,48 @@ elif tool == "📍 GPS-Standort":
                 (pos) => {
                     const lat = pos.coords.latitude.toFixed(6);
                     const lon = pos.coords.longitude.toFixed(6);
-                    
-                    // ✅ WICHTIG: Ändere die URL des ÜBERGEORDNETEN Fensters (Streamlit App)
+                    // WICHTIG: window.top für Streamlit iframe
                     const baseUrl = window.top.location.href.split('?')[0];
-                    const newUrl = baseUrl + "?lat=" + lat + "&lon=" + lon;
-                    window.top.location.href = newUrl;
+                    window.top.location.href = baseUrl + "?lat=" + lat + "&lon=" + lon;
                 },
-                (err) => {
-                    alert("GPS-Fehler: " + err.message + "\\nStelle sicher, dass HTTPS verwendet wird und Standortzugriff erlaubt ist.");
-                },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                (err) => alert("GPS-Fehler: " + err.message)
             );
-        } else {
-            alert("Geolocation wird von diesem Browser nicht unterstützt");
         }
     }
     </script>
-    <button onclick="getLocation()" style="width:100%; padding:15px; background:#1F6FEB; color:white; border:none; border-radius:8px; font-size:16px; font-weight:bold; cursor:pointer;">
+    <button onclick="getLocation()" style="width:100%;padding:15px;background:#1F6FEB;color:white;border:none;border-radius:8px;font-size:16px;font-weight:bold;">
         📍 Standort abrufen
     </button>
     """
     st.components.v1.html(gps_html, height=80)
 
-    # Query-Params aus der App-URL lesen
+    # Query-Params prüfen und übernehmen
     lat_q = st.query_params.get("lat")
     lon_q = st.query_params.get("lon")
-
+    
     if lat_q and lon_q:
         st.session_state.gps_coords = f"{lat_q},{lon_q}"
         st.query_params.clear()
         st.success(f"✅ GPS übernommen: `{st.session_state.gps_coords}`")
-        st.rerun()
+        st.cache_data.clear()  # Wetter-Cache leeren
+        st.rerun()  # App neu laden → Status-Bar aktualisiert!
 
-    # Anzeige des aktuellen Standorts
+    # Aktueller Standort anzeigen
     if st.session_state.gps_coords:
         st.divider()
         st.subheader("📍 Aktueller Standort")
         st.info(f"**Koordinaten:** `{st.session_state.gps_coords}`")
         
-        if st.button("🗑️ Standort zurücksetzen", use_container_width=True):
-            st.session_state.gps_coords = None
-            st.success("📍 Standort zurückgesetzt")
-            st.rerun()
+        col1, col2 = st.columns(2)
+        with col1:
+            st.code(st.session_state.gps_coords)
+        with col2:
+            if st.button("🗑️ Zurücksetzen", use_container_width=True):
+                st.session_state.gps_coords = None
+                st.cache_data.clear()
+                st.rerun()
     else:
-        st.info("💡 Klicke auf '📍 Standort abrufen' und erlaube den GPS-Zugriff im Browser-Popup.")
+        st.info("💡 Klicke auf '📍 Standort abrufen' und erlaube GPS-Zugriff")
 
 # ════════════════════════════════════════════════════════════════
 #  🌙 MOND & MILCHSTRAßE (Koordinaten-Fix)

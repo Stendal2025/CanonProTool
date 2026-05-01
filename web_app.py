@@ -382,28 +382,73 @@ tool = st.session_state.tool
 #  TOOLS – HAUPTINHALT
 # ════════════════════════════════════════════════════════════════
 
-# ── 🏠 HOME ──────────────────────────────────────────────────────
-if tool == "🏠 Home":
-    st.header("Willkommen beim Canon EOS R Pro Tool!")
+# ═══════════════════════════════════════════
+#  📱 MOBILE DASHBOARD (Home-Screen Ersatz)
+# ══════════════════════════════════════════
+elif tool == "🏠 Home":
+    # 🎨 Dashboard-CSS für App-ähnliche Kacheln
     st.markdown("""
-    ### 📸 Was kann diese App?
-    - **30 professionelle Rechner** für Fotografie
-    - **Belichtungsdreieck** optimieren
-    - **Schärfentiefe** berechnen
-    - **Goldene Stunde** planen
-    - **ND-Filter** kalkulieren
-    - **Live-Wetter & Astrodaten** abrufen
-    ### 🚀 Schnellstart
-    Wähle links ein Tool aus der Sidebar!
-    """)
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.info("📊 **Belichtung**\n\nEV-Werte berechnen")
-    with col2:
-        st.success("📐 **Schärfentiefe**\n\nDoF kalkulieren")
-    with col3:
-        st.warning("🌅 **Planung**\n\nGolden Hour Times")
+    <style>
+    .dash-card > button {
+        height: 85px !important;
+        font-size: 15px !important;
+        font-weight: 500 !important;
+        border-radius: 14px !important;
+        background-color: #161B22 !important;
+        color: #F0F6FC !important;
+        border: 1px solid #30363D !important;
+        white-space: pre-line !important;
+        line-height: 1.3 !important;
+        transition: all 0.2s ease !important;
+    }
+    .dash-card > button:hover {
+        background-color: #1F6FEB !important;
+        border-color: #58A6FF !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(31, 111, 235, 0.3) !important;
+    }
+    .dash-card > button:active {
+        transform: scale(0.98) !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
+    st.header("📸 Canon Pro Tool")
+    st.markdown("🚀 **Schnellzugriff** – Tippe auf eine Kachel, um direkt zu starten")
+
+    #  Dashboard-Tools (Icon + Name + Kurzbeschreibung)
+    dash_tools = [
+        ("️ Belichtung", "EV-Werte & Dreieck"),
+        ("🕶️ ND Rechner", "Filter & Stacking"),
+        (" Schärfentiefe", "DoF & Hyperfokal"),
+        ("🌍 Astro & Wetter", "Planung & Live-Daten"),
+        ("🌙 Mond & Milchstraße", "Phasen & Sichtbarkeit"),
+        ("🌊 Gezeiten", "Ebbe, Flut & Foto-Tipps"),
+        ("📝 Planer & Spots", "Logbuch & Locations"),
+        ("🤿 Unterwasser", "Canon & Apexcam"),
+        ("🔬 Focus Stacking", "Makro & Landschaft"),
+        ("🎛️ ND Stacking", "Multi-Filter Berechnung"),
+    ]
+
+    # 📱 2-Spalten-Grid (optimal für Mobile)
+    cols = st.columns(2)
+    for i, (name, desc) in enumerate(dash_tools):
+        with cols[i % 2]:
+            # Container für CSS-Klasse
+            with st.container():
+                st.markdown('<div class="dash-card">', unsafe_allow_html=True)
+                if st.button(f"{name}\n{desc}", use_container_width=True, type="secondary", key=f"home_{name}"):
+                    st.session_state.tool = name
+                    st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
+
+    st.divider()
+    st.markdown("""
+    💡 **Tipp:**  
+    • Die **linke Sidebar** enthält alle 28 Tools & Einstellungen  
+    • GPS-Daten werden automatisch übernommen  
+    • Alle Berechnungen sind offline-fähig (gecacht)
+    """)
 # ── ⚙️ BELICHTUNG ────────────────────────────────────────────────
 elif tool == "⚙️ Belichtung":
     st.header("⚙️ Belichtung-Bewerter")

@@ -286,7 +286,7 @@ NAV_GROUPS = [
             "🌙 Mond & Milchstraße",
             "🌠 Sternspuren",
             "🌙 Aktuelle Mond-Daten",
-            " Gezeiten & Tide-Rechner",
+            "🌊 Gezeiten & Tide-Rechner",
         ],
     },
     {

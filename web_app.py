@@ -973,68 +973,106 @@ elif tool == "📍 GPS-Standort":
             st.session_state.gps_coords = "Berlin"
             st.rerun()
 
-# ── 🌙 MOND & MILCHSTRAßE ────────────────────────────────────────
+# ════════════════════════════════════════════════════════════════
+#  🌙 MOND & MILCHSTRAßE (Koordinaten-Fix)
+# ════════════════════════════════════════════════════════════════
+
 elif tool == "🌙 Mond & Milchstraße":
     st.header("🌙 Mondphasen & Milchstraße Sichtbarkeit")
+    
     city_sel = st.selectbox("📍 Stadt", ["(manuell)"] + CITY_LIST)
+    
+    # 🎯 Koordinaten-Eingabe (mit GPS-Fallback)
     col1, col2 = st.columns(2)
     with col1:
-        date_str = st.text_input("📅 Datum (TT.MM.JJJJ)", value=datetime.now().strftime("%d.%m.%Y"))
+        date_str = st.text_input(
+            "📅 Datum (TT.MM.JJJJ)", value=datetime.now().strftime("%d.%m.%Y")
+        )
     with col2:
         if city_sel != "(manuell)":
-            latitude = CITY_COORDS[city_sel][0]
-            st.number_input("🌍 Breitengrad", value=latitude, disabled=True)
+            # Stadt aus Liste → Koordinaten aus CITY_COORDS
+            latitude, longitude = CITY_COORDS[city_sel]
+            st.number_input("🌍 Breitengrad", value=latitude, disabled=True, key="mw_lat")
+            st.number_input("🌍 Längengrad", value=longitude, disabled=True, key="mw_lon")
         else:
-            latitude = st.number_input("🌍 Breitengrad", min_value=-90.0, max_value=90.0, value=51.34)
+            # Manuelle Eingabe oder GPS-Koordinaten
+            default_coords = st.session_state.get("gps_coords", "51.34,12.38")
+            coords_input = st.text_input(
+                "📍 Koordinaten (Breitengrad, Längengrad)",
+                value=default_coords,
+                help="Beispiel: 50.466164, 7.469177"
+            )
+            # Robustes Parsing
+            try:
+                if "," in coords_input:
+                    parts = coords_input.replace(" ", "").split(",")
+                    latitude, longitude = float(parts[0]), float(parts[1])
+                    if not (-90 <= latitude <= 90 and -180 <= longitude <= 180):
+                        st.error("❌ Ungültige Koordinaten")
+                        st.stop()
+                else:
+                    latitude, longitude = 51.34, 12.38  # Fallback
+            except:
+                latitude, longitude = 51.34, 12.38  # Fallback bei Fehler
 
-    option = st.selectbox("🎯 Fokus", ["Milchstraße", "Mondfotografie", "Deep Sky", "Nordlichter"])
+    option = st.selectbox(
+        "🎯 Fokus", ["Milchstraße", "Mondfotografie", "Deep Sky", "Nordlichter"]
+    )
 
     if st.button("🔍 Berechnen", type="primary"):
         try:
+            # Datum parsen
             day, month, year = map(int, date_str.split("."))
-            phase            = calculate_moon_phase(year, month, day)
+            phase = calculate_moon_phase(year, month, day)
             p_name, p_illum, p_tip = moon_phase_info(phase)
 
+            # Berechnung je nach Fokus
             if option == "Milchstraße":
-                score     = milky_way_score(phase, month)
+                score = milky_way_score(phase, month)
                 best_time = "22:30–04:00" if 4 <= month <= 9 else "03:00–06:00"
-                rec       = ("🟢 Hervorragend!" if score >= 85 else
-                             "🟡 Gut!"          if score >= 65 else
-                             "🟠 Mäßig."        if score >= 40 else "🔴 Schlecht.")
+                rec = (
+                    "🟢 Hervorragend!" if score >= 85 else
+                    "🟡 Gut!" if score >= 65 else
+                    "🟠 Mäßig." if score >= 40 else "🔴 Schlecht."
+                )
             elif option == "Mondfotografie":
-                score     = p_illum
+                score = p_illum
                 best_time = "Abends nach Sonnenuntergang"
-                rec       = "🌕 Vollmond – perfekt!" if 0.45 < phase < 0.55 else "🌙 Interessante Phase"
+                rec = "🌕 Vollmond – perfekt!" if 0.45 < phase < 0.55 else "🌙 Interessante Phase"
             elif option == "Deep Sky":
-                score     = max(0, 100 - p_illum)
+                score = max(0, 100 - p_illum)
                 best_time = "Mitternacht–Morgengrauen"
-                rec       = "🔭 Dunkler Himmel – ideal!" if score > 80 else "⚠️ Auf Neumond warten."
+                rec = "🔭 Dunkler Himmel – ideal!" if score > 80 else "⚠️ Auf Neumond warten."
             else:  # Nordlichter
                 if abs(latitude) > 58:
-                    score     = max(0, 100 - p_illum) * (1.0 if month in list(range(10,13)) + list(range(1,4)) else 0.5)
+                    score = max(0, 100 - p_illum) * (
+                        1.0 if month in range(10, 13) or month in range(1, 4) else 0.5
+                    )
                     best_time = "21:00–02:00"
-                    rec       = "🌌 Aurora möglich bei klarem Himmel!"
+                    rec = "🌌 Aurora möglich bei klarem Himmel!"
                 else:
-                    score     = 15
+                    score = 15
                     best_time = "–"
-                    rec       = "📍 Zu weit südlich – >58° Breite nötig (Skandinavien, Island)"
+                    rec = "📍 Zu weit südlich – >58° Breite nötig (Skandinavien, Island)"
 
             st.success(f"""
-            ### 📊 Ergebnis – {date_str}
-            **🌙 Mondphase:** {p_name}
+            ### 📊 Ergebnis – {date_str} | 📍 {latitude:.4f}, {longitude:.4f}
+            **🌙 Mondphase:** {p_name}  
             Beleuchtung: **{p_illum:.0f}%** | {p_tip}
 
-            **⭐ Bewertung:** {score:.0f}/100
+            **⭐ Bewertung:** {score:.0f}/100  
             {rec}
 
             **⏰ Beste Zeit:** {best_time}
             """)
             st.info("""
-            💡 **Tipps:** 🌑 Neumond = dunkelster Himmel | 🌕 Vollmond = zu hell für Milchstraße
+            💡 **Tipps:** 🌑 Neumond = dunkelster Himmel  |  🌕 Vollmond = zu hell für Milchstraße  
             Milchstraße-Saison: März–Oktober (Peak: Juni–August)
             """)
-        except (ValueError, TypeError):
+        except ValueError:
             st.error("⚠️ Ungültiges Datum. Format: TT.MM.JJJJ (z.B. 15.08.2025)")
+        except Exception as e:
+            st.error(f"❌ Fehler: {type(e).__name__}: {e}")
 
 # ── 🌠 STERNSPUREN ───────────────────────────────────────────────
 elif tool == "🌠 Sternspuren":

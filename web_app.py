@@ -789,14 +789,19 @@ elif tool == "📅 5-Tage Prognose":
         except Exception as e:
             st.error(f"Fehler: {e}")
 
-# ── 🌍 ASTRO & WETTER DASHBOARD ──────────────────────────────────
+# ════════════════════════════════════════════════════════════════
+#  🌍 ASTRO & WETTER DASHBOARD (Koordinaten-Fix)
+# ════════════════════════════════════════════════════════════════
+
 elif tool == "🌍 Astro & Wetter Dashboard":
     st.header("🌍 Astro & Wetter Dashboard")
     st.markdown("Alles für die Shooting-Planung an einem Ort")
 
+    # Vorausgefüllte Stadt aus GPS-Tool übernehmen
+    default_city = st.session_state.get("dash_city", "Berlin")
     city = st.text_input(
         "📍 Stadt oder Koordinaten (z.B. Berlin oder 52.52,13.40)",
-        value=st.session_state.get("gps_coords", "Berlin"),
+        value=default_city,
         key="dash_input",
     )
 
@@ -805,70 +810,94 @@ elif tool == "🌍 Astro & Wetter Dashboard":
             import requests
             API_KEY = st.secrets["OPENWEATHER_API_KEY"]
 
-            w_url = (
-                f"https://api.openweathermap.org/data/2.5/weather"
-                f"?lat={city.split(',')[0]}&lon={city.split(',')[1]}&appid={API_KEY}&units=metric&lang=de"
-                if "," in city else
-                f"https://api.openweathermap.org/data/2.5/weather"
-                f"?q={city}&appid={API_KEY}&units=metric&lang=de"
-            )
+            # 🎯 Robuste Koordinaten-Erkennung
+            lat, lon = None, None
+            if "," in city:
+                try:
+                    # Leerzeichen entfernen, aufteilen, in Float umwandeln
+                    parts = city.replace(" ", "").split(",")
+                    lat, lon = float(parts[0]), float(parts[1])
+                    
+                    # Validierung: Koordinaten müssen im gültigen Bereich sein
+                    if not (-90 <= lat <= 90 and -180 <= lon <= 180):
+                        st.error("❌ Ungültige Koordinaten. Breitengrad: -90 bis 90, Längengrad: -180 bis 180")
+                        st.stop()
+                except (ValueError, IndexError):
+                    st.error("❌ Ungültiges Koordinaten-Format. Bitte: 52.52,13.40 (ohne Leerzeichen)")
+                    st.stop()
+
+            # API-URL bauen (mit Koordinaten oder Stadtnamen)
+            if lat is not None:
+                w_url = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API_KEY}&units=metric&lang=de"
+            else:
+                w_url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric&lang=de"
 
             w = requests.get(w_url, timeout=8).json()
+            
             if w.get("cod") != 200:
-                st.error(f"❌ {w.get('message','Fehler')}")
+                st.error(f"❌ {w.get('message', 'Unbekannter Fehler')}")
             else:
-                temp   = w["main"]["temp"]
+                # Wetter-Daten extrahieren
+                temp = w["main"]["temp"]
                 clouds = w["clouds"]["all"]
-                wind   = w["wind"]["speed"] * 3.6
-                desc   = w["weather"][0]["description"]
-                icon   = w["weather"][0]["icon"]
-                sr_ts  = datetime.fromtimestamp(w["sys"]["sunrise"]).strftime("%H:%M")
-                ss_ts  = datetime.fromtimestamp(w["sys"]["sunset"]).strftime("%H:%M")
+                wind = w["wind"]["speed"] * 3.6
+                desc = w["weather"][0]["description"]
+                icon = w["weather"][0]["icon"]
+                sr_ts = datetime.fromtimestamp(w["sys"]["sunrise"]).strftime("%H:%M")
+                ss_ts = datetime.fromtimestamp(w["sys"]["sunset"]).strftime("%H:%M")
 
-                now             = datetime.now()
-                phase           = calculate_moon_phase(now.year, now.month, now.day)
+                # Mond-Daten berechnen
+                now = datetime.now()
+                phase = calculate_moon_phase(now.year, now.month, now.day)
                 m_name, m_illum, m_tip = moon_phase_info(phase)
 
+                # Layout: 2 Spalten
                 col1, col2 = st.columns(2)
                 with col1:
                     st.subheader("☁️ Live-Wetter")
-                    st.image(f"https://openweathermap.org/img/wn/{icon}@2x.png", width=60)
+                    st.image(f"http://openweathermap.org/img/wn/{icon}@2x.png", width=60)
                     c1, c2, c3 = st.columns(3)
                     c1.metric("🌡️", f"{temp:.1f}°C")
                     c2.metric("💨", f"{wind:.0f} km/h")
                     c3.metric("☁️", f"{clouds}%")
                     st.caption(f"{desc.capitalize()} | ☀️ {sr_ts} – {ss_ts}")
+                    
                 with col2:
                     st.subheader("🌙 Mondstatus")
-                    st.metric("Phase",        m_name)
-                    st.metric("Beleuchtung",  f"{m_illum:.0f}%")
+                    st.metric("Phase", m_name)
+                    st.metric("Beleuchtung", f"{m_illum:.0f}%")
                     st.caption(m_tip)
 
+                # Astro-Score berechnen
                 astro_sc = (100 - m_illum) * 0.6 + (100 - clouds) * 0.4
-                mw_sc    = milky_way_score(phase, now.month)
+                mw_sc = milky_way_score(phase, now.month)
+
                 st.info(f"""
                 ### 📸 Shooting-Empfehlung
                 {astro_recommendation(astro_sc)}
+
                 **Milchstraße-Score:** {mw_sc:.0f}/100
                 """)
 
+                # Stunden-Übersicht (optional)
                 with st.expander("📊 Stunden-Übersicht (heute)"):
-                    f_url  = (
-                        f"https://api.openweathermap.org/data/2.5/forecast"
-                        f"?q={city}&appid={API_KEY}&units=metric&lang=de&cnt=8"
-                    )
+                    if lat is not None:
+                        f_url = f"http://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={API_KEY}&units=metric&lang=de&cnt=8"
+                    else:
+                        f_url = f"http://api.openweathermap.org/data/2.5/forecast?q={city}&appid={API_KEY}&units=metric&lang=de&cnt=8"
+                    
                     f_data = requests.get(f_url, timeout=8).json()
                     if f_data.get("cod") == "200":
                         items = f_data["list"]
-                        df_h  = pd.DataFrame({
-                            "Zeit":    [datetime.fromtimestamp(i["dt"]).strftime("%H:%M") for i in items],
-                            "Temp °C": [i["main"]["temp"]  for i in items],
+                        df_h = pd.DataFrame({
+                            "Zeit": [datetime.fromtimestamp(i["dt"]).strftime("%H:%M") for i in items],
+                            "Temp °C": [i["main"]["temp"] for i in items],
                             "Wolken%": [i["clouds"]["all"] for i in items],
                         })
                         st.dataframe(df_h.set_index("Zeit"), use_container_width=True)
-
+                        
         except Exception as e:
-            st.error(f"Fehler: {e}")
+            st.error(f"Fehler: {type(e).__name__}: {e}")
             st.info("💡 Prüfe deinen API-Key in .streamlit/secrets.toml")
 
 # ── 📍 GPS-STANDORT ──────────────────────────────────────────────

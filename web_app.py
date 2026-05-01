@@ -83,6 +83,39 @@ SHUTTERS_ALL = [
 #  HILFSFUNKTIONEN
 # ════════════════════════════════════════════════════════════════
 
+import streamlit.components.v1 as components
+
+def copy_button(text_to_copy: str, label: str = " Kopieren"):
+    """Erstellt einen Button, der Text in die Zwischenablage kopiert."""
+    # Eindeutige ID für den Button generieren
+    btn_id = f"btn_{hash(text_to_copy)}"
+    
+    components.html(f"""
+    <style>
+    .copy-btn {{
+        background: #238636; color: white; border: none;
+        padding: 8px 16px; border-radius: 6px; cursor: pointer;
+        font-size: 14px; font-weight: bold;
+        transition: background 0.2s;
+    }}
+    .copy-btn:hover {{ background: #2ea043; }}
+    .copy-btn:active {{ transform: scale(0.98); }}
+    </style>
+    <button class="copy-btn" onclick="copy_{btn_id}()">{label}</button>
+    <script>
+    function copy_{btn_id}() {{
+        navigator.clipboard.writeText('{text_to_copy.replace("'", "\\'")}');
+        const btn = document.querySelector('.copy-btn');
+        const originalText = btn.innerText;
+        btn.innerText = "✅ Kopiert!";
+        btn.style.background = "#1F6FEB";
+        setTimeout(() => {{
+            btn.innerText = originalText;
+            btn.style.background = "#238636";
+        }}, 2000);
+    }}
+    </script>
+    """, height=40)
 def parse_shutter(s: str) -> float:
     return SHUTTER_MAP.get(s, 1 / 125)
 
@@ -497,6 +530,22 @@ elif tool == "🕶️ ND Rechner":
             st.warning("⚠️ Sehr lange Belichtung – Stativ + Fernauslöser empfohlen.")
         if result_sec > 900:
             st.warning("⚠️ Über 15 Minuten – Sensorrauschen durch Wärme möglich!")
+
+    # ... (Dein bestehender ND-Rechner Code) ...
+    
+    if st.button("✅ Berechnen", type="primary"):
+        result_sec = calculate_nd(base_sec, nd_stops)
+        
+        # Ergebnis formatieren (wie zuvor)
+        if result_sec >= 3600: result_str = f"{result_sec/3600:.2f} Stunden"
+        elif result_sec >= 60: result_str = f"{result_sec/60:.1f} Minuten"
+        else: result_str = f"{result_sec:.1f} Sekunden"
+
+        st.success(f"### Ergebnis: Neue Belichtungszeit ist {result_str}")
+        
+        #  HIER DEN NEUEN BUTTON EINFÜGEN 👇
+        copy_text = f"ND{2**nd_stops} | {base_str} -> {result_str}"
+        copy_button(copy_text, label=f"📋 '{copy_text}' kopieren")
 
 # ════════════════════════════════════════════════════════════════
 #  🔬 FOCUS STACKING ASSISTANT

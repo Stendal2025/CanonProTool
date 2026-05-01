@@ -1239,10 +1239,10 @@ elif tool == "📍 GPS-Standort":
     import streamlit.components.v1 as components
 
     # Session State für GPS initialisieren
-    if "gps_temp_coords" not in st.session_state:
-        st.session_state.gps_temp_coords = None
+    if "gps_coords" not in st.session_state:
+        st.session_state.gps_coords = None
 
-    # JavaScript speichert Koordinaten temporär im Session State via PostMessage
+    # GPS-HTML mit JavaScript
     gps_html = """
     <div style="padding:10px; box-sizing:border-box; font-family:sans-serif;">
         <button id="gps-btn" style="padding:12px; background:#1F6FEB; color:white; border:none; border-radius:8px; cursor:pointer; width:100%; margin-bottom:10px; font-size:16px;">
@@ -1250,9 +1250,9 @@ elif tool == "📍 GPS-Standort":
         </button>
         <div id="gps-res" style="display:none; background:#161B22; padding:12px; border-radius:8px; text-align:center; border:1px solid #30363D;">
             <p id="gps-txt" style="color:#58A6FF; font-family:monospace; margin:0 0 12px 0; font-size:14px;"></p>
-            <button id="gps-accept-btn" style="padding:12px; background:#238636; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold; font-size:15px;">
+            <a id="gps-link" href="#" style="display:inline-block; padding:12px; background:#238636; color:white; text-decoration:none; border-radius:6px; font-weight:bold; font-size:15px; cursor:pointer;">
                 ✅ Koordinaten übernehmen
-            </button>
+            </a>
         </div>
     </div>
     <script>
@@ -1283,19 +1283,14 @@ elif tool == "📍 GPS-Standort":
                     ort = a.city || a.town || a.village || a.municipality || a.county || a.state || a.country || "Unbekannter Ort";
                 }
                 txt.textContent = `✅ ${lat}, ${lon} (nahe ${ort})`;
-                
-                // Button aktivieren und Koordinaten speichern
-                const btn = document.getElementById('gps-accept-btn');
-                btn.onclick = () => {
-                    window.parent.postMessage({type: 'gps_coords', lat: lat, lon: lon}, '*');
-                };
+                // HIER: Link auf die aktuelle Seite mit Query-Params setzen
+                const baseUrl = window.location.href.split('?')[0];
+                document.getElementById('gps-link').href = baseUrl + "?lat=" + lat + "&lon=" + lon;
             })
             .catch(() => {
                 txt.textContent = `✅ ${lat}, ${lon}`;
-                const btn = document.getElementById('gps-accept-btn');
-                btn.onclick = () => {
-                    window.parent.postMessage({type: 'gps_coords', lat: lat, lon: lon}, '*');
-                };
+                const baseUrl = window.location.href.split('?')[0];
+                document.getElementById('gps-link').href = baseUrl + "?lat=" + lat + "&lon=" + lon;
             });
 
         }, err => {
@@ -1304,44 +1299,30 @@ elif tool == "📍 GPS-Standort":
     };
     </script>
     """
-    
-    # HTML einbetten
     components.html(gps_html, height=180)
-    
-    # PostMessage vom JavaScript empfangen
-    from streamlit_javascript import st_javascript
-    
-    # Alternative: Einfach einen Streamlit-Button anzeigen, wenn Koordinaten bereit sind
-    # Dafür nutzen wir einen Workaround mit Query-Params ODER Session State
-    
-    # Einfache Lösung: Nach GPS-Klick Query-Params setzen via JavaScript Redirect
-    # Aber das haben wir schon probiert...
-    
-    # BESSER: Wir zeigen einfach einen normalen Streamlit-Button an, der die 
-    # zuletzt ermittelten Koordinaten aus einem versteckten Feld nimmt
-    
-    # Für jetzt: Manuelle Eingabe als Fallback (funktioniert garantiert!)
-    st.divider()
-    st.markdown("### 📍 Oder Koordinaten manuell eingeben:")
-    col1, col2 = st.columns(2)
-    with col1:
-        manual_lat = st.text_input("Breitengrad", value="50.466164" if st.session_state.gps_coords else "50.43")
-    with col2:
-        manual_lon = st.text_input("Längengrad", value="7.469177" if st.session_state.gps_coords else "7.47")
-    
-    if st.button("✅ Koordinaten manuell übernehmen", use_container_width=True):
-        st.session_state.gps_coords = f"{manual_lat},{manual_lon}"
-        st.success(f"📍 Standort gesetzt: `{st.session_state.gps_coords}`")
-        st.cache_data.clear()
-        st.rerun()
 
-    # Query-Params prüfen (Fallback)
+    # Query-Params prüfen (wird nach Klick auf "Koordinaten übernehmen" gesetzt)
     lat_q = st.query_params.get("lat")
     lon_q = st.query_params.get("lon")
     if lat_q and lon_q:
         st.session_state.gps_coords = f"{lat_q},{lon_q}"
         st.query_params.clear()
         st.success(f"✅ GPS übernommen: `{st.session_state.gps_coords}`")
+        st.cache_data.clear()
+        st.rerun()
+
+    # Manuelle Eingabe als Alternative
+    st.divider()
+    st.markdown("### 📍 Oder manuell eingeben:")
+    col1, col2 = st.columns(2)
+    with col1:
+        manual_lat = st.text_input("Breitengrad", value="50.43")
+    with col2:
+        manual_lon = st.text_input("Längengrad", value="7.47")
+    
+    if st.button("✅ Manuell übernehmen", use_container_width=True):
+        st.session_state.gps_coords = f"{manual_lat},{manual_lon}"
+        st.success(f" Standort gesetzt: `{st.session_state.gps_coords}`")
         st.cache_data.clear()
         st.rerun()
 

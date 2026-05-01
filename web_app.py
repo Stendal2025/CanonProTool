@@ -593,7 +593,7 @@ if tool == "🏠 Home":
         ("📐 Schärfentiefe", "DoF & Hyperfokal"),
         ("🌍 Astro & Wetter", "Planung & Live"),
         ("🌙 Mond & Milchstraße", "Phasen & Sichtbarkeit"),
-        (" Gezeiten", "Ebbe & Flut"),
+        ("🌊 Gezeiten & Tide-Rechner"), 
         ("📍 GPS-Standort", "Standort & Wetter"),
         ("🤿 Unterwasser-Modus", "Canon & Apexcam"),
     ]

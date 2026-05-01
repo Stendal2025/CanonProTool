@@ -1161,36 +1161,69 @@ elif tool == "🌠 Sternspuren":
         **Stacking:** Sequator (Win) | Starry Landscape Stacker (Mac) | StarStaX
         """)
 
-# ── 🌙 AKTUELLE MOND-DATEN ───────────────────────────────────────
-elif tool == "🌙 Aktuelle Mond-Daten":
+# ════════════════════════════════════════════════════════════════
+#  🌙 AKTUELLE MOND-DATEN (GPS & Koordinaten-Fix)
+# ═══════════════════════════════════════════════════════════════
+
+elif tool == " Aktuelle Mond-Daten":
     st.header("🌙 Live-Sonnen- & Mond-Daten")
     if not ASTRAL_OK:
         st.error(f"⚠️ astral/pytz nicht installiert: {_ASTRAL_ERR}")
         st.stop()
 
-    city_sel = st.selectbox("📍 Standort", CITY_LIST)
+    st.subheader("📍 Standort festlegen")
+    city_sel = st.selectbox("Stadt aus Liste", ["(manuell / GPS)"] + CITY_LIST, index=0)
+
+    lat, lon = None, None
+    if city_sel != "(manuell / GPS)":
+        # Stadt aus Dropdown → Koordinaten aus Dictionary
+        lat, lon = CITY_COORDS[city_sel]
+        st.info(f"🏙️ Gewählt: **{city_sel}** ({lat:.4f}, {lon:.4f})")
+    else:
+        # Manuell oder GPS-Fallback
+        default_coords = st.session_state.get("gps_coords", "51.34, 12.38")
+        coords_input = st.text_input(
+            "📍 Koordinaten eingeben",
+            value=default_coords,
+            help="GPS-Daten werden automatisch übernommen. Format: 50.46, 7.46"
+        )
+        # Robustes Parsing (gleiche Logik wie in den anderen Tools)
+        try:
+            if "," in coords_input:
+                parts = coords_input.replace(" ", "").split(",")
+                lat, lon = float(parts[0]), float(parts[1])
+                if not (-90 <= lat <= 90 and -180 <= lon <= 180):
+                    st.error("❌ Ungültige Koordinaten. Bereich: Lat -90..90, Lon -180..180")
+                    st.stop()
+            else:
+                lat, lon = 51.34, 12.38  # Fallback
+        except Exception:
+            lat, lon = 51.34, 12.38  # Fallback bei Parse-Fehler
+
     if st.button("🔄 Jetzt berechnen", type="primary"):
         try:
-            lat, lon    = CITY_COORDS[city_sel]
-            tz          = pytz.timezone("Europe/Berlin")
-            city_info   = LocationInfo(city_sel, "DE", "Europe/Berlin", lat, lon)
-            now         = datetime.now(tz)
-            s           = sun(city_info.observer, date=now.date(), tzinfo=tz)
-            phase       = calculate_moon_phase(now.year, now.month, now.day)
+            tz = pytz.timezone("Europe/Berlin")
+            # Dynamischer Standortname für die Anzeige
+            display_name = city_sel if city_sel != "(manuell / GPS)" else f"{lat:.4f}, {lon:.4f}"
+            
+            city_info = LocationInfo(display_name, "DE", "Europe/Berlin", lat, lon)
+            now = datetime.now(tz)
+            s = sun(city_info.observer, date=now.date(), tzinfo=tz)
+            phase = calculate_moon_phase(now.year, now.month, now.day)
             m_name, m_illum, m_tip = moon_phase_info(phase)
 
             st.success(f"""
-            ### 📅 {now.strftime('%d.%m.%Y %H:%M')} | {city_sel}
+            ### 📅 {now.strftime('%d.%m.%Y %H:%M')} | 📍 {display_name}
 
             **🌞 Sonne**
-            • Aufgang:        `{s['sunrise'].strftime('%H:%M')}`
-            • Untergang:      `{s['sunset'].strftime('%H:%M')}`
-            • Goldene Stunde: `{(s['sunrise']-timedelta(minutes=15)).strftime('%H:%M')} – {(s['sunrise']+timedelta(minutes=60)).strftime('%H:%M')}`
+            • Aufgang:         `{s['sunrise'].strftime('%H:%M')}`
+            • Untergang:       `{s['sunset'].strftime('%H:%M')}`
+            • Goldene Stunde:  `{(s['sunrise']-timedelta(minutes=15)).strftime('%H:%M')} – {(s['sunrise']+timedelta(minutes=60)).strftime('%H:%M')}`
 
             **🌙 Mond**
-            • Phase:          `{m_name}`
-            • Beleuchtung:    `{m_illum:.0f}%`
-            • Tipp:           {m_tip}
+            • Phase:           `{m_name}`
+            • Beleuchtung:     `{m_illum:.0f}%`
+            • Tipp:            {m_tip}
 
             **📸 Beste Foto-Zeiten**
             {get_best_photo_times(s, phase)}

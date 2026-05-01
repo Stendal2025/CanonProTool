@@ -1292,7 +1292,7 @@ elif tool == "📍 GPS-Standort":
     };
     </script>
     """
-        components.html(gps_html, height=160)
+    components.html(gps_html, height=160)
 
     # 🧪 TEST: Manueller Button zum Setzen der Koordinaten
     st.divider()

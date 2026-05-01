@@ -121,6 +121,12 @@ def moon_phase_info(phase: float) -> tuple[str, float, str]:
         return "🌗 Letztes Viertel",   illum, "Mond geht spät auf"
     return "🌘 Abnehmende Sichel",     illum, "Gut für Morgenaufnahmen"
 
+def get_tide_photo_tip(tide_type: str) -> str:
+    """Gibt Fotografie-Tipps basierend auf Gezeitenzustand zurück."""
+    if tide_type == "High":
+        return "🌊 Dramatische Wellen, Brandungsfotos, Langzeitbelichtung"
+    return "🏖️ Spiegelungen, Gezeitenpfützen, Wattstrukturen, Makro"
+
 
 def calculate_nd(base_sec: float, stops: int) -> float:
     return base_sec * (2 ** stops)

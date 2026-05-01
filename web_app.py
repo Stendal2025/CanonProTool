@@ -251,6 +251,45 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# ═══════════════════════════════════════════
+#   LIVE STATUS BAR (Immer sichtbar oben)
+# ══════════════════════════════════════════
+def render_status_bar():
+    # Standort aus Session State (wird von GPS-Tool befüllt)
+    loc = st.session_state.get("gps_coords", "51.34, 12.38")
+    try:
+        lat, lon = map(float, loc.split(","))
+    except:
+        lat, lon = 51.34, 12.38
+
+    # Wetter (wird nur alle 10 Min neu geladen → spart API-Calls)
+    @st.cache_data(ttl=600)
+    def get_status_weather(lat, lon):
+        try:
+            key = st.secrets.get("OPENWEATHER_API_KEY")
+            if key:
+                r = requests.get(f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={key}&units=metric&lang=de", timeout=4)
+                if r.status_code == 200:
+                    d = r.json()
+                    return f"{d['main']['temp']:.1f}°C", d['weather'][0]['description'].capitalize()
+        except: pass
+        return "--", "Daten n/a"
+
+    temp, desc = get_status_weather(lat, lon)
+
+    # Kompaktes Layout mit dezenter Hintergrundfarbe
+    st.markdown("<div style='background:#0D1117; padding:12px 0; margin-bottom:15px; border-radius:8px;'>", unsafe_allow_html=True)
+    c1, c2, c3, c4 = st.columns([2, 2, 2, 1])
+    c1.markdown(f"📍 **Standort**<br><small style='color:#8B949E'>{loc}</small>", unsafe_allow_html=True)
+    c2.markdown(f"☁️ **Wetter**<br><small style='color:#8B949E'>{temp} | {desc}</small>", unsafe_allow_html=True)
+    c3.markdown(f"🌞 **Status**<br><small style='color:#8B949E'>Live-Betrieb</small>", unsafe_allow_html=True)
+    c4.button("🔄", help="Daten aktualisieren", use_container_width=True, on_click=lambda: st.rerun())
+    st.markdown("</div>", unsafe_allow_html=True)
+    st.divider()
+
+# Bar sofort rendern
+render_status_bar()
+
 
 # ════════════════════════════════════════════════════════════════
 #  APP-KONFIGURATION & CSS

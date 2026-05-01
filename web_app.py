@@ -509,7 +509,6 @@ with st.sidebar:
 #  📱 MOBILE DASHBOARD (Startseite)
 # ══════════════════════════════════════════
 elif tool == "🏠 Home":
-    # Mobile-optimiertes CSS für Dashboard
     st.markdown("""
     <style>
     .dash-card > button {
@@ -542,19 +541,17 @@ elif tool == "🏠 Home":
     st.markdown("**Schnellzugriff** – Tippe auf eine Kachel")
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # Wichtige Tools (gekürzt auf die Top 8 für Übersichtlichkeit)
     dash_tools = [
         ("⚙️ Belichtung", "EV-Werte & Dreieck"),
         ("🕶️ ND Rechner", "Filter & Stacking"),
         ("📐 Schärfentiefe", "DoF & Hyperfokal"),
         ("🌍 Astro & Wetter", "Planung & Live"),
         ("🌙 Mond & Milchstraße", "Phasen & Sichtbarkeit"),
-        ("🌊 Gezeiten", "Ebbe & Flut"),
+        (" Gezeiten", "Ebbe & Flut"),
         ("📍 GPS-Standort", "Standort & Wetter"),
         ("🤿 Unterwasser", "Canon & Apexcam"),
     ]
 
-    # 2-Spalten-Grid (optimal für iPhone)
     cols = st.columns(2)
     for i, (name, desc) in enumerate(dash_tools):
         with cols[i % 2]:

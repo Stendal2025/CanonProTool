@@ -250,56 +250,8 @@ components.html("""
 <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2983/2983796.png">
 """, height=0)
 
-st.set_page_config(
-    page_title="Canon EOS R Pro Tool",
-    page_icon="📷",  # Moderne iOS-PWA-Unterstützung
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
 
-# ═══════════════════════════════════════════
-#   LIVE STATUS BAR (Immer sichtbar oben)
-# ══════════════════════════════════════════
-def render_status_bar():
-    # Holt Koordinaten aus Session State
-    loc = st.session_state.get("gps_coords")
-    display_loc = loc if loc else "📍 Noch nicht festgelegt"
-    
-    @st.cache_data(ttl=600)
-    def get_status_weather(lat, lon):
-        try:
-            key = st.secrets.get("OPENWEATHER_API_KEY")
-            if key:
-                r = requests.get(
-                    f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={key}&units=metric&lang=de", 
-                    timeout=4
-                )
-                if r.status_code == 200:
-                    d = r.json()
-                    return f"{d['main']['temp']:.1f}°C", d['weather'][0]['description'].capitalize()
-        except: pass
-        return "--", "Daten n/a"
 
-    if loc and "," in loc:
-        try:
-            lat, lon = map(float, loc.split(","))
-            temp, desc = get_status_weather(lat, lon)
-        except:
-            temp, desc = "--", "Ungültiges Format"
-    else:
-        temp, desc = "--", "GPS setzen"
-
-    st.markdown("<div style='background:#0D1117; padding:12px 0; margin-bottom:15px; border-radius:8px;'>", unsafe_allow_html=True)
-    c1, c2, c3, c4 = st.columns([2, 2, 2, 1])
-    c1.markdown(f"📍 **Standort**<br><small style='color:#8B949E'>{display_loc}</small>", unsafe_allow_html=True)
-    c2.markdown(f"☁️ **Wetter**<br><small style='color:#8B949E'>{temp} | {desc}</small>", unsafe_allow_html=True)
-    c3.markdown(f"🌞 **Status**<br><small style='color:#8B949E'>Live-Betrieb</small>", unsafe_allow_html=True)
-    
-    # ✅ FIX: Einfach Button ohne on_click – Streamlit rerunnt automatisch!
-    c4.button("🔄", help="Daten aktualisieren", use_container_width=True, key="refresh_status")
-    
-    st.markdown("</div>", unsafe_allow_html=True)
-    st.divider()
 
 
 # ════════════════════════════════════════════════════════════════
@@ -312,6 +264,47 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+# ═══════════════════════════════════════════
+#   LIVE STATUS BAR
+# ══════════════════════════════════════════
+def render_status_bar():
+    # Sichere Fallbacks, falls GPS noch nicht gesetzt ist
+    loc = st.session_state.get("gps_coords")
+    display_loc = loc if loc else " Nicht gesetzt"
+    
+    # Wetter nur holen, wenn gültige Koordinaten vorliegen
+    temp, desc = "--", "GPS setzen"
+    if loc and "," in loc:
+        try:
+            lat, lon = map(float, loc.split(","))
+            key = st.secrets.get("OPENWEATHER_API_KEY")
+            if key:
+                r = requests.get(f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={key}&units=metric&lang=de", timeout=3)
+                if r.status_code == 200:
+                    d = r.json()
+                    temp = f"{d['main']['temp']:.1f}°C"
+                    desc = d['weather'][0]['description'].capitalize()
+        except:
+            temp, desc = "Fehler", "Daten n/a"
+
+    # Layout rendern
+    st.markdown("""
+    <div style='background:#0D1117; padding:10px 5px; margin-bottom:10px; border-radius:8px; border:1px solid #21262D;'>
+    """, unsafe_allow_html=True)
+    
+    c1, c2, c3, c4 = st.columns([2.5, 2.5, 2.5, 1])
+    c1.markdown(f"📍 **Standort**<br><small style='color:#8B949E; font-size:12px;'>{display_loc}</small>", unsafe_allow_html=True)
+    c2.markdown(f"☁️ **Wetter**<br><small style='color:#8B949E; font-size:12px;'>{temp} | {desc}</small>", unsafe_allow_html=True)
+    c3.markdown(f"📷 **Status**<br><small style='color:#8B949E; font-size:12px;'>Live-Modus</small>", unsafe_allow_html=True)
+    
+    # Refresh-Button (ohne callback, löst automatisch Rerun aus)
+    if c4.button("🔄", use_container_width=True, key="status_refresh_btn"):
+        st.cache_data.clear()  # Wetter-Cache leeren
+        
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# ⚠️ WICHTIG: Die Funktion muss HIER aufgerufen werden!
+render_status_bar()
 
 st.markdown("""
 <style>

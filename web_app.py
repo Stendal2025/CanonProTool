@@ -271,6 +271,7 @@ NAV_GROUPS = [
         "tools": [
             "⚙️ Belichtung",
             "🕶️ ND Rechner",
+            "🔬 Focus Stacking",
             "🎛️ ND Stacking",
             "📐 Schärfentiefe",
             "🔦 Blitz",
@@ -440,6 +441,91 @@ elif tool == "🕶️ ND Rechner":
             st.warning("⚠️ Sehr lange Belichtung – Stativ + Fernauslöser empfohlen.")
         if result_sec > 900:
             st.warning("⚠️ Über 15 Minuten – Sensorrauschen durch Wärme möglich!")
+
+# ════════════════════════════════════════════════════════════════
+#  🔬 FOCUS STACKING ASSISTANT
+# ═══════════════════════════════════════════════════════════════
+
+elif tool == "🔬 Focus Stacking":
+    st.header("🔬 Focus Stacking Assistant")
+    st.markdown("Berechne exakte Fokusschritte für maximale Schärfentiefe")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        focal = st.number_input(" Brennweite (mm)", min_value=10, max_value=600, value=100)
+        aperture = st.number_input("🔘 Blende (f/)", min_value=1.0, max_value=32.0, value=5.6, step=0.1)
+        
+    with col2:
+        sensor = st.selectbox("📐 Sensor", ["Vollformat (0.03mm)", "APS-C (0.02mm)", "Micro 4/3 (0.015mm)"])
+        coc = 0.03 if "Voll" in sensor else (0.02 if "APS" in sensor else 0.015)
+        
+        # Start-Entfernung (nächster Punkt, der scharf sein soll)
+        start_dist_m = st.number_input("📏 Start-Entfernung (m)", min_value=0.1, max_value=1000.0, value=0.5, step=0.1)
+        overlap = st.slider("🔄 Überlappung (%)", 10, 90, 30)
+
+    #  Berechnung
+    if st.button("✅ Fokusschritte berechnen", type="primary"):
+        try:
+            # Hyperfokale Distanz berechnen (in mm)
+            # H = (f^2) / (N * c) + f
+            H = (focal**2) / (aperture * coc) + focal
+            
+            # Start-Entfernung in mm
+            D_start = start_dist_m * 1000
+            
+            # Nahe und Ferne Schärfengrenze für den Startpunkt
+            # S_near = (H * D) / (H + D)
+            # S_far = (H * D) / (H - D)
+            
+            S_near = (H * D_start) / (H + D_start)
+            
+            # Wenn Startpunkt hinter der Hyperfokalen liegt, ist alles bis Unendlich scharf
+            if D_start >= H:
+                st.success(f"✅ **Alles scharf!** Dein Startpunkt ({start_dist_m}m) liegt hinter der hyperfokalen Distanz ({H/1000:.2f}m).")
+                st.info("💡 Du brauchst kein Stacking! Stelle auf f/{aperture} und fokusiere auf {start_dist_m}m.")
+            else:
+                S_far = (H * D_start) / (H - D_start)
+                dof = S_far - S_near
+                
+                # Optimale Schrittweite: 70% der DoF, um Lücken zu vermeiden (je nach Overlap)
+                # Je höher der Overlap, desto kleiner der Schritt
+                step_size_mm = dof * ((100 - overlap) / 100)
+                step_size_cm = step_size_mm / 10
+                
+                # Geschätzte Anzahl der Schritte bis Unendlich
+                # Formel approximiert die Verteilung der Schärfentiefe
+                # Bei kleinen Entfernungen ist der Schritt klein, bei großen groß.
+                # Wir machen eine simple Schätzung für die ersten Meter + Hinweis auf Unendlich
+                
+                estimated_shots = int((10.0 * 1000) / step_size_mm) if step_size_mm > 0 else 1
+                if estimated_shots > 100: estimated_shots = "100+"
+                
+                st.success(f"""
+                ### 📸 Fokus-Plan für Start: {start_dist_m}m
+                
+                | Parameter | Wert |
+                |---|---|
+                | **Hyperfokale Distanz** | {H/1000:.2f} m |
+                | **Schärfentiefe am Start** | {dof/1000:.3f} m |
+                | **Empfohlene Schrittweite** | **{step_size_cm:.1f} cm** |
+                """)
+                
+                st.warning(f"⚠️ **Anleitung:**")
+                st.markdown(f"""
+                1. Fokusiere manuell auf **{start_dist_m}m**.
+                2. Mache das erste Foto.
+                3. Drehe den Fokusring um **{step_size_cm:.1f} cm** (weg von dir / Richtung Unendlich).
+                4. Mache das nächste Foto.
+                5. Wiederhole dies, bis der Hintergrund unscharf wird (ca. {estimated_shots} Bilder für die ersten 10m).
+                """)
+                
+                if step_size_cm < 0.5:
+                    st.error("🔴 **Achtung:** Sehr kleine Schrittweite! Benutze ein Makro-Schienensystem oder Focus-Rail.")
+                elif focal > 100:
+                    st.info("📏 **Tipp:** Bei Tele-Brennweiten wirkt sich bereits minimale Bewegung stark aus. Stativ ist Pflicht.")
+                    
+        except Exception as e:
+            st.error(f"Fehler: {e}")
 
 # ════════════════════════════════════════════════════════════════
 #  ️ ND FILTER STACKING RECHNER

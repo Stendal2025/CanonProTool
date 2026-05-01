@@ -595,7 +595,7 @@ if tool == "🏠 Home":
         ("🌙 Mond & Milchstraße", "Phasen & Sichtbarkeit"),
         (" Gezeiten", "Ebbe & Flut"),
         ("📍 GPS-Standort", "Standort & Wetter"),
-        ("🤿 Unterwasser", "Canon & Apexcam"),
+        ("🤿 Unterwasser-Modus", "Canon & Apexcam"),
     ]
 
     cols = st.columns(2)

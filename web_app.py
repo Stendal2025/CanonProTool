@@ -1314,6 +1314,90 @@ elif tool == "🌙 Aktuelle Mond-Daten":
         except Exception as e:
             st.error(f"❌ {type(e).__name__}: {e}")
 
+# ════════════════════════════════════════════════════════════════
+#  🌊 GEZEITEN & TIDE-RECHNER
+# ═══════════════════════════════════════════════════════════════
+
+elif tool == "🌊 Gezeiten & Tide-Rechner":
+    st.header("🌊 Gezeiten & Tide-Rechner")
+    st.markdown("Ebbe & Flut für Küstenfotografie & Tauchplanung")
+
+    # 📍 Standort (GPS-Fallback)
+    default_coords = st.session_state.get("gps_coords", "54.32, 13.09")
+    coords_input = st.text_input(
+        "📍 Koordinaten (Breitengrad, Längengrad)",
+        value=default_coords,
+        help="Format: 54.32, 13.09 (z. B. Rügen)"
+    )
+
+    # 📅 Datum
+    col1, col2 = st.columns(2)
+    with col1:
+        tide_date = st.date_input("📅 Datum", value=datetime.now().date())
+    with col2:
+        st.caption("🔑 API: WorldTides.info (kostenloser Key)")
+
+    if st.button("🌊 Gezeiten abrufen", type="primary"):
+        try:
+            # Koordinaten parsen
+            if "," not in coords_input:
+                st.error("❌ Bitte Koordinaten im Format: 54.32, 13.09")
+                st.stop()
+            lat, lon = map(float, coords_input.replace(" ", "").split(","))
+
+            # API-Key prüfen
+            try:
+                API_KEY = st.secrets["WORLD_TIDES_API_KEY"]
+            except KeyError:
+                st.warning("️ **API-Key nicht hinterlegt!**")
+                st.info("""
+                🔑 **So bekommst du einen kostenlosen Key:**
+                1. Gehe zu [worldtides.info](https://www.worldtides.info/)
+                2. Registriere dich (kostenlos, E-Mail genügt)
+                3. Erstelle einen API Key
+                4. Trage ihn in Streamlit Cloud ein: 
+                   `Settings → Secrets → WORLD_TIDES_API_KEY = "dein_key"`
+                """)
+                st.stop()
+
+            # Daten abrufen
+            start_ts = int(datetime.combine(tide_date, datetime.min.time()).timestamp())
+            url = f"https://www.worldtides.info/api/v3?lat={lat}&lon={lon}&key={API_KEY}&start={start_ts}&length=86400&extremes"
+            res = requests.get(url, timeout=10)
+            data = res.json()
+
+            if res.status_code != 200 or data.get("status") != 200:
+                st.error(f"❌ API-Fehler: {data.get('error', 'Unbekannt')}")
+            else:
+                extremes = data.get("extremes", [])
+                if not extremes:
+                    st.info("ℹ️ Keine Gezeitendaten für diesen Standort verfügbar.")
+                else:
+                    st.success(f"✅ Gezeiten für {tide_date.strftime('%d.%m.%Y')}")
+                    
+                    # Tabelle erstellen
+                    df = pd.DataFrame([
+                        {
+                            "Zeit": datetime.fromtimestamp(e["dt"]).strftime("%H:%M"),
+                            "Typ": "🌊 Hochwasser" if e["type"] == "High" else "️ Niedrigwasser",
+                            "Höhe": f"{e['height']:.2f} m",
+                            "Foto-Tipp": get_tide_photo_tip(e["type"])
+                        } for e in extremes
+                    ])
+                    st.dataframe(df, use_container_width=True, hide_index=True)
+
+                    # Zusammenfassung & Tipps
+                    low_tides = [e for e in extremes if e["type"] == "Low"]
+                    high_tides = [e for e in extremes if e["type"] == "High"]
+                    
+                    if low_tides:
+                        st.info(f"🏖️ **Niedrigwasser:** {low_tides[0]['height']:.2f}m um {datetime.fromtimestamp(low_tides[0]['dt']).strftime('%H:%M')} Uhr → Ideal für Watt & Spiegelungen")
+                    if high_tides:
+                        st.info(f"🌊 **Hochwasser:** {high_tides[0]['height']:.2f}m um {datetime.fromtimestamp(high_tides[0]['dt']).strftime('%H:%M')} Uhr → Dramatische Brandung & Wellen")
+                        
+        except Exception as e:
+            st.error(f"❌ Fehler: {type(e).__name__}: {e}")
+
 # ── 📄 PDF-PLANER ────────────────────────────────────────────────
 elif tool == "📄 PDF-Planer":
     st.header("📄 PDF-Shooting-Plan Generator")

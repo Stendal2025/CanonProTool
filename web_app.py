@@ -320,27 +320,88 @@ render_status_bar()
 
 st.markdown("""
 <style>
-  .main { background-color: #0A0E14; color: #F0F6FC; }
-  h1, h2, h3 { color: #58A6FF; }
+  /* Globale Einstellungen */
+  .main { 
+      background-color: #0A0E14; 
+      color: #F0F6FC; 
+  }
+  h1, h2, h3 { 
+      color: #58A6FF; 
+  }
+  
+  /* Buttons */
   .stButton>button {
-      background-color: #1F6FEB; color: white;
-      border-radius: 8px; border: none;
-      padding: 10px 24px; font-weight: bold;
+      background-color: #1F6FEB; 
+      color: white;
+      border-radius: 8px; 
+      border: none;
+      padding: 10px 24px; 
+      font-weight: bold;
   }
-  .stButton>button:hover { background-color: #58A6FF; }
+  .stButton>button:hover { 
+      background-color: #58A6FF; 
+  }
+  
+  /* Mobile Optimierung (iPhone) */
   @media (max-width: 768px) {
-    .main .block-container { padding: 1rem !important; }
-    .stTextInput input, .stSelectbox div { font-size: 16px !important; min-height: 44px !important; }
-    .stButton>button { min-height: 44px !important; }
+    /* Mehr Padding für Touch */
+    .main .block-container { 
+        padding: 1rem !important; 
+        padding-top: 2rem !important;
+    }
+    
+    /* Größere Eingabefelder (verhindert Zoom auf iPhone) */
+    .stTextInput input, 
+    .stSelectbox div,
+    .stNumberInput input { 
+        font-size: 16px !important; 
+        min-height: 48px !important; 
+    }
+    
+    /* Größere Buttons für Daumenbedienung */
+    .stButton>button { 
+        min-height: 48px !important; 
+        font-size: 16px !important;
+        padding: 12px 24px !important;
+    }
+    
+    /* Status-Bar kompakter auf Mobile */
+    .status-bar-mobile {
+        font-size: 12px !important;
+        padding: 8px !important;
+    }
+    
+    /* Dashboard-Kacheln größer auf Mobile */
+    .dash-card > button {
+        height: 90px !important;
+        font-size: 15px !important;
+    }
+    
+    /* Sidebar besser nutzbar */
+    section[data-testid="stSidebar"] {
+        width: 280px !important;
+    }
   }
-  input, select, textarea { font-size: 16px !important; }
+  
+  /* Desktop: Sidebar schmaler */
+  @media (min-width: 769px) {
+    section[data-testid="stSidebar"] {
+        width: 240px !important;
+    }
+  }
+  
+  /* Verhindert Zoom auf iPhone bei Fokus */
+  input, select, textarea { 
+      font-size: 16px !important; 
+  }
+  
+  /* Bessere Lesbarkeit */
+  .stMarkdown, .stText {
+      font-size: 15px;
+      line-height: 1.6;
+  }
 </style>
 """, unsafe_allow_html=True)
-
-if os.getenv("DEBUG_MODE") == "1":
-    st.sidebar.warning("🔍 Debug-Modus aktiv")
-    st.sidebar.json(dict(st.session_state))
-    st.sidebar.json(dict(st.query_params))
 
 # ════════════════════════════════════════════════════════════════
 #  HEADER

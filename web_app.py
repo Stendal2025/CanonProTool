@@ -25,7 +25,6 @@
 import math
 import os
 import io
-import date as _date_module  # Nur für type hints
 import datetime as dt_module  # Klarer Name um Konflikte zu vermeiden
 from datetime import datetime, timedelta, date
 

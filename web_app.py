@@ -369,102 +369,68 @@ def set_tool(t: str):
 
 
 # ════════════════════════════════════════════════════════════════
-#  SIDEBAR NAVIGATION  ← KOMPLETT NEU & KORREKT
+#  SIDEBAR NAVIGATION (Optimiert für iPhone)
 # ════════════════════════════════════════════════════════════════
+with st.sidebar:
+    st.title("📷 Canon Pro Tool")
+    st.caption("30 Photography Tools")
+    st.divider()
 
-NAV_GROUPS = [
-    {
-        "title":    "📸 Kamera & Rechner",
-        "key":      "calc",
-        "expanded": True,
-        "tools": [
-            "⚙️ Belichtung",
-            "🕶️ ND Rechner",
-            "🔬 Focus Stacking",
-            "🎛️ ND Stacking",
-            "📐 Schärfentiefe",
-            "🔦 Blitz",
-            "📡 Rauschen",
-            "🌡️ Weißabgleich",
-            "🔄 Crop-Faktor",
-            "📈 Histogramm",
-            "🔭 Objektive",
-        ],
-    },
-    {
-        "title":    "🌤️ Wetter, Astro & GPS",
-        "key":      "weather",
-        "expanded": True,
-        "tools": [
-            "☁️ Live-Wetter",
-            "📅 5-Tage Prognose",
-            "🌍 Astro & Wetter Dashboard",
-            "📍 GPS-Standort",
-            "🌙 Mond & Milchstraße",
-            "🌠 Sternspuren",
-            "🌙 Aktuelle Mond-Daten",
-            "🌊 Gezeiten & Tide-Rechner",
-        ],
-    },
-    {
-        "title":    "📅 Planung & Workflow",
-        "key":      "plan",
-        "expanded": False,
-        "tools": [
-            "📄 PDF-Planer",
-            "📝 Planer",
-            "🗺️ Spots",
-            "⏱️ Timelapse",
-            "🖼️ EXIF",
-            "🤖 KI",
-            "📋 Cheat Sheets",
-            "⚖️ Vergleich",
-            "🎨 Filter-Sim",
-            "🎬 Video",
-            "🎨 Bearbeitung",
-            "🔋 Akku",
-            "🤿 Unterwasser-Modus",
-        ],
-    },
-]
+    #  Home-Button (immer sichtbar)
+    if st.button("🏠 Home", use_container_width=True, type="primary" if tool == "🏠 Home" else "secondary"):
+        st.session_state.tool = "🏠 Home"
+        st.rerun()
+    
+    st.divider()
 
+    #  Ordner 1: BELICHTUNG & FOKUS (geschlossen beim Start)
+    with st.expander("⚙️ Belichtung & Fokus", expanded=False):
+        if st.button("⚙️ Belichtung", use_container_width=True):
+            st.session_state.tool = "⚙️ Belichtung"
+            st.rerun()
+        if st.button("🕶️ ND Rechner", use_container_width=True):
+            st.session_state.tool = "🕶️ ND Rechner"
+            st.rerun()
+        if st.button("📐 Schärfentiefe", use_container_width=True):
+            st.session_state.tool = "📐 Schärfentiefe"
+            st.rerun()
+        if st.button("🔬 Focus Stacking", use_container_width=True):
+            st.session_state.tool = "🔬 Focus Stacking"
+            st.rerun()
+        if st.button("🎛️ ND Stacking", use_container_width=True):
+            st.session_state.tool = "🎛️ ND Stacking"
+            st.rerun()
 
-def render_nav_group(sb, group: dict):
-    """Rendert eine Navigationsgruppe als Expander mit Buttons darin."""
-    exp = sb.expander(group["title"], expanded=group["expanded"])
-    for i, tool_name in enumerate(group["tools"]):
-        exp.button(
-            tool_name,
-            key=f"{group['key']}_{i}",
-            use_container_width=True,
-            type="primary" if st.session_state.tool == tool_name else "secondary",
-            on_click=set_tool,
-            args=(tool_name,),
-        )
+    #  Ordner 2: PLANUNG & UMGEBUNG (geschlossen beim Start)
+    with st.expander("🌍 Planung & Umgebung", expanded=False):
+        if st.button("🌍 Astro & Wetter Dashboard", use_container_width=True):
+            st.session_state.tool = "🌍 Astro & Wetter Dashboard"
+            st.rerun()
+        if st.button("🌙 Mond & Milchstraße", use_container_width=True):
+            st.session_state.tool = "🌙 Mond & Milchstraße"
+            st.rerun()
+        if st.button("🌊 Gezeiten & Tide-Rechner", use_container_width=True):
+            st.session_state.tool = "🌊 Gezeiten & Tide-Rechner"
+            st.rerun()
+        if st.button("📍 GPS-Standort", use_container_width=True):
+            st.session_state.tool = "📍 GPS-Standort"
+            st.rerun()
+        if st.button("📝 Planer", use_container_width=True):
+            st.session_state.tool = "📝 Planer"
+            st.rerun()
 
+    #  Ordner 3: SPEZIAL-MODI (geschlossen beim Start)
+    with st.expander("🎨 Spezial-Modi", expanded=False):
+        if st.button("🤿 Unterwasser-Modus", use_container_width=True):
+            st.session_state.tool = "🤿 Unterwasser-Modus"
+            st.rerun()
+        if st.button("📸 Kamera-Vergleich", use_container_width=True):
+            st.session_state.tool = "📸 Kamera-Vergleich"
+            st.rerun()
+        # ... weitere Tools aus Ordner 3 ...
 
-# Sidebar aufbauen
-sb = st.sidebar
-sb.title("🔧 Navigation")
-
-# Home-Button
-sb.button(
-    "🏠 Home",
-    key="nav_home",
-    use_container_width=True,
-    type="primary" if st.session_state.tool == "🏠 Home" else "secondary",
-    on_click=set_tool,
-    args=("🏠 Home",),
-)
-
-sb.divider()
-
-for group in NAV_GROUPS:
-    render_nav_group(sb, group)
-    sb.divider()
-
-# Aktives Tool
-tool = st.session_state.tool
+    st.divider()
+    st.caption("💡 Tipp: Ordner aufklappen für alle Tools")
 
 # ════════════════════════════════════════════════════════════════
 #  TOOLS – HAUPTINHALT

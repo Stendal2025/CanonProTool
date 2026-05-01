@@ -1318,8 +1318,9 @@ elif tool == "📍 GPS-Standort":
     st.markdown("### 📍 Koordinaten übernehmen")
     
     # Automatisch ausfüllen, wenn temporäre Koordinaten da sind
-    default_coords = st.session_state.get("gps_temp_coords", "50.43,7.47")
-    if "," in default_coords:
+   # ✅ NEU (sicher):
+    default_coords = st.session_state.get("gps_temp_coords")
+    if default_coords and "," in default_coords:
         default_lat, default_lon = default_coords.split(",")
     else:
         default_lat, default_lon = "50.43", "7.47"

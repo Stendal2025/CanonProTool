@@ -1253,7 +1253,9 @@ elif tool == "📍 GPS-Standort":
         📍 Standort abrufen
     </button>
     """
-    st.components.html(gps_html, height=80)
+    
+    # ✅ FIX: Hier muss .v1.html stehen!
+    st.components.v1.html(gps_html, height=80)
 
     # Prüfe URL-Parameter (wird nach GPS-Klick gesetzt)
     lat_q = st.query_params.get("lat")
@@ -1273,27 +1275,11 @@ elif tool == "📍 GPS-Standort":
         st.subheader("📍 Aktueller Standort")
         st.info(f"**Koordinaten:** `{st.session_state.gps_coords}`")
         
-        # Koordinaten parsen für Anzeige
-        try:
-            lat, lon = map(float, st.session_state.gps_coords.split(","))
-            st.markdown(f"""
-            - **Breitengrad:** {lat:.6f}
-            - **Längengrad:** {lon:.6f}
-            """)
-        except:
-            pass
-        
         # Buttons
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("📋 Koordinaten kopieren", use_container_width=True):
-                st.write(f"✅ Kopiert: `{st.session_state.gps_coords}`")
-                st.code(st.session_state.gps_coords)
-        with col2:
-            if st.button("🗑️ Standort zurücksetzen", use_container_width=True):
-                st.session_state.gps_coords = None
-                st.success("📍 Standort zurückgesetzt")
-                st.rerun()
+        if st.button("️ Standort zurücksetzen", use_container_width=True):
+            st.session_state.gps_coords = None
+            st.success("📍 Standort zurückgesetzt")
+            st.rerun()
     else:
         st.info("💡 Klicke auf '📍 Standort abrufen' und erlaube den GPS-Zugriff im Browser")
 

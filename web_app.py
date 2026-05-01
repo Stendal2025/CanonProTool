@@ -434,51 +434,36 @@ elif tool == "🕶️ ND Rechner":
             st.warning("⚠️ Über 15 Minuten – Sensorrauschen durch Wärme möglich!")
 
 # ════════════════════════════════════════════════════════════════
-#  🎛️ ND FILTER STACKING RECHNER
-# ════════════════════════════════════════════════════════════════
+#  ️ ND FILTER STACKING RECHNER
+# ═══════════════════════════════════════════════════════════════
 
 elif tool == "🎛️ ND Stacking":
     st.header("🎛️ ND Filter Stacking Rechner")
     st.markdown("Berechne Belichtungszeiten bei **kombinierten ND-Filtern**")
-    
-    # 📋 ND-Filter Datenbank (Name, Stops, Faktor)
+
     ND_FILTERS = [
-        ("Kein Filter", 0, 1),
-        ("ND2 (1 Stop)", 1, 2),
-        ("ND4 (2 Stops)", 2, 4),
-        ("ND8 (3 Stops)", 3, 8),
-        ("ND16 (4 Stops)", 4, 16),
-        ("ND32 (5 Stops)", 5, 32),
-        ("ND64 (6 Stops)", 6, 64),
-        ("ND128 (7 Stops)", 7, 128),
-        ("ND256 (8 Stops)", 8, 256),
-        ("ND512 (9 Stops)", 9, 512),
-        ("ND1000 (10 Stops)", 10, 1000),
-        ("ND2000 (11 Stops)", 11, 2000),
+        ("Kein Filter", 0, 1), ("ND2 (1 Stop)", 1, 2), ("ND4 (2 Stops)", 2, 4),
+        ("ND8 (3 Stops)", 3, 8), ("ND16 (4 Stops)", 4, 16), ("ND32 (5 Stops)", 5, 32),
+        ("ND64 (6 Stops)", 6, 64), ("ND128 (7 Stops)", 7, 128), ("ND256 (8 Stops)", 8, 256),
+        ("ND512 (9 Stops)", 9, 512), ("ND1000 (10 Stops)", 10, 1000), ("ND2000 (11 Stops)", 11, 2000),
         ("ND4000 (12 Stops)", 12, 4000),
     ]
-    
-    # 🎯 Basis-Eingaben
+
     col1, col2, col3 = st.columns(3)
     with col1:
-        base_str = st.selectbox(
-            "📸 Basiszeit (ohne Filter)",
+        base_str = st.selectbox("📸 Basiszeit (ohne Filter)",
             ["1/8000", "1/4000", "1/2000", "1/1000", "1/500", "1/250", "1/125", "1/60", "1/30", "1/15", "1/8", "1/4", "1/2", "1", "2", "4", "8", "15", "30", "60"],
-            index=6
-        )
+            index=6)
     with col2:
         filter_a = st.selectbox("🔷 Filter A", [f[0] for f in ND_FILTERS], index=0)
     with col3:
         filter_b = st.selectbox("🔶 Filter B", [f[0] for f in ND_FILTERS], index=0)
-    
-    # ✅ RICHTIG:
-filter_c = "Kein Filter"
-use_c = False
-with st.expander("➕ Dritten Filter hinzufügen (optional)"):
-    filter_c = st.selectbox("🔺 Filter C", [f[0] for f in ND_FILTERS], index=0, key="stack_c")
-    use_c = st.checkbox("Filter C aktivieren", value=False)
-    
-    # 🧮 Berechnung
+
+    # Optionaler dritter Filter (sicher implementiert)
+    with st.expander("➕ Dritten Filter hinzufügen (optional)"):
+        filter_c = st.selectbox("🔺 Filter C", [f[0] for f in ND_FILTERS], index=0)
+        use_c = st.checkbox("Filter C aktivieren", value=False)
+
     if st.button("✅ Stacking berechnen", type="primary"):
         # Basiszeit parsen
         if "/" in base_str:
@@ -486,24 +471,23 @@ with st.expander("➕ Dritten Filter hinzufügen (optional)"):
             base_sec = num / den
         else:
             base_sec = float(base_str)
-        
-        # Filter-Daten lookup
+
         def get_filter_data(name):
             for n, stops, factor in ND_FILTERS:
                 if n == name:
                     return stops, factor
             return 0, 1
-        
+
         stops_a, factor_a = get_filter_data(filter_a)
         stops_b, factor_b = get_filter_data(filter_b)
-        stops_c, factor_c = get_filter_data(filter_c) if use_c else (0, 1)
-        
-        # Gesamt-Stops & Faktor berechnen
+        stops_c, factor_c = (0, 1)
+        if use_c:
+            stops_c, factor_c = get_filter_data(filter_c)
+
         total_stops = stops_a + stops_b + stops_c
         total_factor = factor_a * factor_b * factor_c
         result_sec = base_sec * total_factor
-        
-        # Ergebnis formatieren
+
         if result_sec >= 3600:
             result_str = f"{result_sec/3600:.2f} Stunden"
         elif result_sec >= 60:
@@ -512,42 +496,23 @@ with st.expander("➕ Dritten Filter hinzufügen (optional)"):
             result_str = f"{result_sec:.1f} Sekunden"
         else:
             result_str = f"1/{int(round(1/result_sec))}s"
-        
-        # 📊 Ergebnis-Anzeige
+
         st.success(f"""
         ### 🎯 Ergebnis:
-        | Parameter | Wert |
-        |-----------|------|
-        | 🔷 Filter A | {filter_a} ({stops_a} Stops) |
-        | 🔶 Filter B | {filter_b} ({stops_b} Stops) |
-        | {"🔺 Filter C" if use_c else "–"} | {filter_c if use_c else "–"} {f"({stops_c} Stops)" if use_c else ""} |
-        | **Σ Gesamt-Stops** | **{total_stops} Stops** |
-        | **🔢 ND-Faktor** | **ND{total_factor}** |
-        | **⏱️ Neue Belichtungszeit** | **{result_str}** |
+        - **Filter A:** {filter_a} ({stops_a} Stops)
+        - **Filter B:** {filter_b} ({stops_b} Stops)
+        - **Filter C:** {filter_c if use_c else "–"} {f"({stops_c} Stops)" if use_c else ""}
+        - **Σ Gesamt-Stops:** {total_stops} Stops
+        - ** ND-Faktor:** ND{total_factor}
+        - **⏱️ Neue Belichtungszeit:** **{result_str}**
         """)
-        
-        # ⚠️ Praktische Warnungen & Tipps
+
         if total_stops >= 6:
             st.warning("⚠️ **Ab 6 Stops:** Stativ + Fernauslöser zwingend empfohlen!")
         if total_stops >= 10:
             st.error("🔴 **Über 10 Stops:** Spiegel vorbelichten (Live View), Langzeitrauschreduktion erwägen!")
         if result_sec > 300:
             st.info("💡 **Tipp:** Bei >5 Min. Belichtung: Bulb-Modus + Intervalometer nutzen")
-        
-        # 📋 Quick-Reference Tabelle
-        with st.expander("📋 ND-Stops Referenz"):
-            st.markdown("""
-            | ND-Bezeichnung | Stops | Lichtreduktion |
-            |---------------|-------|---------------|
-            | ND2 | 1 | 50% |
-            | ND4 | 2 | 25% |
-            | ND8 | 3 | 12.5% |
-            | ND64 | 6 | 1.56% |
-            | ND1000 | 10 | 0.1% |
-            | ND100000 | 16.6 | 0.001% |
-            
-            **Formel:** `Neue Zeit = Basiszeit × 2^Stops`
-            """)
 
 # ── 📐 SCHÄRFENTIEFE ─────────────────────────────────────────────
 elif tool == "📐 Schärfentiefe":

@@ -1292,9 +1292,30 @@ elif tool == "📍 GPS-Standort":
     };
     </script>
     """
-    components.html(gps_html, height=160)
+        components.html(gps_html, height=160)
+
+    # 🧪 TEST: Manueller Button zum Setzen der Koordinaten
+    st.divider()
+    st.subheader("🧪 Test: Koordinaten manuell setzen")
+    
+    test_lat = st.text_input("Breitengrad", value="50.466164", key="test_lat")
+    test_lon = st.text_input("Längengrad", value="7.469177", key="test_lon")
+    
+    if st.button("✅ Test-Koordinaten übernehmen"):
+        st.session_state.gps_coords = f"{test_lat},{test_lon}"
+        st.success(f"📍 Gesetzt: `{st.session_state.gps_coords}`")
+        st.cache_data.clear()  # Wetter-Cache leeren
+        st.rerun()  # App neu laden → Status-Bar aktualisiert!
 
     # Python: Parameter lesen & State setzen
+    lat_q = st.query_params.get("lat")
+    lon_q = st.query_params.get("lon")
+    if lat_q and lon_q:
+        st.session_state.gps_coords = f"{lat_q},{lon_q}"
+        st.query_params.clear()
+        st.success(f"✅ GPS übernommen: `{st.session_state.gps_coords}`")
+        st.cache_data.clear()
+        st.rerun()
     lat_q = st.query_params.get("lat")
     lon_q = st.query_params.get("lon")
     if lat_q and lon_q:

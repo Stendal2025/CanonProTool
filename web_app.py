@@ -522,7 +522,6 @@ elif tool == "🕶️ ND Rechner":
         else:
             result_str = f"1/{int(round(1/result_sec))}s"
 
-        # ✅ Ergebnis anzeigen (NUR EINMAL!)
         st.success(f"""
         ### 🎯 Ergebnis
         - **ND Filter:** ND{nd_factor} ({nd_stops} Stops)
@@ -530,15 +529,16 @@ elif tool == "🕶️ ND Rechner":
         - **Neue Zeit:** **{result_str}**
         """)
 
-        # Warnungen
         if result_sec > 300:
             st.warning("⚠️ Sehr lange Belichtung – Stativ + Fernauslöser empfohlen.")
         if result_sec > 900:
-            st.warning("⚠️ Über 15 Minuten – Sensorrauschen durch Wärme möglich!")
+            st.warning("⚠️ Über 15 Minuten – Sensorrauschen möglich!")
 
-        # 📋 Kopier-Button (erscheint direkt unter dem Ergebnis)
+        # 📋 KOPPER-BUTTON (Streamlit Native - funktioniert garantiert!)
+        st.markdown("**📋 Ergebnis für Notizen:**")
         copy_text = f"ND{nd_factor} | {base_str} → {result_str}"
-        copy_button(copy_text, label="📋 Ergebnis kopieren")
+        st.code(copy_text, language="text")
+        st.caption("💡 Tippe auf das **Kopier-Icon** rechts im Code-Block!"))
 
 # ════════════════════════════════════════════════════════════════
 #  🔬 FOCUS STACKING ASSISTANT

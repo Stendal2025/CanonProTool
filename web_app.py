@@ -508,7 +508,7 @@ with st.sidebar:
 # ═══════════════════════════════════════════
 #  📱 MOBILE DASHBOARD (Startseite)
 # ══════════════════════════════════════════
-elif tool == "🏠 Home":
+if tool == "🏠 Home":
     st.markdown("""
     <style>
     .dash-card > button {

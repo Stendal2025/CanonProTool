@@ -471,6 +471,7 @@ if tool == "🏠 Home":
 
     st.divider()
     st.caption("💡 Tipp: Nutze die Sidebar für alle 30 Tools.")
+    
 # ── ⚙️ BELICHTUNG ────────────────────────────────────────────────
 elif tool == "⚙️ Belichtung":
     st.header("⚙️ Belichtung-Bewerter")
@@ -538,7 +539,7 @@ elif tool == "🕶️ ND Rechner":
         st.markdown("**📋 Ergebnis für Notizen:**")
         copy_text = f"ND{nd_factor} | {base_str} → {result_str}"
         st.code(copy_text, language="text")
-        st.caption("💡 Tippe auf das **Kopier-Icon** rechts im Code-Block!"))
+        st.caption("💡 Tippe auf das **Kopier-Icon** rechts im Code-Block!")
 
 # ════════════════════════════════════════════════════════════════
 #  🔬 FOCUS STACKING ASSISTANT

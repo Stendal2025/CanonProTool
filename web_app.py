@@ -2556,6 +2556,103 @@ elif tool == "🤿 Unterwasser-Modus":
         for c in checks:
             st.checkbox(c, key=f"uw_{c}")
 
+elif tool == "📤 PDF Export":
+    st.header("📄 Shooting-Plan erstellen")
+    st.markdown("Erstelle einen professionellen PDF-Bericht für Kunden oder als Checkliste.")
+
+    # Import prüfen
+    try:
+        from fpdf import FPDF
+        import datetime
+    except ImportError:
+        st.error("❌ Fehler: 'fpdf2' ist nicht installiert. Bitte zu requirements.txt hinzufügen!")
+        st.stop()
+
+    #  Formular
+    st.subheader("📝 Planungsdetails")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        pdf_client = st.text_input("Kunde / Projekt", placeholder="z. B. Hochzeit Müller")
+        # Auto-Fill Location wenn verfügbar
+        default_loc = ""
+        if st.session_state.get("gps_coords"):
+            gps = st.session_state.gps_coords
+            if "," in str(gps):
+                default_loc = f"{gps.split(',')[0].strip()}, {gps.split(',')[1].strip()}"
+            else:
+                default_loc = str(gps)
+        pdf_loc = st.text_input("Ort / Location", value=default_loc)
+        
+    with col2:
+        pdf_date = st.date_input("Datum", value=datetime.date.today())
+        pdf_weather = st.text_input("Wetter / Bedingungen", placeholder="z. B. Sonne, 22°C")
+
+    pdf_notes = st.text_area("Notizen & Settings (Kamera, Objektive, Ablauf...)", height=150, 
+                             placeholder="• 16:00 Uhr: Golden Hour Start\n• Objektiv: 50mm 1.2\n• ND1000 für Wasser...")
+
+    #  PDF Generierung
+    if st.button("📄 PDF generieren & Download", type="primary"):
+        if not pdf_client or not pdf_loc:
+            st.warning("⚠️ Bitte mindestens Kunde und Ort angeben.")
+        else:
+            try:
+                # PDF Klasse
+                class ShootingPDF(FPDF):
+                    def header(self):
+                        self.set_font("Helvetica", 'B', 15)
+                        self.set_text_color(41, 98, 255) # Blau
+                        self.cell(0, 10, 'Canon EOS R - Shooting Plan', 0, 1, 'C')
+                        self.ln(5)
+                        self.set_draw_color(200, 200, 200)
+                        self.line(10, 25, 200, 25)
+                        self.ln(10)
+
+                    def footer(self):
+                        self.set_y(-15)
+                        self.set_font("Helvetica", 'I', 8)
+                        self.set_text_color(128, 128, 128)
+                        self.cell(0, 10, f'Erstellt mit Canon EOS R Pro Tool | {datetime.datetime.now().strftime("%d.%m.%Y")}', 0, 0, 'C')
+
+                pdf = ShootingPDF()
+                pdf.add_page()
+                pdf.set_auto_page_break(auto=True, margin=15)
+                
+                # Inhalt
+                pdf.set_font("Helvetica", 'B', 12)
+                pdf.set_text_color(0, 0, 0)
+                pdf.cell(0, 8, f'Projekt: {pdf_client}', 0, 1)
+                pdf.set_font("Helvetica", size=11)
+                pdf.cell(0, 8, f'Datum: {pdf_date.strftime("%d.%m.%Y")}', 0, 1)
+                pdf.cell(0, 8, f'Ort: {pdf_loc}', 0, 1)
+                if pdf_weather:
+                    pdf.cell(0, 8, f'Wetter: {pdf_weather}', 0, 1)
+                
+                pdf.ln(10)
+                pdf.set_font("Helvetica", 'B', 12)
+                pdf.cell(0, 8, 'Notizen & Settings:', 0, 1)
+                pdf.set_font("Helvetica", size=10)
+                pdf.multi_cell(0, 6, pdf_notes if pdf_notes else "Keine Notizen vorhanden.")
+                
+                # Speichern
+                filename = f"ShootingPlan_{pdf_date.strftime('%Y%m%d')}.pdf"
+                pdf.output(filename)
+                
+                # Download Button
+                with open(filename, "rb") as f:
+                    st.success("✅ PDF erfolgreich erstellt!")
+                    st.download_button(
+                        label="📥 PDF Herunterladen",
+                        data=f,
+                        file_name=filename,
+                        mime="application/pdf"
+                    )
+            except Exception as e:
+                st.error(f"Fehler bei der Erstellung: {e}")
+
+    st.divider()
+    st.caption("💡 Tipp: Die PDF ist optimiert für den Druck und den Versand per E-Mail.")
+
 # ════════════════════════════════════════════════════════════════
 #  FOOTER
 # ════════════════════════════════════════════════════════════════

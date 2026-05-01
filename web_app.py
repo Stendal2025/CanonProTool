@@ -268,19 +268,64 @@ st.set_page_config(
 #   LIVE STATUS BAR (Minimal-Fix)
 # ══════════════════════════════════════════
 def render_status_bar():
+    import time
+    
     # GPS-Daten holen
     gps = st.session_state.get("gps_coords")
     
+    # Standort-Anzeige vorbereiten
+    loc_display = "📍 Nicht gesetzt"
+    place_name = None
+    
     if gps and "," in str(gps):
         try:
-            lat, lon = str(gps).split(",")
-            loc_display = f"{float(lat):.2f}, {float(lon):.2f}"
+            lat, lon = map(float, str(gps).split(","))
+            
+            # 🌍 Reverse Geocoding: Koordinaten → Ortsname (via OpenStreetMap Nominatim)
+            @st.cache_data(ttl=3600)  # 1 Stunde cachen → spart API-Calls
+            def get_place_name(lat, lon):
+                try:
+                    r = requests.get(
+                        f"https://nominatim.openstreetmap.org/reverse?format=json&lat={lat}&lon={lon}&zoom=10&addressdetails=1&accept-language=de",
+                        headers={"User-Agent": "CanonProTool/1.0"},
+                        timeout=3
+                    )
+                    if r.status_code == 200:
+                        data = r.json()
+                        addr = data.get("address", {})
+                        # Priorisierte Ortsnamen-Extraktion
+                        city = addr.get("city") or addr.get("town") or addr.get("village") or addr.get("municipality")
+                        county = addr.get("county") or addr.get("state_district")
+                        state = addr.get("state")
+                        country = addr.get("country")
+                        country_code = addr.get("country_code", "").upper()
+                        
+                        if city and country_code:
+                            return f"{city}, {country_code}"
+                        elif county and country_code:
+                            return f"{county}, {country_code}"
+                        elif state and country:
+                            return f"{state}, {country}"
+                        elif country:
+                            return country
+                except:
+                    pass
+                return None
+            
+            place_name = get_place_name(lat, lon)
+            
+            # Anzeige: Ortsname bevorzugen, sonst Koordinaten
+            if place_name:
+                loc_display = f"📍 {place_name}"
+            else:
+                loc_display = f"📍 {lat:.2f}, {lon:.2f}"
+                
         except:
-            loc_display = str(gps)
+            loc_display = str(gps) if gps else "📍 Nicht gesetzt"
     else:
         loc_display = str(gps) if gps else "📍 Nicht gesetzt"
     
-    # Wetter laden
+    # Wetter laden (nur wenn GPS da)
     temp, desc = "--", "Warten auf GPS"
     if gps and "," in str(gps):
         try:
@@ -298,18 +343,16 @@ def render_status_bar():
         except:
             temp, desc = "--", "Daten n/a"
 
-    # Einfaches, universelles Layout (funktioniert auf Mobile & Desktop)
+    # Status-Bar UI rendern
     st.markdown("""
     <div style='background:#0D1117; padding:10px; margin-bottom:15px; border-radius:8px; border:1px solid #21262D;'>
     """, unsafe_allow_html=True)
     
-    # Immer 4 Spalten – Streamlit passt sie automatisch an die Bildschirmgröße an
-    c1, c2, c3, c4 = st.columns([2.5, 2.5, 2.5, 1])
-    c1.markdown(f"📍 **Standort**<br><small style='color:#8B949E'>{loc_display}</small>", unsafe_allow_html=True)
+    c1, c2, c3, c4 = st.columns([3, 2.5, 2.5, 1])
+    c1.markdown(f"{loc_display}<br><small style='color:#8B949E; font-size:11px;'>{gps if gps and ',' in str(gps) else ''}</small>", unsafe_allow_html=True)
     c2.markdown(f"☁️ **Wetter**<br><small style='color:#8B949E'>{temp} | {desc}</small>", unsafe_allow_html=True)
     c3.markdown(f"📷 **Status**<br><small style='color:#8B949E'>Live</small>", unsafe_allow_html=True)
     
-    # Refresh-Button
     if c4.button("🔄", use_container_width=True, key="sb_refresh"):
         st.cache_data.clear()
         

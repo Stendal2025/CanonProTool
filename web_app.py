@@ -1165,7 +1165,7 @@ elif tool == "🌠 Sternspuren":
 #  🌙 AKTUELLE MOND-DATEN (GPS & Koordinaten-Fix)
 # ═══════════════════════════════════════════════════════════════
 
-elif tool == " Aktuelle Mond-Daten":
+elif tool == "🌙 Aktuelle Mond-Daten":
     st.header("🌙 Live-Sonnen- & Mond-Daten")
     if not ASTRAL_OK:
         st.error(f"⚠️ astral/pytz nicht installiert: {_ASTRAL_ERR}")

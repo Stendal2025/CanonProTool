@@ -238,7 +238,7 @@ if os.getenv("DEBUG_MODE") == "1":
 # ════════════════════════════════════════════════════════════════
 
 st.title("📷 CANON EOS R – PRO TOOL")
-st.markdown("**Web Version** | 28 Photography Tools")
+st.markdown("**Web Version** | 30 Photography Tools")
 st.divider()
 
 # ════════════════════════════════════════════════════════════════
@@ -366,7 +366,7 @@ if tool == "🏠 Home":
     st.header("Willkommen beim Canon EOS R Pro Tool!")
     st.markdown("""
     ### 📸 Was kann diese App?
-    - **28 professionelle Rechner** für Fotografie
+    - **30 professionelle Rechner** für Fotografie
     - **Belichtungsdreieck** optimieren
     - **Schärfentiefe** berechnen
     - **Goldene Stunde** planen
@@ -2279,7 +2279,7 @@ elif tool == "🤿 Unterwasser-Modus":
 st.divider()
 st.markdown("""
 <div style='text-align:center;color:#8B949E;font-size:0.85em;'>
-    📷 Canon EOS R – Pro Tool v8.0 | 28 Tools<br>
+    📷 Canon EOS R – Pro Tool v8.0 | 30 Tools<br>
     Mondphase: Jean-Meeus-Algorithmus | GPS: Query-Params-Methode<br>
     Alle Berechnungen sind Richtwerte – Praxistests empfohlen.
 </div>

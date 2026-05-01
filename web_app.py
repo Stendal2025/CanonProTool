@@ -1223,11 +1223,9 @@ elif tool == "📍 GPS-Standort":
     st.header("📍 GPS-Standort")
     st.markdown("Automatische Standorterkennung für präzise Berechnungen")
 
-    # Initialisiere Session State falls nicht vorhanden
     if "gps_coords" not in st.session_state:
         st.session_state.gps_coords = None
 
-    # HTML für GPS-Erkennung (Browser-API)
     gps_html = """
     <script>
     function getLocation() {
@@ -1236,13 +1234,16 @@ elif tool == "📍 GPS-Standort":
                 (pos) => {
                     const lat = pos.coords.latitude.toFixed(6);
                     const lon = pos.coords.longitude.toFixed(6);
-                    // URL-Parameter setzen und Seite neu laden
-                    const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + "?lat=" + lat + "&lon=" + lon;
-                    window.location.href = newUrl;
+                    
+                    // ✅ WICHTIG: Ändere die URL des ÜBERGEORDNETEN Fensters (Streamlit App)
+                    const baseUrl = window.top.location.href.split('?')[0];
+                    const newUrl = baseUrl + "?lat=" + lat + "&lon=" + lon;
+                    window.top.location.href = newUrl;
                 },
                 (err) => {
-                    alert("GPS-Fehler: " + err.message);
-                }
+                    alert("GPS-Fehler: " + err.message + "\\nStelle sicher, dass HTTPS verwendet wird und Standortzugriff erlaubt ist.");
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
         } else {
             alert("Geolocation wird von diesem Browser nicht unterstützt");
@@ -1253,35 +1254,30 @@ elif tool == "📍 GPS-Standort":
         📍 Standort abrufen
     </button>
     """
-    
-    # ✅ FIX: Hier muss .v1.html stehen!
     st.components.v1.html(gps_html, height=80)
 
-    # Prüfe URL-Parameter (wird nach GPS-Klick gesetzt)
+    # Query-Params aus der App-URL lesen
     lat_q = st.query_params.get("lat")
     lon_q = st.query_params.get("lon")
-    
+
     if lat_q and lon_q:
-        # Koordinaten in Session State speichern
         st.session_state.gps_coords = f"{lat_q},{lon_q}"
         st.query_params.clear()
         st.success(f"✅ GPS übernommen: `{st.session_state.gps_coords}`")
-        st.info("🔄 Seite wird neu geladen...")
         st.rerun()
 
-    # Zeige aktuelle Koordinaten an (falls gesetzt)
+    # Anzeige des aktuellen Standorts
     if st.session_state.gps_coords:
         st.divider()
         st.subheader("📍 Aktueller Standort")
         st.info(f"**Koordinaten:** `{st.session_state.gps_coords}`")
         
-        # Buttons
-        if st.button("️ Standort zurücksetzen", use_container_width=True):
+        if st.button("🗑️ Standort zurücksetzen", use_container_width=True):
             st.session_state.gps_coords = None
             st.success("📍 Standort zurückgesetzt")
             st.rerun()
     else:
-        st.info("💡 Klicke auf '📍 Standort abrufen' und erlaube den GPS-Zugriff im Browser")
+        st.info("💡 Klicke auf '📍 Standort abrufen' und erlaube den GPS-Zugriff im Browser-Popup.")
 
 # ════════════════════════════════════════════════════════════════
 #  🌙 MOND & MILCHSTRAßE (Koordinaten-Fix)

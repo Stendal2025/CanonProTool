@@ -591,7 +591,7 @@ if tool == "🏠 Home":
         ("⚙️ Belichtung", "EV-Werte & Dreieck"),
         ("🕶️ ND Rechner", "Filter & Stacking"),
         ("📐 Schärfentiefe", "DoF & Hyperfokal"),
-        ("🌍 Astro & Wetter", "Planung & Live"),
+        ("🌍 Astro & Wetter Dashboard", "Planung & Live-Daten"),
         ("🌙 Mond & Milchstraße", "Phasen & Sichtbarkeit"),
         ("🌊 Gezeiten & Tide-Rechner", "Ebbe & Flut"),
         ("📍 GPS-Standort", "Standort & Wetter"),

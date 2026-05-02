@@ -1647,6 +1647,18 @@ elif tool == "🌙 Aktuelle Mond-Daten":
     if not ASTRAL_OK:
         st.error(f"⚠️ astral/pytz nicht installiert: {_ASTRAL_ERR}")
         st.stop()
+        # ✅ Füge ganz oben in das Tool ein (vor den Inputs):
+    gps = st.session_state.get("gps_coords", "")
+    if gps and "," in gps:
+        try:
+            auto_lat, auto_lon = map(float, gps.split(","))
+        except:
+            auto_lat, auto_lon = 51.34, 12.38
+    else:
+        auto_lat, auto_lon = 51.34, 12.38
+
+    # Dann im Input:
+    coords_input = st.text_input("Koordinaten (Br,Lg)", value=f"{auto_lat},{auto_lon}")
 
     city_sel = st.selectbox("Stadt", ["(manuell / GPS)"] + CITY_LIST)
     if city_sel != "(manuell / GPS)":

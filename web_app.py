@@ -507,7 +507,7 @@ if tool == "🏠 Home":
         ("🤿 Unterwasser-Modus",        "Canon & Apexcam"),
         ("📸 Bracketing",               "AEB,Focus & WB Serien"),
         ("📱 AR-Vorschau",              "Live-Brennweiten-Overlay"),
-        ("📊 Dynamikumfang",            "Bracketing-Bedarf berechnen"),
+        ("📊 Dynamikumfang & Kontrast", "Bracketing-Bedarf berechnen"),
     ]
     cols = st.columns(2)
     for i, (name, desc) in enumerate(dash_tools):

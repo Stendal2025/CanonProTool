@@ -946,17 +946,17 @@ elif tool == "🌍 Astro & Wetter Dashboard":
 elif tool == "🌙 Mond & Milchstraße":
     st.header("🌙 Mondphasen & Milchstraße Sichtbarkeit")
     # ✅ Füge ganz oben in das Tool ein (vor den Inputs):
-gps = st.session_state.get("gps_coords", "")
-if gps and "," in gps:
-    try:
-        auto_lat, auto_lon = map(float, gps.split(","))
-    except:
+    gps = st.session_state.get("gps_coords", "")
+    if gps and "," in gps:
+        try:
+            auto_lat, auto_lon = map(float, gps.split(","))
+        except:
+            auto_lat, auto_lon = 51.34, 12.38
+    else:
         auto_lat, auto_lon = 51.34, 12.38
-else:
-    auto_lat, auto_lon = 51.34, 12.38
 
-# Dann im Input:
-coords_input = st.text_input("Koordinaten (Br,Lg)", value=f"{auto_lat},{auto_lon}")
+    # Dann im Input:
+    coords_input = st.text_input("Koordinaten (Br,Lg)", value=f"{auto_lat},{auto_lon}")
 
     city_sel = st.selectbox("📍 Stadt", ["(manuell)"] + CITY_LIST)
     col1, col2 = st.columns(2)

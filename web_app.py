@@ -2243,7 +2243,7 @@ elif tool == "📸 Bracketing":
 
     st.caption("💡 Bracketing ist eine Profi-Technik – übe zuerst mit 3-Bild-Serien!")
 
-    elif tool == "📱 AR-Brennweiten-Vorschau":
+elif tool == "📱 AR-Brennweiten-Vorschau":
     st.header("📱 AR-Brennweiten-Vorschau")
     st.markdown("Halte dein Handy hoch und sieh live, wie viel Motiv verschiedene Objektive erfassen.")
 

@@ -510,7 +510,7 @@ if tool == "🏠 Home":
         ("📱 AR-Vorschau",              "Live-Brennweiten-Overlay"),
         ("📊 Dynamikumfang & Kontrast", "Bracketing-Bedarf berechnen"),
         ("🔔 Shooting-Alarm",           "Push-Reminder & Countdown"),
-        ("🤖 AI-Berater",               "Foto hochladen → Settings"),
+        ("🤖 AI-Motiv-Erkennung",       "Foto hochladen → Settings"),
     ]
     cols = st.columns(2)
     for i, (name, desc) in enumerate(dash_tools):

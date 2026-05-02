@@ -441,7 +441,8 @@ with st.sidebar:
 
     with st.expander("⚙️ Belichtung & Fokus", expanded=False):
         for t in ["️ Belichtung", "🕶️ ND Rechner", "📐 Schärfentiefe",
-                  "🔬 Focus Stacking", "🎛️ ND Stacking", "📸 Bracketing"]:  # 👈 HIER EINGEFÜGT
+                  "🔬 Focus Stacking", "🎛️ ND Stacking", "📸 Bracketing",
+                  "📊 Dynamikumfang & Kontrast"]:  # 👈 HIER EINGEFÜGT
             if st.button(t, use_container_width=True, key=f"sb_{t}"):
                 st.session_state.tool = t
                 st.rerun()
@@ -460,7 +461,7 @@ with st.sidebar:
                   "📅 5-Tage Prognose", "🌠 Sternspuren", "🌙 Aktuelle Mond-Daten",
                   "⏱️ Timelapse", "🖼️ EXIF", "🤖 KI", "📋 Cheat Sheets",
                   "⚖️ Vergleich", "🎨 Filter-Sim", "🎬 Video",
-                  "🎨 Bearbeitung", "🔋 Akku", "🗺️ Spots", "📄 PDF-Planer"]:
+                  "🎨 Bearbeitung", "🔋 Akku", "🗺️ Spots", "📄 PDF-Planer","📱 AR-Brennweiten-Vorschau"]:
             if st.button(t, use_container_width=True, key=f"sb_{t}"):
                 st.session_state.tool = t
                 st.rerun()
@@ -505,6 +506,8 @@ if tool == "🏠 Home":
         ("📍 GPS-Standort",             "Standort & Wetter"),
         ("🤿 Unterwasser-Modus",        "Canon & Apexcam"),
         ("📸 Bracketing",               "AEB,Focus & WB Serien"),
+        ("📱 AR-Vorschau",              "Live-Brennweiten-Overlay"),
+        ("📊 Dynamikumfang",            "Bracketing-Bedarf berechnen"),
     ]
     cols = st.columns(2)
     for i, (name, desc) in enumerate(dash_tools):
@@ -2239,6 +2242,154 @@ elif tool == "📸 Bracketing":
             st.warning(f"⚠️ {total_shots} Bilder können schnell 2-5 GB Speicher belegen (RAW)")
 
     st.caption("💡 Bracketing ist eine Profi-Technik – übe zuerst mit 3-Bild-Serien!")
+
+    elif tool == "📱 AR-Brennweiten-Vorschau":
+    st.header("📱 AR-Brennweiten-Vorschau")
+    st.markdown("Halte dein Handy hoch und sieh live, wie viel Motiv verschiedene Objektive erfassen.")
+
+    ar_html = """
+    <style>
+      body { margin:0; background:#0A0E14; font-family:system-ui; color:#F0F6FC; overflow:hidden; }
+      #cam-container { position:relative; width:100vw; height:100vh; display:flex; align-items:center; justify-content:center; }
+      video { width:100%; height:100%; object-fit:cover; transform:scaleX(-1); }
+      #fov-overlay { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); border:2px solid #58A6FF; box-shadow:0 0 0 9999px rgba(0,0,0,0.6); transition:all 0.3s ease; }
+      .controls { position:absolute; bottom:20px; left:0; width:100%; display:flex; flex-wrap:wrap; justify-content:center; gap:8px; padding:0 10px; }
+      .btn { padding:10px 16px; background:#1F6FEB; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; }
+      .btn.active { background:#58A6FF; }
+      .info { position:absolute; top:15px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.7); padding:6px 12px; border-radius:6px; font-size:14px; text-align:center; }
+      .ratio-btn { background:#21262D; }
+    </style>
+    <div id="cam-container">
+      <video id="cam" autoplay playsinline muted></video>
+      <div id="fov-overlay"></div>
+      <div class="info" id="fov-info">24mm | 3:2</div>
+      <div class="controls">
+        <button class="btn" onclick="setFocal(14)">14mm</button>
+        <button class="btn active" onclick="setFocal(24)">24mm</button>
+        <button class="btn" onclick="setFocal(35)">35mm</button>
+        <button class="btn" onclick="setFocal(50)">50mm</button>
+        <button class="btn" onclick="setFocal(85)">85mm</button>
+        <button class="btn" onclick="setFocal(135)">135mm</button>
+        <button class="btn ratio-btn" onclick="toggleRatio()">3:2 ⇄ 16:9</button>
+      </div>
+    </div>
+    <script>
+      let currentFocal = 24;
+      let ratio = "3:2";
+      const video = document.getElementById('cam');
+      const overlay = document.getElementById('fov-overlay');
+      const info = document.getElementById('fov-info');
+
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+        .then(stream => video.srcObject = stream)
+        .catch(() => {
+          document.body.innerHTML = "<div style='padding:40px;text-align:center;'>📷 Kamera-Zugriff verweigert.<br>Nutze manuelle Planung im Rechner.</div>";
+        });
+
+      function setFocal(f) {
+        currentFocal = f;
+        document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+        updateOverlay();
+      }
+
+      function toggleRatio() {
+        ratio = ratio === "3:2" ? "16:9" : "3:2";
+        updateOverlay();
+      }
+
+      function updateOverlay() {
+        // FOV-Skalierung: 24mm = 100%, 50mm = 48%, 85mm = 28% etc.
+        const scale = 24 / currentFocal;
+        const [w, h] = ratio === "3:2" ? [300 * scale, 200 * scale] : [320 * scale, 180 * scale];
+        overlay.style.width = w + 'px';
+        overlay.style.height = h + 'px';
+        info.textContent = `${currentFocal}mm | ${ratio}`;
+      }
+      updateOverlay();
+    </script>
+    """
+    st.components.v1.html(ar_html, height=600, scrolling=False)
+
+    st.divider()
+    st.markdown("""
+    💡 **Profi-Tipp:** 
+    - Nutze **24mm** als Referenz für Weitwinkel-Landschaften
+    - **50mm** entspricht ungefähr dem natürlichen menschlichen Blickfeld
+    - **85mm+** komprimiert Perspektive – ideal für Portraits & Details
+    """)
+
+    elif tool == "📊 Dynamikumfang & Kontrast":
+    st.header("📊 Dynamikumfang & Bracketing-Rechner")
+    st.markdown("Berechne exakt, wie viele Aufnahmen du für HDR/TONEMAPPING benötigst.")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        scene_type = st.selectbox("🌍 Szenen-Typ (geschätzter Kontrast)", [
+            "️ Bewölkt / Nebel (8–10 Stops)",
+            " Wald / Schatten (10–12 Stops)",
+            "🏔️ Landschaft / Sonne (12–14 Stops)",
+            "🌅 Sonnenuntergang / Silhouette (16–18 Stops)",
+            "🪟 Innenraum + Fenster (18–20 Stops)",
+            " Nachtaufnahme / Stadt (14–16 Stops)",
+            "⚙️ Manuell eingeben..."
+        ])
+        if scene_type == "⚙️ Manuell eingeben...":
+            scene_dr = st.number_input("Szenen-Dynamikumfang (Stops)", 6.0, 24.0, 14.0, 0.5)
+        else:
+            # Mittlere Schätzung aus Range
+            dr_map = {
+                "🌫️ Bewölkt / Nebel (8–10 Stops)": 9.0,
+                "🌳 Wald / Schatten (10–12 Stops)": 11.0,
+                "🏔️ Landschaft / Sonne (12–14 Stops)": 13.0,
+                "🌅 Sonnenuntergang / Silhouette (16–18 Stops)": 17.0,
+                "🪟 Innenraum + Fenster (18–20 Stops)": 19.0,
+                "🌃 Nachtaufnahme / Stadt (14–16 Stops)": 15.0,
+            }
+            scene_dr = dr_map[scene_type]
+
+    with col2:
+        iso = st.selectbox("📷 Aufnahme-ISO", [100, 200, 400, 800, 1600, 3200, 6400], index=0)
+        # Canon EOS R reale DR-Werte (ca., basierend auf Sensor-Messungen)
+        cam_dr_map = {100:13.6, 200:13.1, 400:12.4, 800:11.7, 1600:11.0, 3200:10.2, 6400:9.4}
+        cam_dr = cam_dr_map[iso]
+        st.metric("📉 Sensor-Dynamikumfang (ca.)", f"{cam_dr:.1f} Stops")
+        step_ev = st.selectbox("🔢 Bracketing-Schrittweite", [0.5, 1.0, 1.5, 2.0], index=1)
+
+    if st.button("✅ Bracketing-Bedarf berechnen", type="primary", key="calc_dr"):
+        # Formel: Shots = ceil((Scene_DR - Cam_DR) / Step) + 1
+        # +1 für Basisbelichtung, Überlappung von ~1 Stop empfohlen
+        diff = max(0, scene_dr - cam_dr)
+        shots = max(1, math.ceil(diff / step_ev) + 1)
+        
+        # Optimale Reihenfolge berechnen
+        ev_offsets = [(i - shots//2) * step_ev for i in range(shots)]
+        
+        st.success(f"### 📸 Empfehlung: {shots} Bilder für {scene_dr:.1f} Stops Szene")
+        
+        rows = []
+        for i, ev in enumerate(ev_offsets, 1):
+            rows.append({
+                "Bild": f"#{i}",
+                "EV-Korrektur": f"{ev:+.1f}",
+                "Abdeckung": f"{cam_dr - abs(ev):.1f}–{cam_dr + abs(ev):.1f} Stops",
+                "Hinweis": "🟢 Basis" if ev == 0 else ("🔵 Schatten" if ev < 0 else "🟡 Lichter")
+            })
+        st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+        
+        # Copy & Tipps
+        copy_text = f"HDR-Bracketing: {shots}x {step_ev}EV | ISO {iso} | Szene: {scene_dr:.0f} Stops"
+        st.code(copy_text, language="text")
+        copy_button(copy_text, label="📋 Plan kopieren")
+        
+        with st.expander("💡 Profi-Empfehlungen"):
+            st.markdown(f"""
+            - **Sensor-Grenze:** Bei ISO {iso} deckt deine Canon EOS R ~{cam_dr:.1f} Stops ab.
+            - **Überlappung:** Die Berechnung enthält automatisch ~1 Stop Überlappung für nahtloses Tonemapping.
+            - **RAW ist Pflicht:** JPEG verliert bereits in der Kamera Dynamikumfang.
+            - **Stativ & Fernauslöser:** Ab 3 Bildern kritisch für Pixel-genaue Ausrichtung.
+            - **Software:** Lightroom HDR Merge, Photomatix, oder Aurora HDR für beste Ergebnisse.
+            """)
 
             
 

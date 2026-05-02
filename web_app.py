@@ -450,7 +450,7 @@ with st.sidebar:
     with st.expander("🌍 Planung & Umgebung", expanded=False):
         for t in ["🌍 Astro & Wetter Dashboard", "🌙 Mond & Milchstraße",
                   "🌊 Gezeiten & Tide-Rechner", "📍 GPS-Standort", "📝 Planer",
-                  "🔔 Shooting-Alarm"]:
+                  "🔔 Shooting-Alarm","🤖 AI-Motiv-Erkennung"]:
             if st.button(t, use_container_width=True, key=f"sb_{t}"):
                 st.session_state.tool = t
                 st.rerun()
@@ -510,6 +510,7 @@ if tool == "🏠 Home":
         ("📱 AR-Vorschau",              "Live-Brennweiten-Overlay"),
         ("📊 Dynamikumfang & Kontrast", "Bracketing-Bedarf berechnen"),
         ("🔔 Shooting-Alarm",           "Push-Reminder & Countdown"),
+        ("🤖 AI-Berater",               "Foto hochladen → Settings"),
     ]
     cols = st.columns(2)
     for i, (name, desc) in enumerate(dash_tools):
@@ -2512,6 +2513,180 @@ elif tool == "🔔 Shooting-Alarm":
             3. Die App prüft alle 10 Sekunden die Zeit & sendet Push, auch wenn du andere Apps nutzt
             4. Für exakte Zeiten: Nutze das `🌍 Astro-Dashboard` + manuelle Anpassung im Alarm
             """)
+# ── 🤖 AI-MOTIV-ERKENNUNG & SETTINGS-BERATER ─────────────────────
+elif tool == "🤖 AI-Motiv-Erkennung":
+    st.header("🤖 AI-Motiv-Erkennung & Settings-Berater")
+    st.markdown("Lade ein Foto hoch – die KI analysiert Motiv, Licht & Szene und schlägt optimale Canon EOS R Settings vor.")
+
+    uploaded = st.file_uploader("📤 Foto hochladen (JPG, PNG, HEIC)", type=["jpg", "jpeg", "png", "webp", "heic"])
+
+    if uploaded:
+        try:
+            from PIL import Image, ExifTags
+            import numpy as np
+            
+            # Bild laden & analysieren
+            img = Image.open(uploaded).convert("RGB")
+            width, height = img.size
+            img_array = np.array(img)
+            
+            # 1. Helligkeits-Analyse (Luminanz)
+            luminance = np.mean(0.299*img_array[:,:,0] + 0.587*img_array[:,:,1] + 0.114*img_array[:,:,2])
+            
+            # 2. Kontrast-Analyse (Standardabweichung)
+            contrast = np.std(img_array)
+            
+            # 3. Farb-Dominanz (Welcher Kanal ist am stärksten?)
+            avg_r, avg_g, avg_b = np.mean(img_array[:,:,0]), np.mean(img_array[:,:,1]), np.mean(img_array[:,:,2])
+            color_dominance = "🔴 Rot" if avg_r > max(avg_g, avg_b) else ("🟢 Grün" if avg_g > avg_b else "🔵 Blau")
+            
+            # 4. EXIF-Daten auslesen (falls vorhanden)
+            exif_data = {}
+            try:
+                exif = img.getexif()
+                if exif:
+                    for tag_id in exif:
+                        tag = ExifTags.TAGS.get(tag_id, tag_id)
+                        exif_data[tag] = exif.get(tag_id)
+            except:
+                pass
+
+            # 5. KI-Entscheidungsbaum (Rule-Based AI)
+            st.subheader("🔍 Analyse-Ergebnis")
+            c1, c2, c3 = st.columns(3)
+            c1.metric("💡 Helligkeit", f"{luminance:.0f}/255")
+            c2.metric("🎨 Kontrast", f"{contrast:.0f}")
+            c3.metric("🎨 Farb-Tendenz", color_dominance)
+
+            # Szenen-Erkennung
+            scene = "Unbekannt"
+            confidence = 0
+            reason = ""
+            
+            # 🌙 Nacht / Astro
+            if luminance < 60 and avg_b > avg_r and avg_b > avg_g:
+                scene, confidence, reason = "🌙 Nacht / Astro", 92, "Sehr dunkel + Blau-Dominanz → Sternenhimmel oder Stadt bei Nacht"
+            # 🌅 Sonnenaufgang / Sonnenuntergang
+            elif luminance < 150 and avg_r > avg_b and contrast > 60:
+                scene, confidence, reason = "🌅 Golden Hour", 88, "Warme Farben + mittlerer Kontrast → Sonnenauf-/Untergang"
+            # 👤 Portrait
+            elif width < height and contrast < 80 and 80 < luminance < 200:
+                scene, confidence, reason = "👤 Portrait", 85, "Hochformat + weiches Licht → Person oder Objekt im Fokus"
+            # 🏔️ Landschaft
+            elif width > height and contrast > 70 and luminance > 100:
+                scene, confidence, reason = "🏔️ Landschaft", 90, "Querformat + hoher Kontrast → Weite Szene"
+            # 🔬 Makro / Detail
+            elif contrast > 100 and (width*height) < 3_000_000:
+                scene, confidence, reason = "🔬 Makro / Detail", 82, "Sehr hoher Kontrast + kleines Bild → Nahaufnahme"
+            # 🏙️ Street / Urban
+            elif contrast > 90 and color_dominance in ["🔴 Rot", "🔵 Blau"]:
+                scene, confidence, reason = "🏙️ Street / Urban", 78, "Starker Kontrast + dominante Farbe → Städtische Szene"
+            else:
+                scene, confidence, reason = "✨ Allgemein / Kreativ", 70, "Kein eindeutiges Muster → Flexible Basis-Einstellungen"
+
+            st.success(f"### 🎯 Erkennung: {scene} ({confidence}% Sicherheit)\n*{reason}*")
+
+            # 6. Canon EOS R Settings-Vorschläge
+            st.divider()
+            st.subheader("⚙️ Empfohlene Canon EOS R Settings")
+            
+            # Basis-Settings je nach Szene
+            settings_db = {
+                "🌙 Nacht / Astro": {
+                    "mode": "Manuell (M)", "iso": "1600–6400", "aperture": "f/1.4–f/2.8", 
+                    "shutter": "15–30s (Stativ!)", "af": "Manueller Fokus ∞", "wb": "3800–4200K",
+                    "tips": ["✅ RAW + Rauschreduzierung AUS", "✅ 500er-Regel für scharfe Sterne", "✅ Focus Peaking (Rot) aktivieren"]
+                },
+                "🌅 Golden Hour": {
+                    "mode": "Av (Blendenpriorität)", "iso": "100–400", "aperture": "f/5.6–f/8", 
+                    "shutter": "Auto (1/125s min)", "af": "Eye-AF ON", "wb": "5200K (Tageslicht)",
+                    "tips": ["✅ Belichtungskorrektur -0.3 bis -0.7 EV", "✅ GND-Filter für ausgewogenen Himmel", "✅ Serienbild-Modus für Sicherheit"]
+                },
+                "👤 Portrait": {
+                    "mode": "Av (Blendenpriorität)", "iso": "100–800", "aperture": "f/1.2–f/2.8", 
+                    "shutter": "1/200s min", "af": "Eye-AF + Tracking", "wb": "5200K oder Auto",
+                    "tips": ["✅ 85mm oder 50mm f/1.2 für schönes Bokeh", "✅ Einzelfokus für präzise Schärfe", "✅ Reflektor für weiches Licht nutzen"]
+                },
+                "🏔️ Landschaft": {
+                    "mode": "Av oder M", "iso": "100", "aperture": "f/8–f/11", 
+                    "shutter": "Stativ + Fernauslöser", "af": "Manuell mit Lupen-Assist", "wb": "5200K",
+                    "tips": ["✅ Hyperfokale Distanz nutzen für ∞-Schärfe", "✅ Polfilter für sattere Farben", "✅ Focus Bracketing bei Nah- + Fernbereich"]
+                },
+                "🔬 Makro / Detail": {
+                    "mode": "Manuell (M)", "iso": "200–800", "aperture": "f/8–f/11", 
+                    "shutter": "1/160s oder Blitz", "af": "Manuell + Focus Peaking", "wb": "Auto oder 5200K",
+                    "tips": ["✅ Stativ + Makro-Schiene für Präzision", "✅ Diffusor für weiches Licht", "✅ Focus Stacking für maximale Schärfentiefe"]
+                },
+                "🏙️ Street / Urban": {
+                    "mode": "Tv (Verschlusspriorität)", "iso": "Auto (max 3200)", "aperture": "f/4–f/5.6", 
+                    "shutter": "1/250s min", "af": "Zone AF + Tracking", "wb": "Auto oder 5200K",
+                    "tips": ["✅ Leiser Verschluss für diskretes Fotografieren", "✅ Burst-Modus für den perfekten Moment", "✅ Zone AF für schnelle Bewegungen"]
+                },
+                "✨ Allgemein / Kreativ": {
+                    "mode": "P oder Av", "iso": "Auto (100–3200)", "aperture": "f/4–f/5.6", 
+                    "shutter": "1/125s min", "af": "FlexiZone Multi", "wb": "Auto",
+                    "tips": ["✅ Experimentiere mit Kreativ-Assistenten", "✅ RAW für maximale Nachbearbeitung", "✅ Belichtungsreihe für HDR-Option"]
+                }
+            }
+            
+            rec = settings_db.get(scene, settings_db["✨ Allgemein / Kreativ"])
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown(f"""
+                **📷 Basis-Setup:**
+                - Modus: `{rec['mode']}`
+                - ISO: `{rec['iso']}`
+                - Blende: `{rec['aperture']}`
+                - Verschluss: `{rec['shutter']}`
+                """)
+            with col2:
+                st.markdown(f"""
+                **🎯 Fokus & Farbe:**
+                - AF: `{rec['af']}`
+                - Weißabgleich: `{rec['wb']}`
+                """)
+            
+            st.info("💡 **Profi-Tipps:**\n" + "\n".join([f"- {t}" for t in rec['tips']]))
+            
+            # Copy-Button für die Settings
+            copy_text = f"{scene} | {rec['mode']} | ISO {rec['iso']} | {rec['aperture']} | {rec['shutter']} | AF: {rec['af']}"
+            st.code(copy_text, language="text")
+            copy_button(copy_text, label="📋 Settings kopieren")
+            
+            # EXIF-Vergleich (falls vorhanden)
+            if exif_data:
+                with st.expander("🔍 Vergleich mit Original-EXIF"):
+                    orig_iso = exif_data.get("ISOSpeedRatings", "N/A")
+                    orig_ap = exif_data.get("FNumber", "N/A")
+                    orig_sh = exif_data.get("ExposureTime", "N/A")
+                    st.markdown(f"""
+                    **Deine Original-Aufnahme:**
+                    - ISO: `{orig_iso}` | Blende: `{orig_ap}` | Zeit: `{orig_sh}`
+                    
+                    **KI-Empfehlung:**
+                    - ISO: `{rec['iso']}` | Blende: `{rec['aperture']}` | Zeit: `{rec['shutter']}`
+                    
+                    💡 *Tipp: Wenn die Werte stark abweichen, prüfe, ob du kreativ abweichen wolltest oder ob die KI eine bessere Alternative für diese Szene bietet.*
+                    """)
+
+        except ImportError as e:
+            st.error(f"❌ Fehlende Bibliothek: {e}\n\nBitte installiere `Pillow` und `numpy` für die Bildanalyse.")
+        except Exception as e:
+            st.error(f"❌ Analyse-Fehler: {type(e).__name__}: {e}")
+            st.info("💡 *Tipp: Probiere ein anderes Bildformat (JPG/PNG) oder prüfe, ob die Datei beschädigt ist.*")
+    else:
+        # Leerzustand mit Beispielen
+        st.info("👆 Lade ein Foto hoch, um die KI-Analyse zu starten!")
+        
+        st.markdown("### 💡 Beispiel-Motive zum Ausprobieren:")
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            st.markdown("**🌙 Nacht**\n- Dunkles Bild\n- Viele blaue/schwarze Pixel\n- Geringe Helligkeit")
+        with c2:
+            st.markdown("**👤 Portrait**\n- Hochformat\n- Weiches Licht\n- Person im Fokus")
+        with c3:
+            st.markdown("**🏔️ Landschaft**\n- Querformat\n- Hoher Kontrast\n- Weite Perspektive")
 
             
 

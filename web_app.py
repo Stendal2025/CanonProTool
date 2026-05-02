@@ -441,7 +441,7 @@ with st.sidebar:
 
     with st.expander("⚙️ Belichtung & Fokus", expanded=False):
         for t in ["️ Belichtung", "🕶️ ND Rechner", "📐 Schärfentiefe",
-                  "🔬 Focus Stacking", "🎛️ ND Stacking", " Bracketing"]:  # 👈 HIER EINGEFÜGT
+                  "🔬 Focus Stacking", "🎛️ ND Stacking", "📸 Bracketing"]:  # 👈 HIER EINGEFÜGT
             if st.button(t, use_container_width=True, key=f"sb_{t}"):
                 st.session_state.tool = t
                 st.rerun()

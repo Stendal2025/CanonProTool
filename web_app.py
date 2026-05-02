@@ -2319,7 +2319,7 @@ elif tool == "📱 AR-Brennweiten-Vorschau":
     - **85mm+** komprimiert Perspektive – ideal für Portraits & Details
     """)
 
-    elif tool == "📊 Dynamikumfang & Kontrast":
+elif tool == "📊 Dynamikumfang & Kontrast":
     st.header("📊 Dynamikumfang & Bracketing-Rechner")
     st.markdown("Berechne exakt, wie viele Aufnahmen du für HDR/TONEMAPPING benötigst.")
 

@@ -969,7 +969,7 @@ elif tool == "🌙 Mond & Milchstraße":
             st.number_input("Längengrad",  value=longitude, disabled=True, key="mw_lon")
         else:
             default_coords = st.session_state.get("gps_coords", "51.34,12.38")
-            coords_input = st.text_input("Koordinaten (Br,Lg)", value=default_coords)
+            coords_input = st.text_input("Koordinaten (Br,Lg)", value=default_coords, key="coords_mond_milchstrasse")
             try:
                 parts = coords_input.replace(" ", "").split(",")
                 latitude, longitude = float(parts[0]), float(parts[1])

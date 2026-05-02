@@ -450,7 +450,7 @@ with st.sidebar:
     with st.expander("🌍 Planung & Umgebung", expanded=False):
         for t in ["🌍 Astro & Wetter Dashboard", "🌙 Mond & Milchstraße",
                   "🌊 Gezeiten & Tide-Rechner", "📍 GPS-Standort", "📝 Planer",
-                  "🔔 Shooting-Alarm & Push-Reminder"]:
+                  "🔔 Shooting-Alarm"]:
             if st.button(t, use_container_width=True, key=f"sb_{t}"):
                 st.session_state.tool = t
                 st.rerun()

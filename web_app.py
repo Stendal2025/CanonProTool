@@ -1023,6 +1023,14 @@ elif tool == "🌙 Mond & Milchstraße":
 # ── 🌊 GEZEITEN & TIDE-RECHNER ─────────────────────────────────
 elif tool == "🌊 Gezeiten & Tide-Rechner":
     st.header("🌊 Gezeiten & Tide-Rechner")
+    # ✅ Auto-Select GPS falls vorhanden
+    if not st.session_state.get("gps_coords"):
+        methode = st.radio("📍 Standort:", ["️ Bekannter Küstenort", "📍 Eigene Koordinaten", "📱 GPS-Standort"], index=0)
+    else:
+        st.info(f"✅ GPS aktiv: `{st.session_state.gps_coords}`")
+        if st.button("📱 GPS-Koordinaten übernehmen", use_container_width=True):
+            st.session_state.tide_lat, st.session_state.tide_lon = map(float, st.session_state.gps_coords.split(","))
+        methode = "📱 GPS-Standort"
 
     KUESTEN_ORTE = {
         "Rügen (DE)":          (54.32, 13.09),

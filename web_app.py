@@ -853,9 +853,8 @@ elif tool == "📍 GPS-Standort":
 elif tool == "🌍 Astro & Wetter Dashboard":
     st.header("🌍 Astro & Wetter Dashboard")
 
-    city = st.text_input(
-        "📍 Stadt oder Koordinaten (z.B. Berlin oder 52.52,13.40)",
-        value=st.session_state.get("dash_city", "Berlin"),
+    city = st.text_input("📍 Stadt oder Koordinaten (z.B. Berlin oder 50.43,7.47)", 
+                     value=st.session_state.get("gps_coords", "Berlin"))
         key="dash_input",
     )
 

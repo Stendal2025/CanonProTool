@@ -417,7 +417,7 @@ render_status_bar()
 #  HEADER
 # ════════════════════════════════════════════════════════════════
 st.title("📷 CANON EOS R – PRO TOOL")
-st.markdown("**Web Version** | 30 Photography Tools")
+st.markdown("**Web Version** | 32 Photography Tools")
 
 # ════════════════════════════════════════════════════════════════
 #  FIX ⑦+⑧: tool NUR EINMAL zuweisen, KEINE doppelten Checks
@@ -429,7 +429,7 @@ tool = st.session_state.tool  # Einmalig, nach Session-State-Init
 # ════════════════════════════════════════════════════════════════
 with st.sidebar:
     st.title("📷 Canon Pro Tool")
-    st.caption("30 Photography Tools")
+    st.caption("32 Photography Tools")
     st.divider()
 
     if st.button("🏠 Home", use_container_width=True,
@@ -440,8 +440,8 @@ with st.sidebar:
     st.divider()
 
     with st.expander("⚙️ Belichtung & Fokus", expanded=False):
-        for t in ["⚙️ Belichtung", "🕶️ ND Rechner", "📐 Schärfentiefe",
-                  "🔬 Focus Stacking", "🎛️ ND Stacking"]:
+        for t in ["️ Belichtung", "🕶️ ND Rechner", "📐 Schärfentiefe",
+                  "🔬 Focus Stacking", "🎛️ ND Stacking", " Bracketing"]:  # 👈 HIER EINGEFÜGT
             if st.button(t, use_container_width=True, key=f"sb_{t}"):
                 st.session_state.tool = t
                 st.rerun()
@@ -504,6 +504,7 @@ if tool == "🏠 Home":
         ("🌊 Gezeiten & Tide-Rechner",  "Ebbe & Flut"),
         ("📍 GPS-Standort",             "Standort & Wetter"),
         ("🤿 Unterwasser-Modus",        "Canon & Apexcam"),
+        ("📸 Bracketing",               "AEB,Focus & WB Serien"),
     ]
     cols = st.columns(2)
     for i, (name, desc) in enumerate(dash_tools):
@@ -2015,6 +2016,231 @@ elif tool == "📈 Histogramm":
             else: st.success("🟢 Gut belichtet!")
         except ImportError:
             st.error("numpy fehlt: pip install numpy")
+
+# ── 📸 BRACKETING ASSISTANT ──────────────────────────────────────
+elif tool == "📸 Bracketing":
+    st.header("📸 Bracketing-Assistant")
+    st.markdown("Automatische Serien für HDR, Focus Stacking & kreative Experimente")
+
+    # Tab-Navigation
+    tab_exp, tab_foc, tab_wb = st.tabs(["🔆 Exposure (AEB)", "🎯 Focus", "🎨 WB"])
+
+    # ═══════════════════════════════════════════════════════════
+    #  🔆 EXPOSURE BRACKETING (AEB)
+    # ═══════════════════════════════════════════════════════════
+    with tab_exp:
+        st.subheader("🔆 Exposure Bracketing für HDR")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            base_ev = st.slider("Basis-Belichtung (EV)", -3.0, 3.0, 0.0, 0.5)
+            step_ev = st.selectbox("Schrittweite (Stops)", [0.3, 0.5, 0.7, 1.0, 1.5, 2.0], index=1)
+            shots = st.selectbox("Anzahl Bilder", [3, 5, 7, 9], index=0)
+        with col2:
+            iso = st.number_input("ISO (fest)", 100, 12800, 400, step=100)
+            aperture = st.selectbox("Blende (fest)", [1.4,1.8,2.8,4,5.6,8,11,16,22], index=4)
+            shutter_base = st.selectbox("Basis-Verschlusszeit", SHUTTERS_ALL, index=6)
+
+        if st.button("✅ AEB-Serie berechnen", type="primary", key="bracket_aeb"):
+            base_sec = parse_shutter(shutter_base)
+            ev_steps = [(i - shots//2) * step_ev for i in range(shots)]
+            
+            st.success(f"### 📋 AEB-Serie: {shots} Bilder | Schritt: {step_ev} Stops")
+            
+            rows = []
+            for i, ev in enumerate(ev_steps, 1):
+                # Belichtungsanpassung: shutter_sec = base_sec * 2^(-ev)
+                shutter_sec = base_sec * (2 ** (-ev))
+                # Formatierung
+                if shutter_sec >= 1:
+                    shutter_str = f"{shutter_sec:.1f}s"
+                elif shutter_sec >= 1/30:
+                    shutter_str = f"1/{int(round(1/shutter_sec))}s"
+                else:
+                    shutter_str = f"{shutter_sec:.3f}s"
+                
+                rows.append({
+                    "Bild": f"#{i}",
+                    "EV-Korrektur": f"{ev:+.1f}",
+                    "Verschlusszeit": shutter_str,
+                    "ISO": iso,
+                    "Blende": f"f/{aperture}",
+                    "Hinweis": "🟢 Normal" if ev == 0 else ("🔵 Unterbelichtet" if ev < 0 else "🟡 Überbelichtet")
+                })
+            
+            st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+            
+            # Copy-Button für die Serie
+            copy_text = f"AEB {shots}x {step_ev}EV: " + " | ".join([f"{r['EV-Korrektur']}={r['Verschlusszeit']}" for r in rows])
+            st.code(copy_text, language="text")
+            copy_button(copy_text, label="📋 Serie kopieren")
+            
+            # Tipps
+            with st.expander("💡 AEB-Tipps"):
+                st.markdown("""
+                - **Stativ verwenden** für perfekte Ausrichtung der HDR-Bilder
+                - **Fernauslöser** oder 2s-Selbstauslöser gegen Verwacklung
+                - **RAW-Format** für maximale Nachbearbeitungs-Flexibilität
+                - **Reihenfolge**: -EV → 0EV → +EV (so sortieren viele HDR-Softwares automatisch)
+                - **Belichtungsreihe testen**: Erst 3 Bilder mit 1 Stop, dann bei Bedarf erweitern
+                """)
+
+    # ═══════════════════════════════════════════════════════════
+    #  🎯 FOCUS BRACKETING
+    # ═══════════════════════════════════════════════════════════
+    with tab_foc:
+        st.subheader("🎯 Focus Bracketing für Stacking")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            focal = st.number_input("Brennweite (mm)", 14, 600, 100)
+            aperture = st.selectbox("Blende", [1.4,1.8,2.8,4,5.6,8,11,16], index=4)
+            sensor = st.selectbox("Sensor", ["Vollformat","APS-C Canon","APS-C Nikon","Micro 4/3"])
+            coc = {"Vollformat":0.030,"APS-C Canon":0.019,"APS-C Nikon":0.020,"Micro 4/3":0.015}[sensor]
+        with col2:
+            start_dist = st.number_input("Start-Entfernung (m)", 0.1, 100.0, 1.0, 0.1)
+            end_dist = st.number_input("End-Entfernung (m)", 0.2, 500.0, 10.0, 0.5)
+            overlap = st.slider("Überlappung der Schärfenzone (%)", 10, 90, 30)
+
+        if st.button("✅ Fokus-Schritte berechnen", type="primary", key="bracket_focus"):
+            # Hyperfokale Distanz: H = f² / (N * c) + f
+            f_mm = focal
+            H = (f_mm**2) / (aperture * coc) + f_mm  # in mm
+            
+            # Näherung für Fokus-Schritte (in mm)
+            # Schrittweite ≈ (DoF am Startpunkt) * (1 - overlap/100)
+            D1 = start_dist * 1000  # in mm
+            D2 = end_dist * 1000
+            
+            # Schärfentiefe am Startpunkt
+            near = (H * D1) / (H + D1 - focal)
+            far = (H * D1) / (H - D1 + focal) if D1 < H else float("inf")
+            dof_start = (far - near) / 1000 if far != float("inf") else 10  # in Meter
+            
+            # Schrittweite in Meter
+            step_m = dof_start * (1 - overlap/100)
+            if step_m < 0.01: step_m = 0.01  # Minimum 1 cm
+            
+            # Anzahl Bilder
+            total_dist = end_dist - start_dist
+            num_shots = max(2, int(total_dist / step_m) + 1)
+            
+            st.success(f"### 📋 Fokus-Serie: {num_shots} Bilder")
+            st.info(f"**Schrittweite:** {step_m*100:.1f} cm | **Gesamtstrecke:** {total_dist:.1f} m")
+            
+            # Tabelle mit Fokus-Positionen
+            focus_positions = []
+            current = start_dist
+            for i in range(num_shots):
+                focus_positions.append({
+                    "Bild": f"#{i+1}",
+                    "Fokus auf": f"{current:.2f} m",
+                    "Schärfenzone ca.": f"{max(0,current-dof_start/2):.2f} – {min(end_dist,current+dof_start/2):.2f} m"
+                })
+                current += step_m
+            
+            st.dataframe(pd.DataFrame(focus_positions), use_container_width=True, hide_index=True)
+            
+            # Copy-Button
+            copy_text = f"Focus Bracketing: {num_shots}x {step_m*100:.1f}cm Schritt | {start_dist}–{end_dist}m"
+            st.code(copy_text, language="text")
+            copy_button(copy_text, label="📋 Fokus-Plan kopieren")
+            
+            with st.expander("💡 Focus-Bracketing-Tipps"):
+                st.markdown("""
+                - **Manueller Fokus** + Focus Peaking verwenden
+                - **Stativ** ist Pflicht – keine Bewegung zwischen den Bildern
+                - **Belichtung konstant halten** (Manuell-Modus)
+                - **Reihenfolge**: Nah → Fern (oder umgekehrt, aber konsistent)
+                - **Stacking-Software**: Helicon Focus, Zerene Stacker, Photoshop
+                - **Bei Makro**: Schrittweite kann <1mm sein – Fokussierschiene empfohlen!
+                """)
+
+    # ═══════════════════════════════════════════════════════════
+    #  🎨 WHITE BALANCE BRACKETING
+    # ═══════════════════════════════════════════════════════════
+    with tab_wb:
+        st.subheader("🎨 White Balance Bracketing")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            base_wb = st.selectbox("Basis-WB", [
+                "🕯️ Glühlampe (3200K)", "🌅 Sonnenaufgang (4000K)", 
+                "☀️ Tageslicht (5200K)", "⛅ Bewölkt (6000K)", 
+                "🏔️ Schatten (7500K)", "🌌 Blaue Stunde (9000K)"
+            ])
+            step_kelvin = st.selectbox("Schrittweite (Kelvin)", [200, 300, 500, 800, 1000], index=1)
+            wb_shots = st.selectbox("Anzahl WB-Varianten", [3, 5, 7], index=0)
+        with col2:
+            st.markdown("**🎨 Farbton-Verschiebung (optional)**")
+            tint_step = st.slider("Grün↔Magenta Schritt", -3, 3, 0)
+            use_tint = st.checkbox("Farbton-Bracketing aktivieren", value=False)
+
+        if st.button("✅ WB-Serie berechnen", type="primary", key="bracket_wb"):
+            # Kelvin-Werte extrahieren
+            kelvin_map = {
+                "🕯️ Glühlampe (3200K)": 3200, "🌅 Sonnenaufgang (4000K)": 4000,
+                "☀️ Tageslicht (5200K)": 5200, "⛅ Bewölkt (6000K)": 6000,
+                "🏔️ Schatten (7500K)": 7500, "🌌 Blaue Stunde (9000K)": 9000
+            }
+            base_k = kelvin_map[base_wb]
+            
+            # Serie berechnen
+            wb_series = []
+            offset_range = range(-(wb_shots//2), wb_shots//2 + 1)
+            for i, offset in enumerate(offset_range, 1):
+                k_val = base_k + offset * step_kelvin
+                k_val = max(2000, min(10000, k_val))  # Clamp auf sinnvollen Bereich
+                wb_series.append({
+                    "Bild": f"#{i}",
+                    "Kelvin": f"{k_val}K",
+                    "Beschreibung": "🟡 Wärmer" if offset > 0 else ("🔵 Kälter" if offset < 0 else "⚪ Neutral"),
+                    "Farbton": f"{tint_step*offset:+d}" if use_tint else "–"
+                })
+            
+            st.success(f"### 📋 WB-Serie: {wb_shots} Varianten | Schritt: {step_kelvin}K")
+            st.dataframe(pd.DataFrame(wb_series), use_container_width=True, hide_index=True)
+            
+            # Copy-Button
+            copy_text = f"WB Bracketing: {base_wb} ±{step_kelvin}K x{wb_shots}"
+            st.code(copy_text, language="text")
+            copy_button(copy_text, label="📋 WB-Plan kopieren")
+            
+            with st.expander("💡 WB-Bracketing-Tipps"):
+                st.markdown("""
+                - **RAW fotografieren** – WB kann später beliebig angepasst werden
+                - **Bracketing lohnt sich bei**: Gemischtem Licht (Fenster + Lampe), Events, Produktfotos
+                - **Farbton-Bracketing**: Hilft bei grünem Kunstlicht oder Magenta-Stich
+                - **Alternativ**: Einmal neutral fotografieren, später in Lightroom variieren
+                - **Kreativ-Tipp**: Extreme WB-Werte (2000K / 10000K) für künstlerische Effekte
+                """)
+
+    # ═══════════════════════════════════════════════════════════
+    #  🎁 BONUS: ALL-IN-ONE BRACKETING PLANER
+    # ═══════════════════════════════════════════════════════════
+    st.divider()
+    with st.expander("🎁 Bonus: Kompletten Bracketing-Plan erstellen"):
+        st.markdown("Kombiniere mehrere Bracketing-Typen für maximale Flexibilität")
+        
+        c1, c2 = st.columns(2)
+        with c1:
+            use_aeb = st.checkbox("🔆 Exposure Bracketing", value=True)
+            use_focus = st.checkbox("🎯 Focus Bracketing", value=False)
+        with c2:
+            use_wb = st.checkbox("🎨 WB Bracketing", value=False)
+            total_shots = 1
+            if use_aeb: total_shots *= shots
+            if use_focus: total_shots *= num_shots if 'num_shots' in locals() else 5
+            if use_wb: total_shots *= wb_shots
+            st.metric("📸 Geschätzte Gesamtzahl Bilder", f"{total_shots}")
+        
+        if st.button("📄 Bracketing-Plan als PDF"):
+            st.info("💡 Kombiniertes Bracketing erzeugt viele Bilder – nur bei Stativ + ausreichend Speicher nutzen!")
+            st.warning(f"⚠️ {total_shots} Bilder können schnell 2-5 GB Speicher belegen (RAW)")
+
+    st.caption("💡 Bracketing ist eine Profi-Technik – übe zuerst mit 3-Bild-Serien!")
+
+            
 
 # ════════════════════════════════════════════════════════════════
 #  FOOTER

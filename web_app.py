@@ -2319,50 +2319,46 @@ elif tool == "📱 AR-Brennweiten-Vorschau":
     - **85mm+** komprimiert Perspektive – ideal für Portraits & Details
     """)
 
+# ──  DYNAMIKUMFANG & KONTRAST ───────────────────────────────────
 elif tool == "📊 Dynamikumfang & Kontrast":
     st.header("📊 Dynamikumfang & Bracketing-Rechner")
     st.markdown("Berechne exakt, wie viele Aufnahmen du für HDR/TONEMAPPING benötigst.")
 
+    # 1. Sauberes Dictionary: Der Text (Key) muss exakt so im SelectBox stehen
+    DR_OPTIONS = {
+        "🌫️ Bewölkt / Nebel (8–10 Stops)": 9.0,
+        "🌳 Wald / Schatten (10–12 Stops)": 11.0,
+        "🏔️ Landschaft / Sonne (12–14 Stops)": 13.0,
+        "🌅 Sonnenuntergang / Silhouette (16–18 Stops)": 17.0,
+        "🪟 Innenraum + Fenster (18–20 Stops)": 19.0,
+        "🌃 Nachtaufnahme / Stadt (14–16 Stops)": 15.0,
+    }
+
     col1, col2 = st.columns(2)
     with col1:
-        scene_type = st.selectbox("🌍 Szenen-Typ (geschätzter Kontrast)", [
-            "️ Bewölkt / Nebel (8–10 Stops)",
-            " Wald / Schatten (10–12 Stops)",
-            "🏔️ Landschaft / Sonne (12–14 Stops)",
-            "🌅 Sonnenuntergang / Silhouette (16–18 Stops)",
-            "🪟 Innenraum + Fenster (18–20 Stops)",
-            " Nachtaufnahme / Stadt (14–16 Stops)",
-            "⚙️ Manuell eingeben..."
-        ])
-        if scene_type == "⚙️ Manuell eingeben...":
+        # Auswahl NUR der Keys aus dem Dictionary + Manuelle Option
+        available_keys = list(DR_OPTIONS.keys()) + ["⚙️ Manuell eingeben..."]
+        scene_label = st.selectbox("🌍 Szenen-Typ", available_keys)
+        
+        # Value holen
+        if scene_label == "️ Manuell eingeben...":
             scene_dr = st.number_input("Szenen-Dynamikumfang (Stops)", 6.0, 24.0, 14.0, 0.5)
         else:
-            # Mittlere Schätzung aus Range
-            dr_map = {
-                "🌫️ Bewölkt / Nebel (8–10 Stops)": 9.0,
-                "🌳 Wald / Schatten (10–12 Stops)": 11.0,
-                "🏔️ Landschaft / Sonne (12–14 Stops)": 13.0,
-                "🌅 Sonnenuntergang / Silhouette (16–18 Stops)": 17.0,
-                "🪟 Innenraum + Fenster (18–20 Stops)": 19.0,
-                "🌃 Nachtaufnahme / Stadt (14–16 Stops)": 15.0,
-            }
-            scene_dr = dr_map[scene_type]
+            scene_dr = DR_OPTIONS[scene_label]
 
     with col2:
         iso = st.selectbox("📷 Aufnahme-ISO", [100, 200, 400, 800, 1600, 3200, 6400], index=0)
-        # Canon EOS R reale DR-Werte (ca., basierend auf Sensor-Messungen)
+        # Canon EOS R Sensor-Daten (ca.)
         cam_dr_map = {100:13.6, 200:13.1, 400:12.4, 800:11.7, 1600:11.0, 3200:10.2, 6400:9.4}
         cam_dr = cam_dr_map[iso]
-        st.metric("📉 Sensor-Dynamikumfang (ca.)", f"{cam_dr:.1f} Stops")
+        st.metric(" Sensor-Dynamikumfang (ca.)", f"{cam_dr:.1f} Stops")
         step_ev = st.selectbox("🔢 Bracketing-Schrittweite", [0.5, 1.0, 1.5, 2.0], index=1)
 
     if st.button("✅ Bracketing-Bedarf berechnen", type="primary", key="calc_dr"):
-        # Formel: Shots = ceil((Scene_DR - Cam_DR) / Step) + 1
-        # +1 für Basisbelichtung, Überlappung von ~1 Stop empfohlen
+        # Berechnung: (Szenen-Kontrast minus Sensor-DR) durch Schrittweite
         diff = max(0, scene_dr - cam_dr)
         shots = max(1, math.ceil(diff / step_ev) + 1)
         
-        # Optimale Reihenfolge berechnen
         ev_offsets = [(i - shots//2) * step_ev for i in range(shots)]
         
         st.success(f"### 📸 Empfehlung: {shots} Bilder für {scene_dr:.1f} Stops Szene")
@@ -2372,12 +2368,11 @@ elif tool == "📊 Dynamikumfang & Kontrast":
             rows.append({
                 "Bild": f"#{i}",
                 "EV-Korrektur": f"{ev:+.1f}",
-                "Abdeckung": f"{cam_dr - abs(ev):.1f}–{cam_dr + abs(ev):.1f} Stops",
+                "Abdeckung": f"{max(0, cam_dr - abs(ev)):.1f}–{cam_dr + abs(ev):.1f} Stops",
                 "Hinweis": "🟢 Basis" if ev == 0 else ("🔵 Schatten" if ev < 0 else "🟡 Lichter")
             })
         st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
         
-        # Copy & Tipps
         copy_text = f"HDR-Bracketing: {shots}x {step_ev}EV | ISO {iso} | Szene: {scene_dr:.0f} Stops"
         st.code(copy_text, language="text")
         copy_button(copy_text, label="📋 Plan kopieren")
@@ -2385,10 +2380,10 @@ elif tool == "📊 Dynamikumfang & Kontrast":
         with st.expander("💡 Profi-Empfehlungen"):
             st.markdown(f"""
             - **Sensor-Grenze:** Bei ISO {iso} deckt deine Canon EOS R ~{cam_dr:.1f} Stops ab.
-            - **Überlappung:** Die Berechnung enthält automatisch ~1 Stop Überlappung für nahtloses Tonemapping.
+            - **Überlappung:** Automatisch ~1 Stop für nahtloses Tonemapping.
             - **RAW ist Pflicht:** JPEG verliert bereits in der Kamera Dynamikumfang.
             - **Stativ & Fernauslöser:** Ab 3 Bildern kritisch für Pixel-genaue Ausrichtung.
-            - **Software:** Lightroom HDR Merge, Photomatix, oder Aurora HDR für beste Ergebnisse.
+            - **Software:** Lightroom HDR Merge, Photomatix, oder Aurora HDR.
             """)
 
             

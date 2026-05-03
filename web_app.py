@@ -577,6 +577,14 @@ if "tide_lon" not in st.session_state:
     st.session_state.tide_lon = 13.09
 
 # ════════════════════════════════════════════════════════════════
+#  NAVIGATION STATE (MUSS VOR JEDEM tool-Verweis stehen!)
+# ════════════════════════════════════════════════════════════════
+if "tool" not in st.session_state:
+    st.session_state.tool = "🏠 Home"
+
+tool = st.session_state.tool  # ✅ Jetzt ist `tool` definiert und kann genutzt werden!
+
+# ════════════════════════════════════════════════════════════════
 #  FIX ⑭: PWA-Injection NACH set_page_config()
 # ════════════════════════════════════════════════════════════════
 components.html("""

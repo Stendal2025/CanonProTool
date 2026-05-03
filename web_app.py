@@ -2513,179 +2513,125 @@ elif tool == "🔔 Shooting-Alarm":
             3. Die App prüft alle 10 Sekunden die Zeit & sendet Push, auch wenn du andere Apps nutzt
             4. Für exakte Zeiten: Nutze das `🌍 Astro-Dashboard` + manuelle Anpassung im Alarm
             """)
-# ── 🤖 AI-MOTIV-ERKENNUNG & SETTINGS-BERATER (PRO VERSION) ──────
+# ── 🤖 AI-MOTIV-ERKENNUNG & PRO-COACH (CANON R FOKUS) ──────────
 elif tool == "🤖 AI-Motiv-Erkennung":
-    st.header("🤖 AI-Motiv-Erkennung & Settings-Berater")
-    st.markdown("Lade ein Foto hoch – die KI analysiert Motiv, Licht & Szene und schlägt optimale Canon EOS R Settings vor.")
+    st.header("🤖 AI Pro-Coach & Motiv-Analyse")
+    st.markdown("Lade ein Foto hoch. Die KI analysiert Licht, Schärfe und Szene und schlägt **Manuelle (M) oder Halbautomatische (Av/Tv) Settings** für deine Canon EOS R vor.")
 
-    uploaded = st.file_uploader("📤 Foto hochladen (JPG, PNG, HEIC)", type=["jpg", "jpeg", "png", "webp", "heic"])
+    uploaded = st.file_uploader("📤 Foto hochladen (JPG, PNG)", type=["jpg", "jpeg", "png", "webp"])
 
     if uploaded:
         try:
             from PIL import Image, ExifTags, ImageFilter
             import numpy as np
             
-            # Bild laden & vorbereiten
             img = Image.open(uploaded).convert("RGB")
             width, height = img.size
             img_array = np.array(img)
             
-            # 1. Basis-Analyse
+            # 1. Bild-Analyse
             luminance = np.mean(0.299*img_array[:,:,0] + 0.587*img_array[:,:,1] + 0.114*img_array[:,:,2])
             contrast = np.std(img_array)
-            avg_r, avg_g, avg_b = np.mean(img_array[:,:,0]), np.mean(img_array[:,:,1]), np.mean(img_array[:,:,2])
             
-            # 2. Erweiterte Analyse (Kanten & Sättigung)
-            # Kanten-Dichte (für Architektur)
+            # Schärfe-Erkennung (Laplacian-Variante vereinfacht)
             img_gray = img.convert('L')
             edges = img_gray.filter(ImageFilter.FIND_EDGES)
-            edge_density = np.mean(np.array(edges)) / 255.0
-            
-            # Sättigung (für Food)
-            hue = np.arctan2(3**0.5 * (avg_r - avg_g + avg_r - avg_b), 2*avg_r - avg_g - avg_b)
-            saturation = np.std(img_array) # Vereinfacht
-            
-            # 3. EXIF-Daten
+            edge_density = np.mean(np.array(edges))
+            is_blurry = edge_density < 30 # Schwellenwert für Unschärfe
+
+            # EXIF lesen
             exif_data = {}
+            focal_length = None
             try:
                 exif = img.getexif()
                 if exif:
                     for tag_id in exif:
                         tag = ExifTags.TAGS.get(tag_id, tag_id)
                         exif_data[tag] = exif.get(tag_id)
+                    if "FocalLength" in exif_data:
+                        focal_length = float(exif_data["FocalLength"])
             except: pass
 
-            # 4. KI-Entscheidungsbaum (Erweitert)
-            st.subheader("🔍 Analyse-Ergebnis")
-            c1, c2, c3, c4 = st.columns(4)
-            c1.metric("💡 Helligkeit", f"{luminance:.0f}")
-            c2.metric("🎨 Kontrast", f"{contrast:.0f}")
-            c3.metric(" Kanten", f"{edge_density:.2f}") # Neu
-            c4.metric("📐 Format", f"{width}x{height}")
-
-            # Szenen-Erkennung
-            scene = "Unbekannt"
-            confidence = 0
-            reason = ""
+            # 2. Pro-Logik: Szenen & Modus bestimmen
+            st.subheader(" Analyse & Pro-Empfehlung")
             
-            # 🏛️ Architektur
-            if edge_density > 0.15 and contrast > 40 and luminance > 80:
-                scene, confidence, reason = "🏛️ Architektur", 90, "Hohe Kantendichte + Struktur → Gebäude oder Innenraum"
-            # 🍽️ Food
-            elif (avg_r > avg_b) and saturation > 60 and luminance > 100 and luminance < 200:
-                scene, confidence, reason = "🍽️ Food & Gastronomie", 85, "Warme Farben + hohe Sättigung → Speisen oder Produkte"
-            # 🏎️ Sport (via EXIF Shutter oder hoher Kontrast/Bewegung)
-            elif "ExposureTime" in exif_data:
-                try:
-                    exp_time = float(exif_data["ExposureTime"]) if isinstance(exif_data["ExposureTime"], (int, float)) else 1/125
-                    if exp_time < 1/500:
-                        scene, confidence, reason = "🏎️ Sport & Action", 92, "Sehr kurze Belichtungszeit → Schnelle Bewegung eingefroren"
-                except: pass
-            
-            if scene == "Unbekannt": # Fallback-Logik
-                if luminance < 60 and avg_b > avg_r:
-                    scene, confidence, reason = "🌙 Nacht / Astro", 92, "Dunkel + Blau → Sternenhimmel"
-                elif luminance < 150 and avg_r > avg_b and contrast > 60:
-                    scene, confidence, reason = "🌅 Golden Hour", 88, "Warme Farben → Sonne tief"
-                elif width < height and contrast < 80 and 80 < luminance < 200:
-                    # Hauttöne-Check (Vereinfacht: Orange/Yellow dominant)
-                    if avg_r > avg_g > avg_b:
-                        scene, confidence, reason = "💍 Hochzeit & Event", 85, "Hauttöne + Hochformat → Menschen/Event"
-                    else:
-                        scene, confidence, reason = "👤 Portrait", 85, "Hochformat + weiches Licht"
-                elif width > height and contrast > 70 and luminance > 100:
-                    scene, confidence, reason = "🏔️ Landschaft", 90, "Querformat + Weite"
-                else:
-                    scene, confidence, reason = "✨ Allgemein", 70, "Mischszene"
+            # Basis-Werte
+            mode = "M" # Standard: Wir wollen Kontrolle!
+            reasoning = []
+            settings = {}
 
-            st.success(f"### 🎯 Erkennung: {scene} ({confidence}% Sicherheit)\n*{reason}*")
+            # Erkennung
+            if luminance < 50: # Dunkel
+                mode = "M"
+                reasoning.append("🌙 **Nacht/Astro:** Manuelles M-Modus ist Pflicht für lange Belichtungen.")
+                settings = {"mode": "M", "iso": "3200–6400", "aperture": "f/1.4–f/2.8", "shutter": "15–30s", "af": "Manuell ∞", "wb": "4000K"}
+                settings["tips"] = ["✅ Stativ nutzen!", "✅ IBIS (Stabilisator) AN (falls Handheld)", "✅ Rauschreduzierung AUS (für Astro)"]
+            elif luminance > 200: # Sehr Hell
+                mode = "Av"
+                reasoning.append("️ **Helles Licht:** Av-Modus reicht oft, aber M-Modus gibt Konstanz.")
+                settings = {"mode": "M", "iso": "100", "aperture": "f/8–f/11", "shutter": "1/250s", "af": "One-Shot", "wb": "5200K"}
+                settings["tips"] = ["✅ ND-Filter nutzen bei offener Blende", "✅ Belichtungskorrektur im M-Modus prüfen"]
+            elif is_blurry:
+                mode = "Tv" # Priorität: Verschlusszeit!
+                reasoning.append("🏃 **Bewegung erkannt:** Tv-Modus (Verschlusspriorität), um die Schärfe zu sichern.")
+                settings = {"mode": "Tv", "iso": "Auto (Max 6400)", "aperture": "Auto", "shutter": "1/500s–1/1000s", "af": "Servo AF", "wb": "Auto"}
+                settings["tips"] = ["✅ Verschlusszeit nicht unter 1/250s", "✅ Canon R Servo AF Case 2 (Tracking)"]
+            elif focal_length and focal_length > 50: # Tele / Portrait
+                mode = "Av"
+                reasoning.append("👤 **Tele/Portrait:** Av-Modus für Kontrolle über die Schärfentiefe (Bokeh).")
+                settings = {"mode": "Av", "iso": "Auto (Min 100)", "aperture": "f/1.8–f/2.8", "shutter": "Auto (Min 1/200s)", "af": "Eye-AF", "wb": "5200K"}
+                settings["tips"] = ["✅ Fokus auf die Augen!", "✅ ISO-Auto Begrenzung im Menü prüfen"]
+            else: # Standard / Landschaft
+                mode = "M"
+                reasoning.append("🏔️ **Allround:** M-Modus für konsistente Belichtung (besonders bei Serien).")
+                settings = {"mode": "M", "iso": "100–400", "aperture": "f/5.6–f/8", "shutter": "Auto berechnen", "af": "FlexiZone", "wb": "5200K"}
+                settings["tips"] = ["✅ Wasserwaage im Sucher aktivieren", "✅ Histogramm einblenden"]
 
-            # 5. Canon EOS R Settings-Datenbank (Erweitert)
+            # Dynamikumfang Check (Kontrast > 80)
+            if contrast > 90:
+                reasoning.append("️ **Hoher Kontrast:** Belichtungsreihe (Bracketing) empfohlen!")
+                settings["bracketing"] = "3–5 Bilder, ±1.0 EV"
+
+            # Output
+            st.success(f"### 📸 Empfehlung: {mode}-Modus")
+            for r in reasoning:
+                st.markdown(f"- {r}")
+
             st.divider()
-            st.subheader("⚙️ Empfohlene Canon EOS R Settings")
-            
-            settings_db = {
-                "🏛️ Architektur": {
-                    "mode": "Av (Blendenpriorität)", "iso": "100–400", "aperture": "f/8–f/11", 
-                    "shutter": "Stativ (1/60s+)", "af": "Manuell + Peaking", "wb": "5200K (Neutral)",
-                    "tips": ["✅ Blende f/8 für maximale Schärfe", "✅ Gitternetz-Linie im Sucher für Sturz", "✅ Weißabgleich neutral (nicht Auto!)", "✅ Bei Innenräumen: ISO bis 3200, f/4"]
-                },
-                "🍽️ Food": {
-                    "mode": "Av (Blendenpriorität)", "iso": "100–800", "aperture": "f/2.8–f/4", 
-                    "shutter": "1/125s min", "af": "Eye-AF / FlexiZone", "wb": "5200K oder 5500K",
-                    "tips": ["✅ Nah ran gehen (Makro-Objektiv ideal)", "✅ Weiches Seitenlicht bevorzugen", "✅ Sättigung in Kamera leicht erhöhen (+1)", "✅ Fokus auf das wichtigste Element (z.B. Sahne)"]
-                },
-                "🏎️ Sport & Action": {
-                    "mode": "Tv (Verschlusspriorität)", "iso": "Auto (max 6400)", "aperture": "f/2.8–f/5.6", 
-                    "shutter": "1/1000s bis 1/2000s", "af": "Servo AF (Case 2: Continue)", "wb": "Auto",
-                    "tips": ["✅ High-Speed-Serienaufnahme (20fps bei R3/R6II)", "✅ Back-Button Focus für Tracking", "✅ Verschlusszeit nie unter 1/1000s bei schnellen Objekten", "✅ ISO Auto aktivieren für Lichtwechsel"]
-                },
-                " Hochzeit & Event": {
-                    "mode": "Av oder M", "iso": "400–3200", "aperture": "f/1.8–f/2.8", 
-                    "shutter": "1/125s (min)", "af": "Servo AF + Personenerkennung", "wb": "Auto (oder Flash 5500K)",
-                    "tips": ["✅ Zwei Karten-Slots nutzen (Backup!)", "✅ Blitz immer griffbereit (RT 600EX II)", "✅ Lautloser Verschluss in der Zeremonie", "✅ Fokus auf die Augen (Eye-AF ON)"]
-                },
-                "🌙 Nacht / Astro": {
-                    "mode": "Manuell (M)", "iso": "1600–6400", "aperture": "f/1.4–f/2.8", 
-                    "shutter": "15–30s (Stativ!)", "af": "Manuell ∞", "wb": "3800–4200K",
-                    "tips": ["✅ Rauschreduzierung (Langzeit) AUS", "✅ 500er-Regel beachten", "✅ Fernauslöser nutzen", "✅ Fokus-Peaking (Rot) zur Kontrolle"]
-                },
-                "🌅 Golden Hour": {
-                    "mode": "Av", "iso": "100–400", "aperture": "f/5.6–f/8", 
-                    "shutter": "Auto", "af": "One-Shot AF", "wb": "5200K (Tageslicht)",
-                    "tips": ["✅ Gegenlicht: Belichtungskorrektur +1", "✅ Polfilter für sattere Farben", "✅ Goldene Stunde App nutzen für Timing"]
-                },
-                "👤 Portrait": {
-                    "mode": "Av", "iso": "100–800", "aperture": "f/1.2–f/2.8", 
-                    "shutter": "1/200s min", "af": "Eye-AF Tracking", "wb": "5200K",
-                    "tips": ["✅ 85mm f/1.2 oder 50mm f/1.2", "✅ Fokus immer auf die Augen", "✅ Leichte Überbelichtung (+0.3 EV) für Haut"]
-                },
-                "️ Landschaft": {
-                    "mode": "Av", "iso": "100", "aperture": "f/8–f/11", 
-                    "shutter": "Stativ", "af": "Manuell", "wb": "5200K",
-                    "tips": ["✅ Hyperfokale Distanz nutzen", "✅ ND-Filter für Langzeit (Wasser/Wolken)", "✅ Panorama-Modus für Weite"]
-                },
-                "✨ Allgemein": {
-                    "mode": "P", "iso": "Auto", "aperture": "Auto", "shutter": "Auto", 
-                    "af": "FlexiZone Multi", "wb": "Auto",
-                    "tips": ["✅ Kreativ-Filter ausprobieren", "✅ RAW für maximale Freiheit"]
-                }
-            }
-            
-            rec = settings_db.get(scene, settings_db["✨ Allgemein"])
-            
+            st.subheader("⚙️ Canon EOS R Setup")
             col1, col2 = st.columns(2)
             with col1:
-                st.markdown(f"""
-                **📷 Basis-Setup:**
-                - Modus: `{rec['mode']}`
-                - ISO: `{rec['iso']}`
-                - Blende: `{rec['aperture']}`
-                - Verschluss: `{rec['shutter']}`
+                st.info(f"""
+                **🎛️ Einstellungen:**
+                - **Modus:** {settings['mode']}
+                - **ISO:** {settings['iso']}
+                - **Blende:** {settings['aperture']}
+                - **Verschluss:** {settings['shutter']}
                 """)
             with col2:
-                st.markdown(f"""
-                **🎯 Fokus & Farbe:**
-                - AF: `{rec['af']}`
-                - Weißabgleich: `{rec['wb']}`
+                st.info(f"""
+                ** Fokus & AF:**
+                - **AF-Modus:** {settings['af']}
+                - **Weißabgleich:** {settings['wb']}
                 """)
             
-            st.info("💡 **Profi-Tipps:**\n" + "\n".join([f"- {t}" for t in rec['tips']]))
-            
-            copy_text = f"{scene} | {rec['mode']} | ISO {rec['iso']} | {rec['aperture']} | {rec['shutter']}"
+            if "bracketing" in settings:
+                st.warning(f"📸 **Bracketing aktivieren:** {settings['bracketing']}")
+
+            st.markdown("💡 **Profi-Tipps:**")
+            for t in settings.get("tips", []):
+                st.markdown(t)
+
+            # Copy Button
+            copy_text = f"Canon R | {settings['mode']} | ISO {settings['iso']} | {settings['aperture']} | {settings['shutter']} | AF: {settings['af']}"
             st.code(copy_text, language="text")
             copy_button(copy_text, label="📋 Settings kopieren")
-            
-            if exif_data:
-                with st.expander("🔍 Vergleich mit Original-EXIF"):
-                    orig_iso = exif_data.get("ISOSpeedRatings", "N/A")
-                    orig_ap = exif_data.get("FNumber", "N/A")
-                    st.markdown(f"Deine Aufnahme: ISO {orig_iso} | Blende {orig_ap} vs. KI-Empfehlung.")
 
         except Exception as e:
-            st.error(f"❌ Fehler: {e}")
+            st.error(f"❌ Analyse-Fehler: {e}")
     else:
-        st.info("👆 Lade ein Foto hoch, um die KI-Analyse zu starten!")
+        st.info(" Lade ein Foto hoch, um den Pro-Coach zu starten!")
+        st.markdown("**Die KI prüft:** Schärfe, Helligkeit, Kontrast & EXIF-Daten (Brennweite), um den besten Modus (M/Av/Tv) vorzuschlagen.")
             
 
 # ════════════════════════════════════════════════════════════════

@@ -691,7 +691,7 @@ with st.sidebar:
     st.divider()
 
     with st.expander("⚙️ Belichtung & Fokus", expanded=False):
-        for t in ["️ Belichtung", "🕶️ ND Rechner", "📐 Schärfentiefe",
+        for t in ["️⚙️ Belichtung", "🕶️ ND Rechner", "📐 Schärfentiefe",
                   "🔬 Focus Stacking", "🎛️ ND Stacking", "📸 Bracketing",
                   "📊 Dynamikumfang & Kontrast"]:  # 👈 HIER EINGEFÜGT
             if st.button(t, use_container_width=True, key=f"sb_{t}"):

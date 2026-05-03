@@ -330,9 +330,10 @@ LEARNING_DB = {
         "canon_r": "EOS R hat **keinen内置 Alarm**, aber **Interval-Timer** für Serien. **Custom Modes C1-C4** können vorab geladen werden. **Battery-Check** vor Alarm-Zeit. **Kontakt-Schutz** (Regenhülle) bereitlegen.",
         "fehler": " Alarm ohne Vorbereitung → Stress. ❌ GPS nicht gecheckt → falsche Zeit. ❌ Kein Backup-Alarm → verpasst. ❌ Settings nicht voreingestellt → hektisch."
     }
-}
     # 🔍 DEBUG: Zeigt ob Lern-Panel gefunden wird
     st.caption(f"🔍 Tool: `{tool}` | In DB: `{tool in LEARNING_DB}`")
+}
+    
 def render_learning_panel(tool_name):
     """Zeigt Lern-Infos als ausklappbaren Bereich an."""
     if tool_name not in LEARNING_DB:
@@ -777,7 +778,7 @@ if tool == "🏠 Home":
     st.divider()
     st.markdown(
         "<div style='text-align:center;color:#8B949E;font-size:13px;'>"
-        "💡 Sidebar → alle 30 Tools<br>"
+        "💡 Sidebar → alle 32 Tools<br>"
         "📱 GPS-Daten werden automatisch übernommen</div>",
         unsafe_allow_html=True,
     )

@@ -781,7 +781,7 @@ if tool == "🏠 Home":
         "📱 GPS-Daten werden automatisch übernommen</div>",
         unsafe_allow_html=True,
     )
-
+# ── ⚙️ Belichtung ──────────────────────────────────────────────
 elif tool == "⚙️ Belichtung":
     st.header("⚙️ Belichtung-Bewerter")
     col1, col2, col3 = st.columns(3)

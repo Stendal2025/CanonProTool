@@ -794,6 +794,8 @@ if tool == "🏠 Home":
 # ── ⚙️ Belichtung ──────────────────────────────────────────────
 elif tool == "⚙️ Belichtung":
     st.header("⚙️ Belichtung-Bewerter")
+    # ✅ DEBUG NUR HIER (innerhalb des Blocks, wo tool bekannt ist):
+    st.caption(f"🔍 Tool: `{tool}` | In DB: `{tool in LEARNING_DB}`")
     col1, col2, col3 = st.columns(3)
     with col1:
         iso = st.selectbox("ISO", [100,200,400,800,1600,3200,6400,12800], index=0)

@@ -93,6 +93,257 @@ SHUTTERS_ALL = [
 ]
 
 # ════════════════════════════════════════════════════════════════
+#  📚 LERN-DATENBANK (Canon EOS R Pro Guide)
+# ════════════════════════════════════════════════════════════════
+LEARNING_DB = {
+    " Home": {
+        "theorie": "Das Dashboard ist dein Kommandozentrum. Es bündelt alle Tools für Planung, Berechnung und Feld-Einsatz.",
+        "praxis": "Nutze 'Schnellzugriff' für häufige Tools. GPS einmal setzen → gilt für alle Wetter- und Astro-Tools.",
+        "canon_r": "Tipp: Lege dir Custom-Modi C1-C4 auf das Modus-Wahlrad (z.B. C1=Portrait, C2=Sport, C3=Video, C4=Langzeit).",
+        "fehler": "❌ Apps einzeln öffnen → Zeitverlust. ❌ GPS nicht synchronisiert → Wetterdaten falsch."
+    },
+    "️ Belichtung": {
+        "theorie": "Das **Belichtungsdreieck**: Blende (Lichtmenge/DoF), Zeit (Bewegung), ISO (Rauschen). Alle drei sind austauschbar, haben aber kreative Nebenwirkungen.",
+        "praxis": "Entscheide zuerst über Kreativität (DoF oder Bewegung?). Passe dann ISO an, um auf Belichtung 0 zu kommen. Halte ISO so niedrig wie möglich.",
+        "canon_r": "Die R-Serie zeigt Belichtung **live im EVF** (auch in M). Nutze **Histogramm-Overlay** statt nur dem Strich-Messer. Aktiviere 'Belichtungssimulation AN' für WYSIWYG.",
+        "fehler": "❌ ISO zu schnell erhöhen → Rauschen. ❌ f/22 für Schärfe → Beugungsunschärfe! (Besser f/8–f/11). ❌ AV ohne ISO-Limit → ISO springt auf 25600+."
+    },
+    "🕶️ ND Rechner": {
+        "theorie": "ND-Filter reduzieren Licht neutral. **1 Stop = halbiert Licht**. ND8=3Stops, ND64=6Stops, ND1000=10Stops. Ermöglichen Langzeitbelichtung bei Tag.",
+        "praxis": "1. Belichte ohne Filter korrekt. 2. Rechne: `Neue Zeit = Alte Zeit × 2^Stops`. 3. Filter aufsetzen, Fokus/WB fixieren! 4. Fernauslöser nutzen.",
+        "canon_r": "Bei >30s: **BULB-Modus**. R-Reihe unterstützt **Langzeit-Rauschreduzierung** (Dark Frame Subtraction) – bei Astro/ND ausschalten, um Wartezeit zu sparen.",
+        "fehler": "❌ Fokus nach Filter ändern → unscharf. ❌ ND-Stacking ohne Formel → Überbelichtung. ❌ Günstige ND → Farbstich (Grün/Magenta)."
+    },
+    "📐 Schärfentiefe": {
+        "theorie": "DoF ist der Bereich vor/hinter Fokus, der noch scharf wirkt. Wird kleiner durch: große Blende (f/1.4), lange Brennweite, kurze Distanz, großen Sensor.",
+        "praxis": "Landschaft: Nutze **hyperfokale Distanz** (Fokus so, dass von halber Distanz bis ∞ scharf ist). Portrait: Fokus auf Augen, f/1.8–f/2.8.",
+        "canon_r": "Menü: **Tiefenschärfenvorschau** (F-Taste zuweisen). Im M mit 'Belichtungssimulation' siehst du DoF live. Nutze **Focus Peaking (Rot)** + **Lupe** für manuelle Schärfe.",
+        "fehler": "❌ Immer auf ∞ fokussieren → Vordergrund unscharf. ❌ Blende < f/16 → Beugungsunschärfe. ❌ DoF-App ignorieren."
+    },
+    " Focus Stacking": {
+        "theorie": "Physikalisch kann kein Objektiv alles von 10cm bis ∞ scharf abbilden. Stacking kombiniert Aufnahmen mit verschobenem Fokus.",
+        "praxis": "Stativ + manuelle Belichtung! 30–50% Überlappung der Schärfenzone. Vom Nah- zum Fernpunkt. Blende nie ändern!",
+        "canon_r": "EOS R hat **native Focus-Bracketing-Funktion** (Menü > Fokus-Bracketing). Step Size 1–3, Shots 50–200. Kamera erstellt Serie automatisch für Helicon/PS.",
+        "fehler": "❌ Zu große Schritte → Lücken im Schärfeverlauf. ❌ Stativ vergessen → Bilder passen nicht. ❌ Belichtung ändern → Merge scheitert."
+    },
+    "️ ND Stacking": {
+        "theorie": "Mehrere ND-Filter vor dem Objektiv addieren ihre Stops. ND8 + ND64 = 3+6 = 9 Stops. Vorsicht: Zu viele Filter = Vignettierung & Qualitätsverlust.",
+        "praxis": "Maximal 2 Filter stapeln. Rechne Stops: `Stop_A + Stop_B`. Faktor: `Faktor_A × Faktor_B`. Beispiel: ND8 (×8) × ND64 (×64) = ND512.",
+        "canon_r": "Nutze nur hochwertige Multi-Coated Filter (z.B. Hoya, B+W). Bei Stacking >6 Stops: **Live View Helligkeit hochdrehen**, um Komposition zu sehen.",
+        "fehler": "❌ >3 Filter stapeln → massive Unschärfe/Vignettierung. ❌ Filter reinigen vergessen → Staubflecken bei kleiner Blende sichtbar."
+    },
+    " GPS-Standort": {
+        "theorie": "GPS-Koordinaten (Breitengrad/Längengrad) definieren deinen genauen Standort. Wichtig für Wetter, Astro-Planung und Gezeiten.",
+        "praxis": "Einmal GPS abrufen → App speichert es für alle Tools. Koordinaten format: `50.43, 7.47`. Genauigkeit: Handy-GPS meist ±3-5m.",
+        "canon_r": "Die EOS R hat **kein eingebautes GPS**. Nutze die **Canon Camera Connect App** am Handy, um GPS-Daten per Bluetooth ins Bild zu schreiben (Geo-Tagging).",
+        "fehler": "❌ GPS in Gebäuden ungenau. ❌ Koordinaten vertauscht (Lat/Lon). ❌ Nicht auf 'Übernehmen' klicken → Daten gehen verloren."
+    },
+    "🌍 Astro & Wetter Dashboard": {
+        "theorie": "Astrofotografie braucht Dunkelheit (Neumond), klare Sicht und Kenntnis der Milchstraßen-Position. Wetter bestimmt, ob Shooting möglich ist.",
+        "praxis": "Plane Shootings 2-3 Tage im Voraus. Prüfe Mondphase, Wolkenvorhersage und 'Seeing' (Luftunruhe). Goldene Stunde für Landschaft, Blaue Stunde für Städte.",
+        "canon_r": "Nutze **Long Exposure NR AUS** für Astro (spart 50% Zeit). **IBIS** hilft bei kurzen Brennweiten, aber Stativ ist Pflicht. R5/R6 II: Astro-Modus im Menü.",
+        "fehler": "❌ Mond >20% → überstrahlt Milchstraße. ❌ Taupunkt ignorieren → Objektiv beschlägt. ❌ Ohne Rotlicht-Lampe → Nachtsehen zerstört."
+    },
+    "🌙 Mond & Milchstraße": {
+        "theorie": "Sterne wandern durch Erdrotation. **500er-Regel** (`500/(Brennweite×Crop)`) gibt Max-Zeit für Punktsterne. **NPF-Regel** ist präziser (berücksichtigt Pixelgröße).",
+        "praxis": "ISO 1600–6400, Blende offen (f/1.4–f/2.8), Fokus manuell auf ∞ (Live View 10x Zoom). WB 3800–4200K für natürliches Blau.",
+        "canon_r": "**Silent Shutter** nur bei <2s (sonst Rolling-Shutter). R5/R6 II: **High-Res Shot Mode** (nicht für Astro!). Nutze **Focus Peaking** zur Schärfe-Kontrolle.",
+        "fehler": "❌ Fokus auf ∞-Markierung → oft nicht optimal. ❌ ISO zu hoch → Rauschreduzierung löscht Sterne. ❌ Mondlicht ignorieren."
+    },
+    " Gezeiten & Tide-Rechner": {
+        "theorie": "Gezeiten entstehen durch Mond/Sonne-Gravitation. **Hochwasser** = dramatische Wellen. **Ebbe** = Spiegelungen, Watt, Strukturen. Timing ist alles!",
+        "praxis": "Küsten-Fotografie: 2h vor Hochwasser starten (Wellen brechen). Ebbe: Spiegelflächen nutzen. Immer Tide-Tabelle + lokale Gegebenheiten prüfen (Strömung!).",
+        "canon_r": "Küstenumgebung = **Salzwasser-Gefahr**. Kamera immer im Gehäuse oder gut abgedeckt. Nach Shooting: Gehäuse mit Süßwasser abwischen. **Wet-Weather-Body** (R5/R6) ist spritzwassergeschützt, aber nicht wasserdicht!",
+        "fehler": "❌ Tide-Tabelle ohne Ort → falsche Zeiten. ❌ Zu nah an brechende Wellen → Ausrüstung nass. ❌ Ebbe-Zeit unterschätzt → im Watt stecken bleiben."
+    },
+    "📝 Planer": {
+        "theorie": "Profis planen Shootings schriftlich. Location, Licht, Equipment, Backup, Kundenwünsche. Ein Plan spart Stress und erhöht Trefferquote.",
+        "praxis": "Logbuch führen: Ort, Datum, Settings, was lief gut/schlecht. So lernst du aus jedem Shooting. Notizen für Kunden-Feedback speichern.",
+        "canon_r": "Nutze **Custom Modes C1-C4** für wiederkehrende Settings (z.B. C1=Hochzeit, C2=Sport). Speichere WB-Profile. Plane Akkus/Ladezeiten ein.",
+        "fehler": " Kein Backup-Plan (Akkus, Karten). ❌ Wetter nicht checken.  Kundenwünsche nicht dokumentiert → Streit hinterher."
+    },
+    "🤿 Unterwasser-Modus": {
+        "theorie": "Wasser absorbiert Farben (Rot zuerst). Ab 5m ist alles Blau/Grün. Licht streut (Backscatter). Druck & Dichte beeinflussen Fokus & Weitwinkel.",
+        "praxis": "Nah ran gehen (<1m). Roter Filter ab 5m. Weißabgleich manuell (5600K+). Blitz/Strobe auf 45° für Backscatter-Vermeidung. Housing immer testen!",
+        "canon_r": "Canon EOS R im **Gehäuse** (z.B. Ikelite). Touchscreen nass oft ungenutzbar → **Mode-Knopf** oder Joystick nutzen. **Dual Pixel AF** funktioniert unter Wasser oft besser als Phasen-AF anderer Marken.",
+        "fehler": "❌ O-Ring nicht gefettet → Wasser im Gehäuse. ❌ Ohne Filter → blaue Bilder. ❌ Zu weit weg → kontrastlos. ❌ Housing nicht getestet → Katastrophe."
+    },
+    "📸 Kamera-Vergleich": {
+        "theorie": "Kameras unterscheiden sich in Sensor (Größe/Auflösung), AF-System, IBIS, Video, Gehäuse. Kein 'Beste', nur 'Passendste' für dich.",
+        "praxis": "Vergleiche nicht nur Specs, sondern **Handling & Ergonomie**. R5 = Auflösung/Speed. R6 II = Low-Light/Preis. R8 = Einstieg/Compact. R3 = Speed/Durability.",
+        "canon_r": "EOS R Serie: **Dual Pixel CMOS AF II** ist führend. **RF-Objektive** sind optisch top, aber teuer. **EF-Adapter** funktioniert perfekt (keine Einbußen). Akku LP-E6NH kompatibel mit alten LP-E6.",
+        "fehler": "❌ Nur auf MP schauen → Rauschverhalten & AF wichtiger. ❌ RF-Objektiv-Preis ignorieren → System-Kosten explodieren. ❌ Altes Zubehör (Blitz/Auslöser) nicht kompatibel prüfen."
+    },
+    " PDF Export": {
+        "theorie": "Professionelle Dokumentation von Shootings. Kunden erhalten Plan, Location, Settings, Wetter. Dient als Vertrag, Checkliste und Erinnerung.",
+        "praxis": "PDF vor Shooting erstellen → mit Kunde besprechen. Nach Shooting: Ergebnisse + Settings anhängen. Immer Backup der PDFs in Cloud.",
+        "canon_r": "Nutze PDF für **Equipment-Listen** (Objektive, Filter, Akkus). Dokumentiere **Firmware-Stand** vor großen Shootings. Speichere **Custom-Modi C1-C4** Einstellungen im PDF.",
+        "fehler": "❌ PDF nur lokal → Verlust bei Defekt. ❌ Keine Versionierung → Verwirrung. ❌ Kunden-Feedback nicht dokumentiert."
+    },
+    "🔦 Blitz": {
+        "theorie": "Blitzlicht fügt Licht hinzu, friert Bewegung ein, füllt Schatten. **Leitzahl (GN)** bestimmt Reichweite. `Aperture = GN / Distanz`. TTL misst automatisch, M gibt Kontrolle.",
+        "praxis": "TTL für Events/Sport (schnell). M für Studio/Portrait (konsistent). **HSS** ermöglicht Blende offen bei Sonne. **Off-Camera-Flash** für kreative Beleuchtung.",
+        "canon_r": "EOS R unterstützt **Canon Speedlite EL-1 / EL-5** mit **E-TTL II**. **Funk-Auslösung** integriert (kein Extra-Sender nötig bei EL-Serie). **HSS bis 1/8000s**. **Second-Curtain-Sync** für Bewegungsunschärfe-Effekt.",
+        "fehler": "❌ Blitz direkt auf Motiv → harter Schatten/rote Augen. ❌ HSS nicht aktiv → Überbelichtung. ❌ TTL bei Serien → Belichtung springt."
+    },
+    " Rauschen": {
+        "theorie": "Rauschen entsteht durch Sensor-Hitze & ISO-Verstärkung. **Signal-to-Noise Ratio (SNR)**: Je mehr Licht, desto besser. ISO erhöht Rauschen, rettet aber unterbelichtete Bilder.",
+        "praxis": "Expose To The Right (ETTR) → heller belichten, in Post runter. ISO so niedrig wie möglich, aber nicht zu niedrige Verschlusszeit. **Rauschreduzierung** nur in Post (DxO/Topaz).",
+        "canon_r": "EOS R Sensoren haben **exzellentes High-ISO-Rauschverhalten** (besonders R6 II/R3). **In-Camera NR** (JPEG) oft zu aggressiv → RAW nutzen. **Long Exposure NR** verdoppelt Aufnahmezeit → bei Astro ausschalten.",
+        "fehler": "❌ ISO immer auf 100 → verwackelte Bilder. ❌ In-Camera NR an → Details weg. ❌ Unterbelichtung 'retten' → Rauschen explodiert."
+    },
+    "️ Weißabgleich": {
+        "theorie": "Licht hat Farbtemperatur (Kelvin). Glühlampe 2800K (warm), Tageslicht 5500K, Schatten 7500K (kalt). WB gleicht aus, damit Weiß neutral wirkt.",
+        "praxis": "Immer **manuell Kelvin** setzen (nicht Auto!). Für Serien/Timelapse: WB fixieren. RAW erlaubt spätere Korrektur ohne Verlust. Graukarte für exakten WB.",
+        "canon_r": "Menü: **WB > Manuell (K)**. Nutze **WB-Korrektur** (A-B / G-M Raster) für Feinjustage. Speichere Profile unter C1-C3. **Auto WB Ambience Priority** (Standard) vs **White Priority** (kühler).",
+        "fehler": "❌ AWB im Wechsellicht → Farb-Chaos.  WB erst in Post → JPEG beschnitten. ❌ Kelvin raten → Graukarte nutzen."
+    },
+    "🔄 Crop-Faktor": {
+        "theorie": "Kleinere Sensoren nutzen nur Mittelteil des Bildkreises → wirkt wie längere Brennweite. **Crop-Faktor**: APS-C 1.6x, MFT 2x. Vollformat = 1.0x (Referenz).",
+        "praxis": "Rechnung: `Echte Brennweite × Crop = KB-Äquivalent`. Beispiel: 50mm an APS-C = 80mm Effekt. Umgekehrt: Für Weitwinkel auf APS-C braucht man 10mm für 16mm Effekt.",
+        "canon_r": "EOS R ist **Vollformat (1.0x)**. RF-S Objektive sind für APS-C (Crop 1.6x), funktionieren aber an R (mit Crop-Modus oder schwarzem Rand). **RF 1.4x/2x Extender** erhöhen Brennweite, reduzieren Blende um 1/2 Stops.",
+        "fehler": "❌ Crop-Faktor ignorieren → falsche Objektiv-Wahl. ❌ APS-C Objektiv an Vollformat → Vignettierung (oder Crop-Modus aktivieren). ❌ Extender vergessen → Blende zu klein für AF."
+    },
+    "📈 Histogramm": {
+        "theorie": "Histogramm zeigt Helligkeitsverteilung: Links=Tiefen, Rechts=Lichter. Bergförmig=normal. Abschnitte an Rändern = **Clipping** (Zeichnungsverlust).",
+        "praxis": "**ETTR**: Belichte so hell wie möglich ohne Clipping rechts. Maximiert SNR. In Post runterregeln. Prüfe Histogramm bei jedem Motiv (Schnee vs. Kohle).",
+        "canon_r": "EVF-Menü: **Histogramm anzeigen**. Aktiviere **Highlight Alert (Blinken)** → überbelichtete Bereiche blinken rot. **Dual Pixel RAW** ermöglicht späteren Bokeh-Shift (nur kompatible Objektive).",
+        "fehler": "❌ Auf LCD-Helligkeit vertrauen → immer Histogramm prüfen! ❌ 'Mittige' Belichtung → oft unterbelichtet/verrauscht. ❌ Clipping ignorieren → Lichter nicht rettbar."
+    },
+    "🔭 Objektive": {
+        "theorie": "Objektiv bestimmt Bildcharakter: Brennweite (Perspektive), Blende (DoF/Licht), Qualität (Schärfe/CA/Vignette). RF-Bajonett = großer Durchmesser + kurzer Abstand = optische Vorteile.",
+        "praxis": "Weitwinkel (<35mm) für Landschaft/Architektur. Standard (50mm) für Alltag/Street. Tele (>85mm) für Portrait/Sport. Makro (1:1) für Details. Zoom vs. Prime (Licht/Qualität vs. Flexibilität).",
+        "canon_r": "RF-Objektive: **Control Ring** (Fokus/Blende/ISO/LV wählbar). **IS in Objektiv** + **IBIS in Body** = bis zu 8 Stops Stabilisierung. **RF 28-70mm f/2** ersetzt Zoom+Prime. **MTF-Kurven** prüfen vor Kauf.",
+        "fehler": "❌ Nur auf Blende schauen → Schärfe/CA wichtiger.  Control Ring nicht nutzen → Geschwindigkeitsverlust. ❌ IS an Stativ → oft kontraproduktiv (neue IS-Modelle erkennen Stativ automatisch)."
+    },
+    "☁️ Live-Wetter": {
+        "theorie": "Wetter beeinflusst Licht, Stimmung, Planung. Wolken = Diffusor (soft). Sonne = hart/schattig. Regen = Reflexionen/Grautöne. Wind = Bewegung/Bildstabilisierung wichtig.",
+        "praxis": "Vor Shooting: Wolkenvorhersage, Wind, Temperatur, Niederschlag checken. 'Golden Hour' Apps nutzen. Bei Regen: Schutz für Ausrüstung. Nebel = Stimmung, aber Kontrastverlust.",
+        "canon_r": "Bei Kälte: **Akku-Leistung sinkt** → Ersatzakkus warm halten. Bei Hitze: **Sensor kann überhitzen** (Video) → Pausen einlegen. **Spritzwasserschutz** (R5/R6) reicht für leichten Regen, nicht für Dauerregen.",
+        "fehler": "❌ Nur auf Sonne hoffen → Wolken oft besser für Portrait. ❌ Wind ignorieren → Stativ wackelt. ❌ Temperatur unterschätzt → Akku leer oder Kondenswasser."
+    },
+    "📅 5-Tage Prognose": {
+        "theorie": "Langfristige Planung von Shootings. Trends erkennen (Wetterumschwung, Sturmfront, klare Phase). Nicht auf exakte Werte vertrauen, sondern auf Tendenzen.",
+        "praxis": "3 Tage im Voraus planen. Modell-Vergleich (ECMWF vs. GFS). 'Ensemble' (Unsicherheit) prüfen. Bei Unsicherheit: Backup-Location indoor planen.",
+        "canon_r": "Plane **Ladezeiten** ein (bei Kälte länger). Checke **Firmware-Updates** vor Reisen. Packe **Wetter-Schutz** (Regenhülle, Silica-Gel) je nach Prognose.",
+        "fehler": "❌ Auf exakte Regen-Zeit vertrauen → Modelle ungenau.  Keine Backup-Planung. ❌ Wetter-App nicht aktualisiert."
+    },
+    "🌠 Sternspuren": {
+        "theorie": "Erdrotation lässt Sterne als Spuren erscheinen. Lange Belichtung (Minuten/Stunden) oder Serie von Bildern (Stacking). Polarstern = Zentrum (Nordhalbkugel).",
+        "praxis": "Serie: 100+ Bilder à 30s, ISO 800-1600, Blende f/2.8-4. Intervall 1s. Stacking-Software (StarStaX, Sequator) addiert Spuren. Kompass auf Polarstern richten.",
+        "canon_r": "EOS R: **Bulb-Modus** für Einzelbilder >30s. **Interval-Timer** im Menü (bis zu 99 Aufnahmen). **Rauschreduzierung AUS**. **Spiegelvorauslösung** (bei DSLR) entfällt, aber **Silent Shutter** kann bei Serie helfen.",
+        "fehler": "❌ Zu kurze Einzelbilder → Lücken in Spuren. ❌ Mondlicht → überstrahlt schwache Sterne. ❌ Fokus driftet → Serie unscharf."
+    },
+    "🌙 Aktuelle Mond-Daten": {
+        "theorie": "Mondphase, Auf-/Untergang, Beleuchtung, Entfernung (Supermond). Mondlicht ist Sonnenlicht-Reflexion. Beeinflusst Nacht-Helligkeit & Gezeiten.",
+        "praxis": "Neumond = dunkel (Astro). Vollmond = hell (Landschaft/Nacht-Portrait). Mond-Aufgang/Untergang für Komposition nutzen. 'Mond-Bogen' am Himmel beachten.",
+        "canon_r": "Mond-Fotografie: **Spot-Messung** auf Mond, Belichtung nach **Loony 11** (f/11, ISO 100, 1/100s). **Manueller Fokus** (Live View Zoom). **Stativ** Pflicht. **WB 4000-5000K**.",
+        "fehler": "❌ AWB bei Mond → zu blau/gelb. ❌ Autofokus → sucht vergeblich. ❌ Zu lange Belichtung → Mond überstrahlt/unscharf (durch Bewegung)."
+    },
+    "⏱️ Timelapse": {
+        "theorie": "Reihe von Fotos in Intervall aufgenommen, als Video abgespielt. Komprimiert Zeit. Intervall hängt von Motiv-Geschwindigkeit ab (Wolken schnell, Schatten langsam).",
+        "praxis": "Intervall: Wolken 3-5s, Sonne 10-30s, Sterne 20-30s. Manuelle Belichtung/WB/AF!RAW für Post. Ausreichend Speicher/Akku. Nachbearbeitung (Deflicker, Stabilisierung).",
+        "canon_r": "EOS R hat **Interval-Timer** im Menü. **Silent Shutter** für Serien (aber Achtung Rolling-Shutter bei Bewegung). **Dual Pixel RAW** nicht für Timelapse. **C-Log** für Video-Timelapse (wenn Video-Modus).",
+        "fehler": "❌ Auto-Belichtung → Flackern (Deflicker nötig). ❌ Intervall zu lang → ruckelig. ❌ Akku/Speicher zu klein → Mitte abgebrochen.  AF an → sucht bei jedem Bild."
+    },
+    "🖼️ EXIF": {
+        "theorie": "EXIF-Daten speichern Kamera-Info, Settings, Datum, GPS, Objektiv. Wichtig für Analyse, Archivierung, Copyright, Lern-Effekt. Kann in Post entfernt werden.",
+        "praxis": "EXIF lesen um Settings zu verstehen. Eigene Notizen (IPTC) hinzufügen. GPS-Tagging für Locations. Copyright-Info einbetten. Regelmäßig analysieren: Was lief gut?",
+        "canon_r": "EOS R schreibt **detaillierte EXIF** (Objektiv-Seriennummer, Firmware, AF-Modus, IBIS-Daten). **DPOF** für Druck-Aufträge. **IPTC** für Copyright/Keywords. **GPS** via App oder extern.",
+        "fehler": "❌ EXIF entfernen → Lern-Effekt weg. ❌ Keine Copyright-Info → Diebstahl-Risiko. ❌ GPS nicht prüfen → falsche Location."
+    },
+    "🤖 KI": {
+        "theorie": "Künstliche Intelligenz analysiert Bild-Inhalte (Objekte, Szene, Stil) und schlägt Settings vor. Basiert auf Mustern, nicht auf Kreativität. Hilft bei Entscheidung, ersetzt aber nicht das Auge.",
+        "praxis": "KI als 'Zweite Meinung' nutzen. Vorschläge prüfen, ob sie zur Szene passen. Nicht blind folgen. Eigene Kreativität priorisieren. KI lernt nicht aus deinen Fotos (Privacy).",
+        "canon_r": "EOS R hat **AI-gestützten AF** (Personen/Tiere/Fahrzeuge erkennen). **Auto-Leveling** (Horizont). **Scene Intelligent Auto** (Einsteiger). Pro-Modus nutzt KI nur als Assistenz, nicht als Autopilot.",
+        "fehler": "❌ Blind KI folgen → sterile Bilder. ❌ KI für Kreativität halten → sie kennt keinen 'Look'. ❌ Privacy ignorieren → Fotos nicht hochladen wenn sensibel."
+    },
+    "📋 Cheat Sheets": {
+        "theorie": "Schnellreferenz für häufige Szenen. Spart Zeit im Feld. Sollte griffbereit sein (Handy, ausgedruckt). Enthält Basis-Settings, Tipps, Fallstricke.",
+        "praxis": "Cheat Sheet für dein System anpassen (Canon R + deine Objektive). Nicht auswendig lernen, sondern nachschlagen. Bei neuen Szenen erweitern. Mit Kollegen teilen.",
+        "canon_r": "Cheat Sheet für **Canon R Menüs** (Custom Buttons, C-Modi, AF-Cases). **Tastenkombinationen** (Q-Menü, Info-Taste). **Objektiv-Charakteristiken** (Schärfe bei f/8, CA bei Offenblende).",
+        "fehler": "❌ Veraltetes Cheat Sheet → falsche Infos. ❌ Zu generisch → nicht auf dein Gear angepasst. ❌ Nicht genutzt → Wissen veraltet."
+    },
+    "⚖️ Vergleich": {
+        "theorie": "Zwei Belichtungen/Settings vergleichen. EV-Differenz berechnen. Entscheiden, welche Variante besser passt (DoF vs. Rauschen vs. Bewegung).",
+        "praxis": "Test-Shots machen (A/B). Histogramm vergleichen. 100% Zoom auf Schärfe. In Post Side-by-Side. Dokumentieren warum A besser als B.",
+        "canon_r": "EOS R: **Vergleichs-Ansicht** im Playback (zwei Bilder nebeneinander). **Rating/Protect** für Favoriten. **RAW-JPEG-Vergleich** möglich. **Focus Guide** im EVF für manuellen Vergleich.",
+        "fehler": " Nur auf LCD schauen → immer Zoom/Histogramm prüfen. ❌ Vergleich ohne gleiche Bedingungen (Licht ändern). ❌ Entscheidung nicht dokumentieren."
+    },
+    " Filter-Sim": {
+        "theorie": "Filter simulieren Effekt vor Aufnahme (ND, Pol, Farb). Hilft bei Planung. Echte Filter haben physikalische Effekte (Reflexion, Polarisation), die Software nur annähern kann.",
+        "praxis": "Simulator für Idee nutzen, aber echten Filter testen. Polarisations-Effekt nur mit echtem Filter möglich. ND-Filter-Effekt simulieren (Abdunkeln), aber kein Motion-Blur.",
+        "canon_r": "EOS R hat **Kreativ-Filter** im Modus-Wahlrad (Körniges SW, Weichzeichner, Toy, Miniatur). **Multi-Exposure** für Overlays. **HDR Mode** (in-Camera Merge). Für Profis: Echte Filter vor Objektiv.",
+        "fehler": "❌ Simulator für echtes Ergebnis halten → Qualität anders. ❌ Polarisations-Effekt simulieren → unmöglich ohne Filter. ❌ Filter vergessen → Effekt nicht möglich."
+    },
+    " Video": {
+        "theorie": "Video = 24/25/30/50/60 Bilder pro Sekunde. **180°-Regel**: Verschlusszeit = 1/(2×FPS) für natürliche Bewegungsunschärfe. 4K vs. FHD. Codec (H.265 effizienter, H.264 kompatibler).",
+        "praxis": "24fps für Kino-Look, 60fps für Slow-Mo. Manuelle Belichtung/WB/AF! **Log-Profile** (C-Log) für Dynamikumfang. Audio extern. Stativ/Gimbal für stabile Shots.",
+        "canon_r": "EOS R: **4K 30p** (gecroppt 1.7x), **FHD 120p** (Slow-Mo). **C-Log** (R5/R6/R8). **Dual Pixel AF** auch im Video. **IBIS** (Digital IS) kombinierbar. **HDMI Clean Out** für Recorder. **Audio: 3.5mm Klinke** (R) oder **USB-C Audio** (R5/R6).",
+        "fehler": " Auto-Belichtung im Video → Helligkeit springt. ❌ 180°-Regel ignorieren → Video wirkt 'soap-opera' (zu scharf) oder strobe. ❌ Internen Speicher voll → Aufnahme stoppt."
+    },
+    "🎨 Bearbeitung": {
+        "theorie": "Post-Processing korrigiert/verbessert: Belichtung, Kontrast, Farbe, Schärfe, Rauschen. RAW bietet maximalen Spielraum. Workflow: Import > Sortieren > Entwickeln > Export.",
+        "praxis": "Nicht-zerstörend arbeiten (Smart-Objekte, Virtual Copies). Presets für Konsistenz. Backup der Originale. Export je nach Zweck (Web sRGB, Druck AdobeRGB).",
+        "canon_r": "Canon **Digital Photo Professional (DPP)** liest RAW perfekt (Farben, AF-Punkte). **Canon Log** braucht spezifische LUTs. **Dual Pixel RAW** ermöglicht Bokeh-Shift/Defringe in DPP. **HDR PQ** Bilder in DPP tonemappen.",
+        "fehler": " JPEG bearbeiten → Qualitätsverlust. ❌ Zu viel Schärfe/Kontrast → unnatürlich. ❌ Kein Backup → Originale weg. ❌ Falsches Farbprofil (sRGB vs AdobeRGB)."
+    },
+    "🔋 Akku": {
+        "theorie": "Akkus (Li-Ion) altern, verlieren Kapazität bei Kälte, sind empfindlich gegen Tiefentladung. Lebensdauer: 300-500 Zyklen. Kapazität in mAh, Spannung in V.",
+        "praxis": "Immer Ersatzakku dabei. Akkus warm halten (Innentasche). Nicht komplett entladen. Original-Ladegerät nutzen. Bei Langzeit-Aufnahmen: Powerbank (USB-C PD) nutzen.",
+        "canon_r": "EOS R nutzt **LP-E6NH** (2130mAh). Abwärtskompatibel mit LP-E6N/LP-E6 (aber weniger Kapazität). **USB-C Laden** im Gehäuse möglich (Power Delivery). **Battery Info** im Menü (Zyklen, Gesundheit). **Auto Power Off** einstellen.",
+        "fehler": " Akku in Kälte → Kapazität halbiert. ❌ Tiefentladung → Akku defekt. ❌ Falsches Ladegerät → Feuergefahr. ❌ Akku-Info ignorieren → Überraschung im Feld."
+    },
+    "🗺️ Spots": {
+        "theorie": "Foto-Spots sind Locations mit Potenzial (Licht, Komposition, Zugang). Sammlung aufbauen: Koordinaten, Beste Zeit, Genehmigungen, Gefahren, Bilder.",
+        "praxis": "Spot scouten (Google Earth, Sonnen-Apps). Vor Ort: Sicherheit, Erlaubnis, Backup-Location prüfen. Dokumentieren (Foto + Notizen). Mit Community teilen (wenn erlaubt).",
+        "canon_r": "GPS-Daten in EXIF schreiben (via App). **Geo-Tagging** aktivieren. **Kompass** im EVF (R5/R6) für Himmelsrichtung. **Level Gauge** für Horizont. **Custom Modes** für Spot-Typ (z.B. C1=Küste, C2=Wald).",
+        "fehler": "❌ Spot ohne Erlaubnis → Ärger. ❌ Keine Backup-Location → enttäuscht. ❌ GPS nicht prüfen → falsche Koordinaten. ❌ Sicherheit ignorieren (Gezeiten, Steinschlag)."
+    },
+    " PDF-Planer": {
+        "theorie": "PDF-Planer bündelt Shooting-Infos: Kunde, Location, Zeit, Equipment, Wetter, Backup. Dient als Vertrag, Checkliste, Erinnerung.",
+        "praxis": "Vor Shooting erstellen → mit Kunde/Team teilen. Nach Shooting: Ergebnisse + Feedback anhängen. Cloud-Backup. Versionierung (v1, v2).",
+        "canon_r": "PDF für **Equipment-Checkliste** (Objektive, Filter, Akkus, Karten). **Firmware-Stand** dokumentieren. **Custom-Modi C1-C4** Settings notieren. **Kontaktdaten** Kunde/Location.",
+        "fehler": " PDF nur lokal → Verlust. ❌ Keine Versionierung → Verwirrung. ❌ Kunden-Feedback nicht dokumentiert. ❌ Equipment-Liste unvollständig → fehlt im Feld."
+    },
+    "📸 Bracketing": {
+        "theorie": "Bracketing = Serie mit Variationen: Belichtung (AEB), Fokus, WB. Überbrückt Grenzen des Sensors (Dynamikumfang, Schärfentiefe). RAW essenziell.",
+        "praxis": "AEB: 3-5 Bilder, ±1-2 EV. Fokus: 30-50% Überlappung. WB: ±200-500K. Stativ + Fernauslöser. In Post mergen (HDR/Stacking).",
+        "canon_r": "EOS R: **AEB im Menü** (bis ±3 EV). **Focus Bracketing** (native Funktion). **WB Bracketing** (A-B/G-M). **Silent Shutter** für AEB (leise, aber Rolling-Shutter). **Dual Pixel RAW** für Fokus-Stacking in DPP.",
+        "fehler": "❌ Zu große AEB-Schritte → unnatürlich. ❌ Fokus ohne Überlappung → Lücken.  JPEG statt RAW → Dynamik beschnitten. ❌ Ohne Stativ → Merge scheitert."
+    },
+    " AR-Brennweiten-Vorschau": {
+        "theorie": "AR-Overlay simuliert Bildausschnitt verschiedener Brennweiten auf Live-Bild. Hilft bei Objektiv-Wahl vor Ort. Basis: Sensor-Größe & Seitenverhältnis.",
+        "praxis": "Handy hochhalten, Overlay auf Szene legen. 14mm vs 24mm vs 50mm vergleichen. Panorama-Check (reicht ein Bild?). Komposition planen.",
+        "canon_r": "EOS R hat **kein AR-Overlay im EVF**, aber **Gitternetz** (3x3, 6x4, etc.) für Komposition. **Digital Lens Optimizer** in DPP korrigiert Verzerrung. **RF-Objektiv-Daten** im EXIF für spätere Korrektur.",
+        "fehler": "❌ AR nur als grobe Orientierung → echte Optik anders (Verzerrung, Vignette). ❌ Seitenverhältnis ignorieren (3:2 vs 16:9). ❌ Handy-Kamera-Qualität unterschätzen (für Vorschau ok, nicht für Ergebnis)."
+    },
+    "📊 Dynamikumfang & Kontrast": {
+        "theorie": "Dynamikumfang = Differenz zwischen hellstem und dunkstem Detail. Sensor: 12-14 Stops. Szene: oft 15-20 Stops. Kontrast = Unterschied benachbarter Bereiche. Bracketing nötig wenn Szene > Sensor.",
+        "praxis": "Histogramm prüfen: Clipping links/rechts? Wenn ja: Bracketing oder Aufheller/Abdunkler. ETTR für maximales SNR. In Post: Schatten/Lichter regulieren.",
+        "canon_r": "EOS R: **Highlight Tone Priority (D+)** aktiviert → schützt Lichter (ISO startet bei 200). **Auto Lighting Optimizer** (ALO) hebt Schatten (kann Rauschen erhöhen). **HDR Mode** (in-Camera Merge). **Dual Pixel RAW** für Lichter-/Schatten-Rettung.",
+        "fehler": "❌ Clipping ignorieren → Details weg. ❌ ALO zu hoch → Rauschen in Schatten. ❌ D+ immer an → ISO 200 Minimum stört bei Low-Light. ❌ HDR Mode für Bewegung → Geisterbilder."
+    },
+    "🔔 Shooting-Alarm": {
+        "theorie": "Zeitbasierte Erinnerung für kritische Momente (Golden Hour, Gezeiten, Mond-Aufgang). Verhindert Verpassen von perfektem Licht/Ereignis.",
+        "praxis": "Alarm 15-30 Min vor Ereignis. Standort prüfen (GPS). Backup-Alarm (Handy). Notiz: Was ist zu tun? (Stativ, Filter, Settings).",
+        "canon_r": "EOS R hat **keinen内置 Alarm**, aber **Interval-Timer** für Serien. **Custom Modes C1-C4** können vorab geladen werden. **Battery-Check** vor Alarm-Zeit. **Kontakt-Schutz** (Regenhülle) bereitlegen.",
+        "fehler": " Alarm ohne Vorbereitung → Stress. ❌ GPS nicht gecheckt → falsche Zeit. ❌ Kein Backup-Alarm → verpasst. ❌ Settings nicht voreingestellt → hektisch."
+    }
+}
+
+def render_learning_panel(tool_name):
+    """Zeigt Lern-Infos als ausklappbaren Bereich an."""
+    if tool_name not in LEARNING_DB:
+        return
+    content = LEARNING_DB[tool_name]
+    with st.expander("📚 Lernen & Hintergründe"):
+        st.markdown(f"### 📖 Theorie\n{content['theorie']}")
+        st.markdown(f"### 🎯 Praxis-Anwendung\n{content['praxis']}")
+        st.markdown(f"### 📷 Canon EOS R Spezial\n{content['canon_r']}")
+        st.markdown(f"### ⚠️ Typische Fehler\n{content['fehler']}")
+
+# ════════════════════════════════════════════════════════════════
 #  HILFSFUNKTIONEN (pure Python – kein Streamlit-Aufruf!)
 # ════════════════════════════════════════════════════════════════
 
@@ -554,6 +805,8 @@ elif tool == "⚙️ Belichtung":
             st.warning("💡 Hohes ISO – Rauschreduzierung in Post einplanen.")
         if aperture >= 16:
             st.info("💡 Kleine Blende – Beugungsunschärfe möglich (f/16+).")
+
+    render_learning_panel(tool)  # 👈 Fügt automatisch den passenden Lern-Block hinzu
 
 # ── 🕶️ ND RECHNER ──────────────────────────────────────────────
 elif tool == "🕶️ ND Rechner":

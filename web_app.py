@@ -330,8 +330,7 @@ LEARNING_DB = {
         "canon_r": "EOS R hat **keinen内置 Alarm**, aber **Interval-Timer** für Serien. **Custom Modes C1-C4** können vorab geladen werden. **Battery-Check** vor Alarm-Zeit. **Kontakt-Schutz** (Regenhülle) bereitlegen.",
         "fehler": " Alarm ohne Vorbereitung → Stress. ❌ GPS nicht gecheckt → falsche Zeit. ❌ Kein Backup-Alarm → verpasst. ❌ Settings nicht voreingestellt → hektisch."
     }
-    # 🔍 DEBUG: Zeigt ob Lern-Panel gefunden wird
-    st.caption(f"🔍 Tool: `{tool}` | In DB: `{tool in LEARNING_DB}`")
+    
 }
     
 def render_learning_panel(tool_name):
@@ -783,7 +782,6 @@ if tool == "🏠 Home":
         unsafe_allow_html=True,
     )
 
-# ── ⚙️ BELICHTUNG ──────────────────────────────────────────────
 elif tool == "⚙️ Belichtung":
     st.header("⚙️ Belichtung-Bewerter")
     col1, col2, col3 = st.columns(3)
@@ -808,7 +806,8 @@ elif tool == "⚙️ Belichtung":
         if aperture >= 16:
             st.info("💡 Kleine Blende – Beugungsunschärfe möglich (f/16+).")
 
-    render_learning_panel(tool)  # 👈 Fügt automatisch den passenden Lern-Block hinzu
+    # ✅ Lern-Panel AUFRUFEN (funktioniert nur wenn LEARNING_DB + Funktion oben definiert sind!)
+    render_learning_panel(tool)
 
 # ── 🕶️ ND RECHNER ──────────────────────────────────────────────
 elif tool == "🕶️ ND Rechner":

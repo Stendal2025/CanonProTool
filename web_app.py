@@ -331,8 +331,8 @@ LEARNING_DB = {
         "fehler": " Alarm ohne Vorbereitung → Stress. ❌ GPS nicht gecheckt → falsche Zeit. ❌ Kein Backup-Alarm → verpasst. ❌ Settings nicht voreingestellt → hektisch."
     }
 }
-# 🔍 DEBUG: Zeigt ob Lern-Panel gefunden wird
-st.caption(f"🔍 Tool: `{tool}` | In DB: `{tool in LEARNING_DB}`")
+    # 🔍 DEBUG: Zeigt ob Lern-Panel gefunden wird
+    st.caption(f"🔍 Tool: `{tool}` | In DB: `{tool in LEARNING_DB}`")
 def render_learning_panel(tool_name):
     """Zeigt Lern-Infos als ausklappbaren Bereich an."""
     if tool_name not in LEARNING_DB:

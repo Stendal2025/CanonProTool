@@ -2302,11 +2302,55 @@ elif tool == "🗺️ Spots":
         else:
             st.info("📭 Noch keine Spots.")
 
+        # ... dein bestehender Code ...
+
+    with st.expander("💡 Spot-Scouting & Location-Management"):
+        st.markdown("""
+        **Warum Spots dokumentieren?**
+        Profis planen nicht nur das Bild, sondern die **Location**: Licht, Zugang, Sicherheit, Backup.
+        Ein guter Spot-Bericht spart Zeit, vermeidet Ärger und steigert die Trefferquote.
+
+        **Checkliste für den perfekten Spot:**
+        📍 Koordinaten + Wegbeschreibung (letzter Fußweg oft nicht auf Maps)
+        🌅 Beste Lichtzeit (Golden/Blue Hour, Sonnenstand im Jahresverlauf)
+        📜 Genehmigungen? (Privatgrund, Naturschutz, Drohnen-Verbotszonen)
+        🔄 Backup-Location (bei schlechtem Wetter oder gesperrtem Zugang)
+
+        **📷 Canon EOS R Spezial:**
+        - GPS-Tagging: Nutze die **Canon Camera Connect App** → Bluetooth überträgt Handy-GPS ins Bild-EXIF
+        - **EVF Kompass & Elektronischer Horizont** aktivieren → perfekt für Panorama- oder Astro-Spots
+        - Lege **Custom-Modi C1-C4** pro Spot-Typ an (z.B. C1=Küste/Wind, C2=Wald/Statisch, C3=Stadt/Nacht)
+        - Wetter-Schutz: R5/R6 sind spritzwassergeschützt, aber bei Dauerregen oder Gischt immer **Regenhülle** nutzen
+        - Tipp: Mache vor Ort ein **Orientierungs-Foto** mit Handy-Kompass & Notizen → später in Spots-Liste eintragen
+        """)
+
 # ── 📄 PDF-PLANER (alter Name) ─────────────────────────────────
 elif tool == "📄 PDF-Planer":
     # Redirect zum neuen PDF Export Tool
     st.session_state.tool = "📤 PDF Export"
     st.rerun()
+
+    # ... dein bestehender Code ...
+
+    with st.expander("💡 Professionelle PDF-Planung & Dokumentation"):
+        st.markdown("""
+        **Warum ein Shooting-Plan als PDF?**
+        Struktur = Sicherheit. Ein PDF bündelt Location, Zeit, Equipment, Wetter & Kundenwünsche.
+        Dient als Checkliste, Erinnerungsstütze und bei Kundenprojekten als **verbindliche Basis**.
+
+        **Best Practice für den Export:**
+        📅 **Vor dem Shooting:** Plan erstellen, mit Team/Kunde teilen, Feedback einholen
+        🎒 **Equipment-Check:** Objektive, Filter, Akkus, Karten, Reinigung, Stativ, Blitze
+        🔄 **Versionierung:** `_v1`, `_v2`, `_Final` → vermeidet Verwirrung bei Änderungen
+        ☁️ **Backup:** Immer in Cloud + lokal speichern (Handy/Laptop)
+
+        **📷 Canon EOS R Spezial:**
+        - Dokumentiere im PDF immer den **Firmware-Stand** (Menü > Gelber Reiter > Firmware) → vor großen Shootings updaten!
+        - Notiere deine **C1-C4 Custom-Modi** Settings → falls Kamera resetet, kannst du sie schnell wiederherstellen
+        - **Kontakt-/Notfall-Infos**: Location-Owner, Backup-Location, nächstes Krankenhaus (bei Outdoor/Extrem-Shootings)
+        - Nach dem Shooting: PDF um **Ergebnisse & Feedback** erweitern → wertvoll für Portfolio & nächste Planung
+        - Tipp: Drucke die **Equipment-Checkliste** aus → am Morgen vor dem Shooting abhaken, nichts vergessen
+        """)
 
 # ── 📈 HISTOGRAMM ──────────────────────────────────────────────
 elif tool == "📈 Histogramm":
@@ -2415,6 +2459,26 @@ elif tool == "📸 Bracketing":
                 - **Reihenfolge**: -EV → 0EV → +EV (so sortieren viele HDR-Softwares automatisch)
                 - **Belichtungsreihe testen**: Erst 3 Bilder mit 1 Stop, dann bei Bedarf erweitern
                 """)
+        # ... dein bestehender Code ...
+
+    with st.expander("💡 Bracketing-Technik & Canon R Integration"):
+        st.markdown("""
+        **Was ist Bracketing?**
+        Automatische Serien mit Variationen: Belichtung (AEB), Fokus oder Weißabgleich.
+        Überbrückt Sensor-Grenzen (Dynamikumfang 12-14 Stops vs. Realität 15-20+ Stops).
+
+        **Die 3 Hauptarten:**
+        🔆 **AEB (Belichtung):** 3-7 Bilder, ±1 bis ±2 EV. Für HDR & Schatten/Lichter-Rettung
+        🎯 **Fokus-Bracketing:** Schrittweise Fokusverschiebung. Für Makro & Landschaft (Stacking)
+        🎨 **WB-Bracketing:** ±200-500K Schritte. Für gemischtes Licht & Farbsicherheit
+
+        **📷 Canon EOS R Spezial:**
+        - Menü > **Aufnahme 2 > AEB**: ±3 EV in 0,3/0,5/1/2 Stops einstellbar
+        - **Focus Bracketing** (native Funktion): Step Size 1-10, Aufnahmen bis zu 999. Kamera erstellt Serie automatisch
+        - **Silent Shutter** für AEB nutzen → leiser, aber bei schnellen Bewegungen: Rolling-Shutter beachten!
+        - **Dual Pixel RAW** in DPP ermöglicht nachträgliches "Bokeh Shift" & Fein-Fokus-Korrektur
+        - Wichtig: Immer **RAW + Stativ**. JPEG-Bracketing verliert Dynamik bereits in der Kamera
+        """)
 
     # ═══════════════════════════════════════════════════════════
     #  🎯 FOCUS BRACKETING
@@ -2929,6 +2993,29 @@ elif tool == "🤖 AI-Motiv-Erkennung":
     else:
         st.info(" Lade ein Foto hoch, um den Pro-Coach zu starten!")
         st.markdown("**Die KI prüft:** Schärfe, Helligkeit, Kontrast & EXIF-Daten (Brennweite), um den besten Modus (M/Av/Tv) vorzuschlagen.")
+
+    # ... dein bestehender Code ...
+
+    with st.expander("💡 KI-Assistent: Chancen & Grenzen"):
+        st.markdown("""
+        **Wie funktioniert die KI-Analyse?**
+        Sie prüft Helligkeit, Kontrast, Farbverteilung, Kanten & EXIF-Daten.
+        Erkennt Muster (Nacht, Portrait, Sport, Landschaft) und leitet **physikalisch sinnvolle** Settings ab.
+
+        **KI als Werkzeug, nicht als Autopilot:**
+        ✅ Nutze Vorschläge als **Startpunkt** oder "zweite Meinung"
+        ✅ Prüfe immer: Passt die Empfehlung zur **kreativen Absicht**?
+        ✅ Lerne aus dem Vergleich: Warum schlägt KI f/8 vor, wenn du f/2.8 willst? (DoF vs. Bokeh)
+        ❌ Blind übernehmen → sterile, technische Bilder ohne Aussage
+        ❌ Kreativität ersetzen → KI kennt keinen "Look", nur Statistik
+
+        **📷 Canon EOS R Spezial:**
+        - Die R-Serie hat **AI-gestützten Dual Pixel AF** (Person, Tier, Fahrzeug, Insekt-Erkennung)
+        - **Scene Intelligent Auto** nutzt ähnliche Logik für Einsteiger → Pro-Modus (M/Av/Tv) gibt dir die Kontrolle zurück
+        - KI-Vorschläge basieren auf **Standard-Belichtung**. Für kreative Abweichung (Silhouetten, High-Key) musst du manuell gegensteuern
+        - Datenschutz: Diese App analysiert lokal. Keine Bilder werden an Cloud-KIs gesendet → ideal für vertrauliche Shootings
+        - Tipp: Speichere erfolgreiche KI-Empfehlungen als **C1/C2 Custom-Modus** → nächstes Mal sofort griffbereit
+        """)
             
 
 # ════════════════════════════════════════════════════════════════

@@ -489,7 +489,7 @@ with st.sidebar:
                   "📅 5-Tage Prognose", "🌠 Sternspuren", "🌙 Aktuelle Mond-Daten",
                   "⏱️ Timelapse", "🖼️ EXIF", "🤖 KI", "📋 Cheat Sheets",
                   "⚖️ Vergleich", "🎨 Filter-Sim", "🎬 Video",
-                  "🎨 Bearbeitung", "🔋 Akku", "🗺️ Spots", "📄 PDF-Planer","📱 AR-Brennweiten-Vorschau"]:
+                  "🎨 Bearbeitung", "🔋 Akku", "🗺️ Spots", "📱 AR-Brennweiten-Vorschau"]:
             if st.button(t, use_container_width=True, key=f"sb_{t}"):
                 st.session_state.tool = t
                 st.rerun()
@@ -2324,33 +2324,6 @@ elif tool == "🗺️ Spots":
         - Tipp: Mache vor Ort ein **Orientierungs-Foto** mit Handy-Kompass & Notizen → später in Spots-Liste eintragen
         """)
 
-# ── 📄 PDF-PLANER (alter Name) ─────────────────────────────────
-elif tool == "📄 PDF-Planer":
-    # Redirect zum neuen PDF Export Tool
-    st.session_state.tool = "📤 PDF Export"
-    st.rerun()
-
-    # ... dein bestehender Code ...
-
-    with st.expander("💡 Professionelle PDF-Planung & Dokumentation"):
-        st.markdown("""
-        **Warum ein Shooting-Plan als PDF?**
-        Struktur = Sicherheit. Ein PDF bündelt Location, Zeit, Equipment, Wetter & Kundenwünsche.
-        Dient als Checkliste, Erinnerungsstütze und bei Kundenprojekten als **verbindliche Basis**.
-
-        **Best Practice für den Export:**
-        📅 **Vor dem Shooting:** Plan erstellen, mit Team/Kunde teilen, Feedback einholen
-        🎒 **Equipment-Check:** Objektive, Filter, Akkus, Karten, Reinigung, Stativ, Blitze
-        🔄 **Versionierung:** `_v1`, `_v2`, `_Final` → vermeidet Verwirrung bei Änderungen
-        ☁️ **Backup:** Immer in Cloud + lokal speichern (Handy/Laptop)
-
-        **📷 Canon EOS R Spezial:**
-        - Dokumentiere im PDF immer den **Firmware-Stand** (Menü > Gelber Reiter > Firmware) → vor großen Shootings updaten!
-        - Notiere deine **C1-C4 Custom-Modi** Settings → falls Kamera resetet, kannst du sie schnell wiederherstellen
-        - **Kontakt-/Notfall-Infos**: Location-Owner, Backup-Location, nächstes Krankenhaus (bei Outdoor/Extrem-Shootings)
-        - Nach dem Shooting: PDF um **Ergebnisse & Feedback** erweitern → wertvoll für Portfolio & nächste Planung
-        - Tipp: Drucke die **Equipment-Checkliste** aus → am Morgen vor dem Shooting abhaken, nichts vergessen
-        """)
 
 # ── 📈 HISTOGRAMM ──────────────────────────────────────────────
 elif tool == "📈 Histogramm":

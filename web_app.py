@@ -821,7 +821,30 @@ elif tool == "📐 Schärfentiefe":
             st.info("💡 Fokus jenseits der hyperfokalen Distanz – alles bis ∞ scharf!")
         elif distance < 1.0:
             st.info("💡 Sehr kurze Distanz – Schärfentiefe sehr gering. Stativ empfohlen.")
+    # ... dein bestehender Code mit Berechnung ...
 
+    # ── 📚 Schärfentiefe leicht gemacht ──────────────────────
+    with st.expander("💡 Schärfentiefe verstehen"):
+        st.markdown("""
+        **Was ist Schärfentiefe (DoF)?**  
+        Der Bereich vor und hinter dem Fokuspunkt, der noch scharf wirkt.
+
+        **Was macht DoF kleiner?** ✅  
+        - Große Blende (f/1.4, f/2.8)  
+        - Lange Brennweite (85mm, 200mm)  
+        - Kurze Distanz zum Motiv (<1m)  
+        - Großer Sensor (Vollformat > APS-C)
+
+        **Praxis-Beispiele:**
+        | Motiv | Empfohlene DoF | Settings |
+        |-------|---------------|----------|
+        | Portrait | Gering (Hintergrund unscharf) | 85mm, f/1.8, Fokus auf Augen |
+        | Landschaft | Groß (alles scharf) | 24mm, f/8, hyperfokale Distanz |
+        | Makro | Sehr gering | 100mm Macro, f/5.6, Focus Stacking |
+
+        **Canon EOS R Trick:**  
+        Aktiviere **Focus Peaking (Rot)** + **MF Assist Lupe** (Menü > Aufnahme > Fokus-Hilfe). So siehst du live, was scharf ist – auch bei manueller Schärfe!
+        """)
 # ── 📍 GPS-STANDORT ────────────────────────────────────────────
 elif tool == "📍 GPS-Standort":
     st.header("📍 Standort automatisch erkennen")

@@ -581,6 +581,26 @@ elif tool == "⚙️ Belichtung":
         if aperture >= 16:
             st.info("💡 Kleine Blende – Beugungsunschärfe möglich (f/16+).")
 
+        # ... dein bestehender Code mit if st.button("📊 Bewerten") ...
+
+    # ── 📚 Einfache Lern-Hilfe (direkt im Tool) ────────────────
+    with st.expander("💡 Tipps zur Belichtung"):
+        st.markdown("""
+        **Das Belichtungsdreieck kurz erklärt:**
+        - **Blende (f/)**: Steuert Lichtmenge + Schärfentiefe  
+          → f/1.4 = viel Licht, unscharfer Hintergrund  
+          → f/11 = wenig Licht, alles scharf
+        - **Verschlusszeit**: Steuert Bewegung  
+          → 1/1000s = Bewegung einfrieren  
+          → 1s = Bewegungsunschärfe (Wasser, Wolken)
+        - **ISO**: Steuert Sensor-Empfindlichkeit  
+          → ISO 100 = wenig Rauschen, viel Licht nötig  
+          → ISO 3200 = wenig Licht, aber mehr Rauschen
+
+        **Canon EOS R Profi-Tipp:**  
+        Nutze den **Belichtungs-Simulator im EVF** (Menü > Sucher-Info > Belichtungssimulation: AN). So siehst du das Ergebnis live – auch im M-Modus!
+        """)
+
  
 
 # ── 🕶️ ND RECHNER ──────────────────────────────────────────────

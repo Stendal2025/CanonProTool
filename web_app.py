@@ -1628,7 +1628,27 @@ elif tool == "🌡️ Weißabgleich":
         c1.markdown(f"<span style='color:{color};font-weight:bold'>{name}</span>", unsafe_allow_html=True)
         c2.code(kelvin)
     st.info("💡 Manuellen WB in Kelvin setzen – stabilere Farben im Timelapse!")
+    # ... dein bestehender Code ...
 
+    with st.expander("💡 Weißabgleich (Kelvin) & Canon WB-Profis"):
+        st.markdown("""
+        **Warum Kelvin statt Auto?**  
+        Lichtquellen haben unterschiedliche Farbtemperatur:  
+        🕯️ Kerze: ~1800K | 💡 Glühbirne: ~2800K | ☀️ Sonne: ~5500K | ⛅ Schatten: ~7500K  
+        Auto-WB springt bei Wechsellicht → Farb-Chaos in Serien. Manueller Kelvin = konsistent.
+
+        **Praxis-Workflow:**  
+        1. Grau- oder Weißkarte ins Motiv halten → Custom WB speichern  
+        2. Alternativ: Kelvin manuell einstellen (2500–10000K)  
+        3. **RAW fotografieren** → WB ist in Post vollständig verlustfrei änderbar
+
+        **📷 Canon EOS R Spezial:**  
+        - Menü > **Weißabgleich > K** → direkt Kelvin eingeben  
+        - **WB-Verschiebung (A-B / G-M Raster)**: Feinjustage um 9 Stufen pro Achse (z. B. +2 Blau bei Kunstlicht)  
+        - **Auto WB**: „Ambience Priority" (wärmere Stimmung) vs „White Priority" (neutraler)  
+        - Speichere oft genutzte WB-Werte unter **Custom 1–3** → schneller Zugriff über Q-Menü  
+        - Timelapse/Serien: WB **immer fixieren**, sonst flackern Farben im fertigen Video/Album
+        """)
 # ── 🔄 CROP-FAKTOR ─────────────────────────────────────────────
 elif tool == "🔄 Crop-Faktor":
     st.header("🔄 Crop-Faktor Rechner")
@@ -1647,6 +1667,27 @@ elif tool == "🔄 Crop-Faktor":
         **Original ({sensor_from}):** {focal}mm | f/{aperture}  
         **Vollformat-Äq.:** {focal*cf_from:.0f}mm | f/{aperture*cf_from:.1f}  
         **Äq. auf {sensor_to}:** {focal*cf_from/cf_to:.0f}mm | f/{aperture*cf_from/cf_to:.1f}
+        """)
+
+    # ... dein bestehender Code ...
+
+    with st.expander("💡 Crop-Faktor & Sensor-Größe verstehen"):
+        st.markdown("""
+        **Was ist der Crop-Faktor?**  
+        Kleinere Sensoren nutzen nur den mittleren Teil des Bildkreises → wirkt wie eine längere Brennweite.  
+        `Effektive Brennweite = Reale Brennweite × Crop-Faktor`
+
+        **Übersicht:**  
+        - Vollformat (1.0x) → Referenz (Canon EOS R / R5 / R6 / R8)  
+        - APS-C Canon (1.6x) → 50mm wirkt wie 80mm  
+        - Micro 4/3 (2.0x) → 50mm wirkt wie 100mm  
+
+        **Wichtig:** Der Crop ändert **nicht** die tatsächliche Schärfentiefe oder Lichtstärke des Objektivs – nur den Bildausschnitt!
+
+        **📷 Canon EOS R Spezial:**  
+        - EOS R = Vollformat (1.0x). RF-S Objektive sind für APS-C → an R-Kamera erscheint automatisch ein Crop-Hinweis oder schwarzer Rand  
+        - **RF-Extender 1.4x / 2.0x** funktionieren nur mit kompatiblen Tele-Objektiven → Blende verliert 1 bzw. 2 Stops  
+        - Menü > **Bildfeld**: „1.0x (Vollformat)“ oder „1.6x (APS-C Crop)“ manuell umschalten (nützlich für Reichweite bei Wildfotografie)
         """)
 
 # ── 🔭 OBJEKTIVE ───────────────────────────────────────────────
@@ -1906,6 +1947,24 @@ elif tool == "⏱️ Timelapse":
             st.success(f"**Bilder:** {frames:,} | **Dauer:** {h}h {m}m {s}s | **Speicher:** {size_gb:.1f} GB")
             if size_gb > 64: st.warning("⚠️ >64 GB!")
 
+        # ... dein bestehender Code ...
+
+    with st.expander("💡 Timelapse-Grundlagen & Flicker-Vermeidung"):
+        st.markdown("""
+        **Intervall-Regeln nach Motiv:**  
+        ☁️ Wolken: 3–5s | 🌅 Sonne: 10–30s | 🌌 Sterne: 20–30s | 🏙️ Stadt: 5–10s
+
+        **Goldene Regel: Alles manuell!**  
+        Belichtung, Weißabgleich & Fokus **fixieren** → sonst „Flickern" im fertigen Video.  
+        RAW aufnehmen → in Post maximale Spielräume für Deflicker & Color-Grading.
+
+        **📷 Canon EOS R Spezial:**  
+        - Menü > **Interval Timer** → Anzahl Bilder & Intervall direkt in Kamera einstellen  
+        - **Silent Shutter** aktivieren → weniger mechanischer Verschleiß (aber Achtung: Rolling-Shutter bei schnellen Bewegungen)  
+        - Akku + Speicherkarte planen: 60fps bei 30s Intervall = 120 Bilder → ~3.6 GB (RAW)  
+        - Für Video-Timelapses: **C-Log 3** aufnehmen → später in DaVinci/Premiere grade
+        """)
+
     with tab2:
         st.markdown("""
         | Motiv | Intervall |
@@ -2108,6 +2167,25 @@ elif tool == "🎬 Video":
         fps_v = st.selectbox("FPS:", [24,25,30,50,60,120])
         st.success(f"**{fps_v} fps → 1/{fps_v*2}s Verschlusszeit** (180°-Regel)")
 
+    # ... dein bestehender Code ...
+
+    with st.expander("💡 Video-Technik & Canon R Video-Features"):
+        st.markdown("""
+        **180°-Verschlussregel:**  
+        `Verschlusszeit ≈ 1 / (2 × FPS)` → sorgt für natürliche Bewegungsunschärfe  
+        24fps → 1/50s | 30fps → 1/60s | 60fps → 1/120s
+
+        **Frame-Rates im Einsatz:**  
+        🎬 24p: Kino-Look | 📺 30p: Standard/YouTube | 🐢 60p/120p: Slow-Motion (in Post auf 24/30p verlangsamen)
+
+        **📷 Canon EOS R Spezial:**  
+        - Original EOS R: 4K ist **1.74× gecroppt** (Super35). R5/R6/R8: 4K uncropped  
+        - **C-Log 3** aktivieren → bis zu 12+ Stops Dynamikumfang (ideal für Color-Grading)  
+        - **Dual Pixel AF II** funktioniert auch im Video exzellent → Person-/Tier-/Fahrzeug-Tracking  
+        - Menü > **Video > Rec. Format**: H.265 (kleiner, aber rechenintensiver) vs H.264 (kompatibler)  
+        - Hitze-Management: Bei 4K60 lange aufnehmen → Pausen einlegen oder extern über HDMI auf Recorder streamen
+        """)
+
 # ── 🎨 BEARBEITUNG ─────────────────────────────────────────────
 elif tool == "🎨 Bearbeitung":
     st.header("🎨 Post-Processing Guide")
@@ -2167,6 +2245,27 @@ elif tool == "🔋 Akku":
         if factor < 0.6:
             st.warning("⚠️ Hoher Verbrauch – Ersatzakku einpacken!")
         st.info(f"💡 Für 8h: ca. **{math.ceil((8*60*spm)/max(shots,1))} Akkus** empfohlen")
+
+    # ... dein bestehender Code ...
+
+    with st.expander("💡 Akku-Management & Canon LP-E6NH Tipps"):
+        st.markdown("""
+        **Li-Ion Physik kurz erklärt:**  
+        Kälte reduziert verfügbare Kapazität drastisch (-20°C → oft nur 50% Laufzeit).  
+        Tiefentladung (<3.0V) kann Zellen dauerhaft schädigen. Lebensdauer: ~300–500 Ladezyklen.
+
+        **Praxis-Regeln:**  
+        🔋 Immer mind. 1 Ersatzakku dabei (Innentasche = warm halten)  
+        🔌 Nicht komplett entladen → bei 10–15% wechseln  
+        ⚡ Original-Ladegerät oder USB-C PD (mind. 18W) nutzen
+
+        **📷 Canon EOS R Spezial:**  
+        - Nutzt **LP-E6NH** (2130 mAh). Abwärtskompatibel mit LP-E6N / LP-E6 (aber ~15–20% weniger Kapazität)  
+        - **USB-C Laden im Gehäuse** möglich → Powerbank (PD) rettet Shootings  
+        - Menü > **Battery Info**: Zeigt Ladezyklen & Gesundheitsstatus an → rechtzeitig tauschen!  
+        - **Auto Power Off**: Für Timelapse/Astro auf 10min+ stellen, sonst geht Kamera zwischen Intervallen aus  
+        - Studio-Workaround: **Dummy-Akku (DC-Coupler)** → Dauerstrom ohne Wechseln
+        """)
 
 # ── 🗺️ SPOTS ───────────────────────────────────────────────────
 elif tool == "🗺️ Spots":

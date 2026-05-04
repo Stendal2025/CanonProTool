@@ -1240,6 +1240,26 @@ elif tool == "🌊 Gezeiten & Tide-Rechner":
         except Exception as e:
             st.error(f"❌ {type(e).__name__}: {e}")
 
+    # ... dein bestehender Code mit Berechnungsergebnis ...
+
+    with st.expander("💡 Gezeiten & Küstenfoto-Tipps"):
+        st.markdown("""
+        **Warum Gezeiten wichtig sind:**  
+        🌊 **Hochwasser**: Dramatische Wellen, Brandung, lange Belichtung möglich  
+        🏖️ **Ebbe**: Spiegelungen, Gezeitenpfützen, Watt-Strukturen, Makro-Chancen
+
+        **Timing ist alles:**  
+        - Starte **2h vor Hochwasser** → Wellen brechen optimal  
+        - Prüfe immer **lokale Tabellen** + Wetter (Wind = höhere Wellen)  
+        - Sicherheit first: Nie dem Wasser den Rücken zukehren, Rettungsweste bei Felsen
+
+        **📷 Canon EOS R Spezial:**  
+        - R5/R6: **Spritzwassergeschützt** (nicht wasserdicht!) → Regenhülle bei Gischt nutzen  
+        - Nach Shooting: Gehäuse mit **Süßwasser** abwischen (Salz frisst Dichtungen!)  
+        - **Polarisationsfilter** reduzieren Spiegelungen auf nassem Sand/Wasser  
+        - Stativ: Gummifüße bei Ebbe, Spikes bei Sand/Steinen. Immer Waage prüfen!
+        """)
+
 # ── 📝 PLANER ──────────────────────────────────────────────────
 elif tool == "📝 Planer":
     st.header("📝 Aufnahme-Planer & Logbuch")
@@ -1343,6 +1363,28 @@ elif tool == "🤿 Unterwasser-Modus":
         for c in ["O-Ring reinigen & einfetten","Speicherkarte formatiert",
                   "Akku voll","Gehäuse-Vakuumtest","Objektiv trocken"]:
             st.checkbox(c, key=f"uw_{c}")
+
+    # ... dein bestehender Code mit Berechnungsergebnis ...
+
+    with st.expander("💡 Unterwasser-Fotografie Grundlagen"):
+        st.markdown("""
+        **Physik unter Wasser:**  
+        🔴 Wasser schluckt Farben: Rot (~5m) → Orange (~10m) → Gelb (~15m)  
+        🌫️ Partikel streuen Licht → "Backscatter" (weiße Flecken im Bild)  
+        🌊 Brechungsindex vergrößert Motiv scheinbar um 33%
+
+        **Goldene Regeln:**  
+        1. **Nah ran!** (<1m Abstand) → Kontrast & Farbe erhalten  
+        2. **Roter Filter** ab 5m Tiefe (sonst wird alles Blau/Grün)  
+        3. **Blitz/Strobe auf 45°** → vermeidet Backscatter  
+        4. Weißabgleich manuell (5600K+), nie Auto!
+
+        **📷 Canon EOS R Spezial:**  
+        - Im Gehäuse: Touchscreen oft ungenutzbar → **Joystick + Mode-Taste** priorisieren  
+        - **Dual Pixel AF** funktioniert unter Wasser besser als Phasen-AF anderer Marken  
+        - Gehäuse immer **vor dem Tauchgang im Becken testen** (O-Ring reinigen & silikonisieren!)  
+        - Nach dem Tauchgang: **Süßwasser spülen**, Dichtungen prüfen, trocken lagern
+        """)
 
 # ════════════════════════════════════════════════════════════════
 #  FIX ⑥: 📸 KAMERA-VERGLEICH (komplett neu implementiert)
@@ -1526,6 +1568,25 @@ elif tool == "🔦 Blitz":
             rows = [{"Blende": f"f/{f}", "Max. Reichweite": f"{gn * math.sqrt(iso/100) / f:.1f} m"}
                     for f in [1.4,2.0,2.8,4.0,5.6,8.0,11,16]]
             st.dataframe(pd.DataFrame(rows), use_container_width=True)
+
+    # ... dein bestehender Code mit Berechnungsergebnis ...
+
+    with st.expander("💡 Blitz-Leitzahl & Technik"):
+        st.markdown("""
+        **Was ist die Leitzahl (GN)?**  
+        `GN = Entfernung (m) × Blende (f/)`  
+        Beispiel: GN 58 bei 5m → f/11.6. Höheres ISO erhöht GN: `GN_neu = GN_100 × √(ISO/100)`
+
+        **TTL vs. Manuell:**  
+        - **E-TTL II**: Kamera misst, blitzt automatisch. Ideal für Events, Hochzeiten, schnelle Moves  
+        - **Manuell (M)**: Volle Kontrolle. Besser für Studio, Portrait, Serien (konsistente Belichtung)
+
+        **📷 Canon EOS R Spezial:**  
+        - Integrierter **Funk-Auslöser** (kein Extra-Sender nötig bei Canon EL-Serie)  
+        - **HSS (High-Speed Sync)**: Ermöglicht Blende f/1.4–f/2.8 auch bei 1/4000s in der Sonne  
+        - **Second-Curtain Sync**: Blitz zündet am ENDE der Belichtung → Bewegungsspuren + scharfes Motiv  
+        - Menü > **Flash Control** > E-TTL Messung / Blitzkompensation anpassen
+        """)
 
 # ── 📡 RAUSCHEN ────────────────────────────────────────────────
 elif tool == "📡 Rauschen":
@@ -2167,6 +2228,26 @@ elif tool == "📈 Histogramm":
             else: st.success("🟢 Gut belichtet!")
         except ImportError:
             st.error("numpy fehlt: pip install numpy")
+
+
+    # ... dein bestehender Code mit Berechnungsergebnis ...
+
+    with st.expander("💡 Histogramm & ETTR erklärt"):
+        st.markdown("""
+        **Was zeigt das Histogramm?**  
+        📉 Links = Tiefen (Schwarz) | 📊 Mitte = Mitteltöne | 📈 Rechts = Lichter (Weiß)  
+        ⚠️ **Clipping**: Balken kleben am Rand → Zeichnungsverlust (nicht rettbar!)
+
+        **ETTR (Expose To The Right):**  
+        Belichte so hell wie möglich, **ohne** dass die rechten Balken die Wand berühren.  
+        → Maximiert Signal-Rausch-Verhältnis → Weniger Rauschen in Post
+
+        **📷 Canon EOS R Spezial:**  
+        - EVF/Display: `INFO`-Taste drücken → **Histogramm + Highlight Alert** aktivieren  
+        - **Blinkende Stellen** = überbelichtet → Blende schließen oder Zeit verkürzen  
+        - **Dual Pixel RAW**: Ermöglicht späteres "Bokeh-Shift" & feine Lichter-Rettung in DPP  
+        - Tipp: Im M-Modus mit "Belichtungssimulation AN" siehst du das Histogramm LIVE vor der Aufnahme!
+        """)
 
 # ── 📸 BRACKETING ASSISTANT ──────────────────────────────────────
 elif tool == "📸 Bracketing":

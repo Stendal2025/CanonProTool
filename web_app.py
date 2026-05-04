@@ -1120,6 +1120,26 @@ elif tool == "🌙 Mond & Milchstraße":
         except Exception as e:
             st.error(f"❌ Fehler: {e}")
 
+    # ... dein bestehender Code mit Berechnungsergebnis ...
+
+    with st.expander("💡 Astro & Milchstraße verstehen"):
+        st.markdown("""
+        **Wann ist die Milchstraße sichtbar?**  
+        ✅ **Neumond** (0–15% Beleuchtung) + klare Nacht + wenig Lichtverschmutzung  
+        ❌ Vollmond überstrahlt schwache Sterne komplett
+
+        **Belichtungs-Regeln:**  
+        - **500er-Regel:** `500 / (Brennweite × Crop)` = max. Sekunden ohne Sternspuren  
+        - **NPF-Regel:** Präziser (berücksichtigt Sensor-Pixelgröße & Deklination)  
+        - **Empfohlen:** ISO 1600–6400 | f/1.4–f/2.8 | 15–25s
+
+        **📷 Canon EOS R Spezial:**  
+        - Menü > **Long Exposure NR AUS** (spart 50% Wartezeit zwischen Bildern)  
+        - Fokus manuell auf ∞ + **Live View 10x Zoom** + **Focus Peaking (Rot)**  
+        - **IBIS** hilft bei <15s, aber Stativ ist Pflicht für scharfe Sterne  
+        - R5/R6 II: **Astro-Modus** im Menü aktivieren (optimiert Rauschverhalten)
+        """)
+
 # ── 🌊 GEZEITEN & TIDE-RECHNER ─────────────────────────────────
 elif tool == "🌊 Gezeiten & Tide-Rechner":
     st.header("🌊 Gezeiten & Tide-Rechner")

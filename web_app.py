@@ -644,6 +644,32 @@ elif tool == "🕶️ ND Rechner":
         st.code(copy_text, language="text")
         copy_button(copy_text)
 
+    # ... dein bestehender Code mit Berechnung ...
+
+    # ── 📚 ND-Filter Wissen ──────────────────────────────────
+    with st.expander("💡 ND-Filter verstehen"):
+        st.markdown("""
+        **Was bedeutet ND?**  
+        ND = Neutral Density = neutraler Graufilter. Er dunkelt ab, ohne Farben zu verändern.
+
+        **Stops ↔ Faktor ↔ Name:**
+        | Stops | Faktor | Filter-Name |
+        |-------|--------|-------------|
+        | 1 | ×2 | ND2 |
+        | 3 | ×8 | ND8 |
+        | 6 | ×64 | ND64 |
+        | 10 | ×1000 | ND1000 |
+
+        **Wann welchen Filter?**  
+        - **ND8 (3 Stops)**: Leichte Langzeit bei Dämmerung  
+        - **ND64 (6 Stops)**: Wasser weichzeichnen bei Tageslicht  
+        - **ND1000 (10 Stops)**: Wolken-Streaks, Menschen "wegzaubern"
+
+        **Canon EOS R Spezial:**  
+        Bei Belichtungen >30s automatisch in **BULB-Modus** wechseln. Fernauslöser nutzen!  
+        **Langzeit-Rauschreduzierung** im Menü AUSschalten (spart 50% Zeit bei Astro/ND).
+        """)
+
 # ── 🔬 FOCUS STACKING ──────────────────────────────────────────
 elif tool == "🔬 Focus Stacking":
     st.header("🔬 Focus Stacking Assistant")

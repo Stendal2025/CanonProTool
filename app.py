@@ -100,33 +100,28 @@ def render_status_bar():
                     desc = d['weather'][0]['description'].capitalize()
         except (requests.RequestException, KeyError, ValueError):
             temp, desc = "--", _("app.status.weather_na")
-    st.markdown(f"<div style='background:var(--bg-secondary);padding:10px;margin-bottom:15px;border-radius:8px;border:1px solid var(--border-color);'>", unsafe_allow_html=True)
+    st.markdown(f"<div style='background:{TC['bg2']};padding:10px;margin-bottom:15px;border-radius:8px;border:1px solid {TC['border']};'>", unsafe_allow_html=True)
     c1, c2, c3, c4 = st.columns([3, 2.5, 2.5, 1])
-    c1.markdown(f"{loc_display}<br><small style='color:var(--text-secondary);font-size:11px;'>{gps if gps and ',' in str(gps) else ''}</small>", unsafe_allow_html=True)
-    c2.markdown(f"☁️ **{_('app.status.weather')}**<br><small style='color:var(--text-secondary)'>{temp} | {desc}</small>", unsafe_allow_html=True)
-    c3.markdown(f"📷 **{_('app.status.status')}**<br><small style='color:var(--text-secondary)'>{_('app.status.live')}</small>", unsafe_allow_html=True)
+    c1.markdown(f"{loc_display}<br><small style='color:{TC['text2']};font-size:11px;'>{gps if gps and ',' in str(gps) else ''}</small>", unsafe_allow_html=True)
+    c2.markdown(f"☁️ **{_('app.status.weather')}**<br><small style='color:{TC['text2']}'>{temp} | {desc}</small>", unsafe_allow_html=True)
+    c3.markdown(f"📷 **{_('app.status.status')}**<br><small style='color:{TC['text2']}'>{_('app.status.live')}</small>", unsafe_allow_html=True)
     if c4.button("🔄", use_container_width=True, key="sb_refresh"):
         st.cache_data.clear()
     st.markdown("</div>", unsafe_allow_html=True)
 
-theme = st.session_state.get("theme", "dark")
-theme_colors = {
-    "dark":  {"bg":"#0A0E14","bg2":"#161B22","text":"#F0F6FC","text2":"#8B949E","border":"#30363D","card":"#161B22"},
-    "light": {"bg":"#FFFFFF","bg2":"#F6F8FA","text":"#1F2328","text2":"#656D76","border":"#D0D7DE","card":"#F6F8FA"},
-}[theme]
 st.markdown(f"""
 <style>
   :root {{
-    --bg-primary: {theme_colors["bg"]};
-    --bg-secondary: {theme_colors["bg2"]};
-    --text-primary: {theme_colors["text"]};
-    --text-secondary: {theme_colors["text2"]};
-    --border-color: {theme_colors["border"]};
-    --card-bg: {theme_colors["card"]};
+    --bg-primary: {TC["bg"]};
+    --bg-secondary: {TC["bg2"]};
+    --text-primary: {TC["text"]};
+    --text-secondary: {TC["text2"]};
+    --border-color: {TC["border"]};
+    --card-bg: {TC["card"]};
     --accent: #1F6FEB;
     --accent-hover: #58A6FF;
   }}
-  .main {{ background-color: var(--bg-primary); color: var(--text-primary); }}
+  .main .block-container {{ background-color: var(--bg-primary); color: var(--text-primary); }}
   h1, h2, h3 {{ color: var(--accent-hover); }}
   .stButton>button {{ background-color: var(--accent); color: white; border-radius: 8px; border: none; padding: 10px 24px; font-weight: bold; min-height: 48px; }}
   .stButton>button:hover {{ background-color: var(--accent-hover); }}
@@ -134,7 +129,7 @@ st.markdown(f"""
   a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {{ outline: 3px solid var(--accent-hover); outline-offset: 2px; }}
   input, select, textarea {{ font-size: 16px !important; min-height: 48px !important; }}
   .stMarkdown, .stText {{ font-size: 15px; line-height: 1.6; }}
-  section[data-testid="stSidebar"] {{ min-width: 240px; }}
+  section[data-testid="stSidebar"] {{ min-width: 240px; background-color: {TC['bg2']}; }}
   @media (max-width: 768px) {{
     .main .block-container {{ padding: 1rem !important; padding-top: 2rem !important; }}
     section[data-testid="stSidebar"] {{ width: 280px !important; }}
@@ -150,20 +145,24 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-render_status_bar()
-
-st.title(_("app.title"))
-st.markdown(f"**Web Version** | {_('app.subtitle')}")
-st.divider()
-
+if "theme" not in st.session_state: st.session_state.theme = "dark"
 if "tool" not in st.session_state: st.session_state.tool = "🏠 Home"
 if "logbook" not in st.session_state: st.session_state.logbook = []
 if "spots" not in st.session_state: st.session_state.spots = []
 if "gps_coords" not in st.session_state: st.session_state.gps_coords = "Berlin"
 if "language" not in st.session_state: st.session_state.language = "de"
 if "authenticated" not in st.session_state: st.session_state.authenticated = False
-if "theme" not in st.session_state:
-    st.session_state.theme = "dark"
+
+TC = {
+    "dark":  {"bg":"#0A0E14","bg2":"#161B22","text":"#F0F6FC","text2":"#8B949E","border":"#30363D","card":"#161B22"},
+    "light": {"bg":"#FFFFFF","bg2":"#F6F8FA","text":"#1F2328","text2":"#656D76","border":"#D0D7DE","card":"#F6F8FA"},
+}[st.session_state.theme]
+
+render_status_bar()
+
+st.title(_("app.title"))
+st.markdown(f"**Web Version** | {_('app.subtitle')}")
+st.divider()
 
 TOOLS_CANONICAL: dict[str, str] = {
     "🏠 Home": "",

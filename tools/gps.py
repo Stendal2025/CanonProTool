@@ -12,29 +12,28 @@ def render_gps():
 
     gps_html = """
 <div style="padding:10px;box-sizing:border-box;font-family:sans-serif;">
-<button id="gps-btn" style="padding:12px;background:#1F6FEB;color:white;border:none;border-radius:8px;cursor:pointer;width:100%;margin-bottom:10px;font-size:16px;">📍 Standort abrufen</button>
-<div id="gps-res" style="display:none;background:#161B22;padding:12px;border-radius:8px;text-align:center;border:1px solid #30363D;">
-<p id="gps-txt" style="color:#58A6FF;font-family:monospace;margin:0 0 12px 0;font-size:14px;"></p>
+<button id="b" style="padding:12px;background:#1F6FEB;color:white;border:none;border-radius:8px;cursor:pointer;width:100%;margin-bottom:10px;font-size:16px;">Standort abrufen</button>
+<div id="r" style="display:none;background:#161B22;padding:12px;border-radius:8px;text-align:center;border:1px solid #30363D;">
+<p id="t" style="color:#58A6FF;font-family:monospace;margin:0;font-size:14px;"></p>
 </div></div>
 <script>
-document.getElementById('gps-btn').onclick=function(){
-var txt=document.getElementById('gps-txt');
-var res=document.getElementById('gps-res');
-txt.textContent='⏳ Standort wird ermittelt...';
-res.style.display='block';
-if(!navigator.geolocation){txt.textContent='❌ Geolocation nicht unterstützt';return;}
-navigator.geolocation.getCurrentPosition(function(pos){
-var lat=pos.coords.latitude.toFixed(6);
-var lon=pos.coords.longitude.toFixed(6);
-txt.textContent='✅ Koordinaten gefunden – unten auf "Übernehmen" klicken';
+document.getElementById('b').onclick=function(){
+var t=document.getElementById('t');
+var r=document.getElementById('r');
+t.textContent='Ermittle Standort...';
+r.style.display='block';
+if(!navigator.geolocation){t.textContent='Fehler: keine Geolocation';return;}
+navigator.geolocation.getCurrentPosition(function(p){
+var la=p.coords.latitude.toFixed(6);
+var lo=p.coords.longitude.toFixed(6);
+t.textContent='Koordinaten: '+la+', '+lo+' -> unten Ubernehmen klicken';
 var u=new URL(window.parent.location.href);
-u.searchParams.set('lat',lat);u.searchParams.set('lon',lon);
+u.searchParams.set('lat',la);u.searchParams.set('lon',lo);
 window.parent.history.replaceState({},'',u.toString());
-},function(err){
-txt.textContent='❌ Fehler: '+err.message;
+},function(e){t.textContent='Fehler: '+e.message;
 },{enableHighAccuracy:true,timeout:10000});};
 </script>"""
-    components.html(gps_html, height=160)
+    components.html(gps_html, height=200)
 
     lat_q = st.query_params.get("lat")
     lon_q = st.query_params.get("lon")

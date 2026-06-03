@@ -143,8 +143,8 @@ st.markdown(f"""
   input, select, textarea {{ font-size: 16px !important; min-height: 48px !important; }}
   .stMarkdown, .stText {{ font-size: 15px; line-height: 1.6; }}
   section[data-testid="stSidebar"] {{ min-width: 240px; background-color: {TC['bg2']}; }}
+  section[data-testid="stMain"] {{ flex: 1; min-width: 0; }}
   @media (max-width: 768px) {{
-    .main .block-container {{ padding: 1rem !important; padding-top: 2rem !important; }}
     section[data-testid="stSidebar"] {{ width: 280px !important; }}
   }}
   @media (min-width: 769px) {{ section[data-testid="stSidebar"] {{ width: 240px !important; }} }}

@@ -33,17 +33,17 @@ fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat='+lat+'&lon='
 var ort='Unbekannter Ort';
 if(data&&data.address){var a=data.address;ort=a.city||a.town||a.village||a.municipality||a.county||a.state||a.country||'Unbekannter Ort';}
 txt.textContent='✅ '+lat+', '+lon+' (nahe '+ort+')';
-var u=new URL(window.location.href);u.searchParams.set('lat',lat);u.searchParams.set('lon',lon);
+var u=new URL(window.parent.location.href);u.searchParams.set('lat',lat);u.searchParams.set('lon',lon);
 document.getElementById('gps-link').href=u.toString();})
 .catch(function(){
 txt.textContent='✅ '+lat+', '+lon;
-var u=new URL(window.location.href);u.searchParams.set('lat',lat);u.searchParams.set('lon',lon);
+var u=new URL(window.parent.location.href);u.searchParams.set('lat',lat);u.searchParams.set('lon',lon);
 document.getElementById('gps-link').href=u.toString();});
 },function(err){txt.textContent='❌ Fehler: '+err.message;},{enableHighAccuracy:true,timeout:10000});};
 </script>"""
     st.markdown(f"""
 <iframe srcdoc='{gps_html.replace("'", "\\'")}'
-        sandbox='allow-scripts allow-top-navigation'
+        sandbox='allow-scripts allow-top-navigation allow-same-origin'
         style='width:100%;height:240px;border:none;border-radius:8px;'>
 </iframe>""", unsafe_allow_html=True)
     lat_q = st.query_params.get("lat")

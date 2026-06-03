@@ -8,9 +8,10 @@ def render_gps():
         st.session_state.gps_coords = None
     if "gps_temp_coords" not in st.session_state:
         st.session_state.gps_temp_coords = None
+    if "gps_requested" not in st.session_state:
+        st.session_state.gps_requested = False
 
-    col_btn, _ = st.columns([1, 3])
-    if col_btn.button("📍 Standort abrufen", use_container_width=True):
+    if st.button("📍 Standort abrufen", use_container_width=True, key="gps_locate"):
         st.session_state.gps_requested = True
         st.rerun()
 
@@ -65,7 +66,7 @@ def render_gps():
     with col2:
         manual_lon = st.text_input("Längengrad", value=default_lon)
 
-    if st.button("✅ Übernehmen", use_container_width=True, type="primary"):
+    if st.button("✅ Übernehmen", use_container_width=True, type="primary", key="gps_adopt"):
         use_lat = lat_q if lat_q else manual_lat
         use_lon = lon_q if lon_q else manual_lon
         st.session_state.gps_coords = f"{use_lat},{use_lon}"

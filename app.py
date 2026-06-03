@@ -309,7 +309,7 @@ elif tool in TOOLS_CANONICAL:
     else:
         track_usage(tool)
         authed = st.session_state.get("authenticated", False)
-        auth_needed = tool in ("📝 Planer", "🗺️ Spots", "📍 GPS-Standort", "⚙️ Einstellungen")
+        auth_needed = tool in ("📝 Planer", "🗺️ Spots", "⚙️ Einstellungen")
         if auth_needed and not authed:
             st.markdown(f"<div class='auth-box'><h3>{_('auth.protected')}</h3><p>{_('auth.login_prompt')}</p></div>", unsafe_allow_html=True)
         else:

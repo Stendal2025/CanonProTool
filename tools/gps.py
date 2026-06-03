@@ -45,13 +45,17 @@ def render_gps():
                     ort = a.city || a.town || a.village || a.municipality || a.county || a.state || a.country || "Unbekannter Ort";
                 }
                 txt.textContent = `✅ ${lat}, ${lon} (nahe ${ort})`;
-                const baseUrl = window.location.href.split('?')[0];
-                document.getElementById('gps-link').href = baseUrl + "?lat=" + lat + "&lon=" + lon;
+                const gpsUrl = new URL(window.location.href);
+                gpsUrl.searchParams.set('lat', lat);
+                gpsUrl.searchParams.set('lon', lon);
+                document.getElementById('gps-link').href = gpsUrl.toString();
             })
             .catch(() => {
                 txt.textContent = `✅ ${lat}, ${lon}`;
-                const baseUrl = window.location.href.split('?')[0];
-                document.getElementById('gps-link').href = baseUrl + "?lat=" + lat + "&lon=" + lon;
+                const gpsUrl = new URL(window.location.href);
+                gpsUrl.searchParams.set('lat', lat);
+                gpsUrl.searchParams.set('lon', lon);
+                document.getElementById('gps-link').href = gpsUrl.toString();
             });
         }, err => {
             txt.textContent = `❌ Fehler: ${err.message}`;

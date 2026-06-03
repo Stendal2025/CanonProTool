@@ -109,6 +109,19 @@ def render_status_bar():
         st.cache_data.clear()
     st.markdown("</div>", unsafe_allow_html=True)
 
+if "theme" not in st.session_state: st.session_state.theme = "dark"
+if "tool" not in st.session_state: st.session_state.tool = "🏠 Home"
+if "logbook" not in st.session_state: st.session_state.logbook = []
+if "spots" not in st.session_state: st.session_state.spots = []
+if "gps_coords" not in st.session_state: st.session_state.gps_coords = "Berlin"
+if "language" not in st.session_state: st.session_state.language = "de"
+if "authenticated" not in st.session_state: st.session_state.authenticated = False
+
+TC = {
+    "dark":  {"bg":"#0A0E14","bg2":"#161B22","text":"#F0F6FC","text2":"#8B949E","border":"#30363D","card":"#161B22"},
+    "light": {"bg":"#FFFFFF","bg2":"#F6F8FA","text":"#1F2328","text2":"#656D76","border":"#D0D7DE","card":"#F6F8FA"},
+}[st.session_state.theme]
+
 st.markdown(f"""
 <style>
   :root {{
@@ -144,19 +157,6 @@ st.markdown(f"""
   .dash-card > button:active {{ transform: scale(0.98) !important; }}
 </style>
 """, unsafe_allow_html=True)
-
-if "theme" not in st.session_state: st.session_state.theme = "dark"
-if "tool" not in st.session_state: st.session_state.tool = "🏠 Home"
-if "logbook" not in st.session_state: st.session_state.logbook = []
-if "spots" not in st.session_state: st.session_state.spots = []
-if "gps_coords" not in st.session_state: st.session_state.gps_coords = "Berlin"
-if "language" not in st.session_state: st.session_state.language = "de"
-if "authenticated" not in st.session_state: st.session_state.authenticated = False
-
-TC = {
-    "dark":  {"bg":"#0A0E14","bg2":"#161B22","text":"#F0F6FC","text2":"#8B949E","border":"#30363D","card":"#161B22"},
-    "light": {"bg":"#FFFFFF","bg2":"#F6F8FA","text":"#1F2328","text2":"#656D76","border":"#D0D7DE","card":"#F6F8FA"},
-}[st.session_state.theme]
 
 render_status_bar()
 

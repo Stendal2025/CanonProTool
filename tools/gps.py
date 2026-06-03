@@ -16,7 +16,7 @@ def render_gps():
         </button>
         <div id="gps-res" style="display:none; background:#161B22; padding:12px; border-radius:8px; text-align:center; border:1px solid #30363D;">
             <p id="gps-txt" style="color:#58A6FF; font-family:monospace; margin:0 0 12px 0; font-size:14px;"></p>
-            <a id="gps-link" href="#" style="display:inline-block; padding:12px; background:#238636; color:white; text-decoration:none; border-radius:6px; font-weight:bold; font-size:15px;">
+            <a id="gps-link" href="javascript:void(0)" style="display:inline-block; padding:12px; background:#238636; color:white; text-decoration:none; border-radius:6px; font-weight:bold; font-size:15px;">
                 ✅ Koordinaten übernehmen
             </a>
         </div>
@@ -46,17 +46,17 @@ def render_gps():
                     ort = a.city || a.town || a.village || a.municipality || a.county || a.state || a.country || "Unbekannter Ort";
                 }
                 txt.textContent = `✅ ${lat}, ${lon} (nahe ${ort})`;
-                const gpsUrl = new URL(window.location.href);
-                gpsUrl.searchParams.set('lat', lat);
-                gpsUrl.searchParams.set('lon', lon);
-                document.getElementById('gps-link').href = gpsUrl.toString();
+                document.getElementById('gps-link').onclick = function(e){e.preventDefault();
+                    const u=new URL(window.top.location.href);
+                    u.searchParams.set('lat',lat);u.searchParams.set('lon',lon);
+                    window.top.location.href=u.toString();};
             })
             .catch(() => {
                 txt.textContent = `✅ ${lat}, ${lon}`;
-                const gpsUrl = new URL(window.location.href);
-                gpsUrl.searchParams.set('lat', lat);
-                gpsUrl.searchParams.set('lon', lon);
-                document.getElementById('gps-link').href = gpsUrl.toString();
+                document.getElementById('gps-link').onclick = function(e){e.preventDefault();
+                    const u=new URL(window.top.location.href);
+                    u.searchParams.set('lat',lat);u.searchParams.set('lon',lon);
+                    window.top.location.href=u.toString();};
             });
         }, err => {
             txt.textContent = `❌ Fehler: ${err.message}`;

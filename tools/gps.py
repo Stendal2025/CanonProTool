@@ -1,3 +1,4 @@
+import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
 
@@ -94,6 +95,11 @@ def render_gps():
     if st.session_state.gps_coords:
         st.divider()
         st.success(f"### ✅ Aktueller Standort: `{st.session_state.gps_coords}`")
+        try:
+            lat_f, lon_f = map(float, str(st.session_state.gps_coords).split(","))
+            st.map(pd.DataFrame({"lat": [lat_f], "lon": [lon_f]}))
+        except (ValueError, TypeError):
+            pass
         if st.button("🗑️ Standort löschen"):
             st.session_state.gps_coords = None
             st.session_state.gps_temp_coords = None

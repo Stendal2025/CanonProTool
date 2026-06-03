@@ -8,7 +8,7 @@ import requests
 from config import SHUTTERS_ALL, CITY_COORDS
 from utils import get_place_name
 from i18n import _, render_language_selector, SUPPORTED_LANGUAGES
-from database import init_db, get_setting, track_usage, get_top_tools
+from database import init_db, get_setting, get_api_key, track_usage, get_top_tools
 
 logging.basicConfig(
     level=logging.INFO,
@@ -69,9 +69,9 @@ window.location.href=url.toString();
 
 st.set_page_config(page_title=_("app.title"), page_icon="📷", layout="wide", initial_sidebar_state="expanded")
 
-OW_STATUS = "✅" if get_setting("OPENWEATHER_API_KEY") else "❌"
-WT_STATUS = "✅" if get_setting("WORLD_TIDES_API_KEY") else "❌"
-if not get_setting("OPENWEATHER_API_KEY") or not get_setting("WORLD_TIDES_API_KEY"):
+OW_STATUS = "✅" if get_api_key("OPENWEATHER_API_KEY") else "❌"
+WT_STATUS = "✅" if get_api_key("WORLD_TIDES_API_KEY") else "❌"
+if not get_api_key("OPENWEATHER_API_KEY") or not get_api_key("WORLD_TIDES_API_KEY"):
     st.warning(f"🔑 **{_('env.keys_missing')}**\n\n🌤️ OpenWeatherMap: {OW_STATUS} · 🌊 WorldTides: {WT_STATUS}\n\n👉 Gehe zu **⚙️ Einstellungen** in der Seitenleiste, um Keys einzugeben.")
 
 

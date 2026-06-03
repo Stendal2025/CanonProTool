@@ -124,35 +124,16 @@ TC = {
 
 st.markdown(f"""
 <style>
-  :root {{
-    --bg-primary: {TC["bg"]};
-    --bg-secondary: {TC["bg2"]};
-    --text-primary: {TC["text"]};
-    --text-secondary: {TC["text2"]};
-    --border-color: {TC["border"]};
-    --card-bg: {TC["card"]};
-    --accent: #1F6FEB;
-    --accent-hover: #58A6FF;
-  }}
-  .main .block-container {{ background-color: var(--bg-primary); color: var(--text-primary); }}
-  h1, h2, h3 {{ color: var(--accent-hover); }}
-  .stButton>button {{ background-color: var(--accent); color: white; border-radius: 8px; border: none; padding: 10px 24px; font-weight: bold; min-height: 48px; }}
-  .stButton>button:hover {{ background-color: var(--accent-hover); }}
-  .stButton>button:focus-visible {{ outline: 3px solid var(--accent-hover); outline-offset: 2px; }}
-  a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {{ outline: 3px solid var(--accent-hover); outline-offset: 2px; }}
+  .main .block-container {{ background-color: {TC["bg"]}; color: {TC["text"]}; }}
+  h1, h2, h3 {{ color: #58A6FF; }}
+  .stButton>button {{ background-color: #1F6FEB; color: white; border-radius: 8px; border: none; padding: 10px 24px; font-weight: bold; min-height: 48px; }}
+  .stButton>button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {{ outline: 3px solid #58A6FF; outline-offset: 2px; }}
   input, select, textarea {{ font-size: 16px !important; min-height: 48px !important; }}
-  .stMarkdown, .stText {{ font-size: 15px; line-height: 1.6; }}
-  section[data-testid="stSidebar"] {{ min-width: 240px; background-color: {TC['bg2']}; }}
-  section[data-testid="stMain"] {{ flex: 1; min-width: 0; }}
-  @media (max-width: 768px) {{
-    section[data-testid="stSidebar"] {{ width: 280px !important; }}
-  }}
-  @media (min-width: 769px) {{ section[data-testid="stSidebar"] {{ width: 240px !important; }} }}
   .dash-card > button {{ height: 90px !important; font-size: 15px !important; font-weight: 500 !important;
-    border-radius: 12px !important; background-color: var(--card-bg) !important; color: var(--text-primary) !important;
-    border: 1px solid var(--border-color) !important; white-space: pre-line !important; line-height: 1.3 !important;
+    border-radius: 12px !important; background-color: {TC["card"]} !important; color: {TC["text"]} !important;
+    border: 1px solid {TC["border"]} !important; white-space: pre-line !important; line-height: 1.3 !important;
     transition: all 0.2s ease !important; margin-bottom: 10px !important; }}
-  .dash-card > button:hover {{ background-color: var(--accent) !important; border-color: var(--accent-hover) !important;
+  .dash-card > button:hover {{ background-color: #1F6FEB !important; border-color: #58A6FF !important;
     transform: translateY(-2px) !important; box-shadow: 0 4px 12px rgba(31, 111, 235, 0.3) !important; }}
   .dash-card > button:active {{ transform: scale(0.98) !important; }}
 </style>

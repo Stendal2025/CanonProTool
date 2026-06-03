@@ -109,8 +109,6 @@ def render_status_bar():
         st.cache_data.clear()
     st.markdown("</div>", unsafe_allow_html=True)
 
-render_status_bar()
-
 theme = st.session_state.get("theme", "dark")
 theme_colors = {
     "dark":  {"bg":"#0A0E14","bg2":"#161B22","text":"#F0F6FC","text2":"#8B949E","border":"#30363D","card":"#161B22"},
@@ -151,6 +149,8 @@ st.markdown(f"""
   .dash-card > button:active {{ transform: scale(0.98) !important; }}
 </style>
 """, unsafe_allow_html=True)
+
+render_status_bar()
 
 st.title(_("app.title"))
 st.markdown(f"**Web Version** | {_('app.subtitle')}")

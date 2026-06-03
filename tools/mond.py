@@ -41,7 +41,7 @@ def render_mond_milchstrasse():
                         st.stop()
                 else:
                     latitude, longitude = 51.34, 12.38
-                    except (ValueError, TypeError, KeyError):
+            except (ValueError, TypeError, KeyError):
                 latitude, longitude = 51.34, 12.38
     option = st.selectbox("🎯 Fokus", ["Milchstraße", "Mondfotografie", "Deep Sky", "Nordlichter"])
     if st.button("🔍 Berechnen", type="primary"):
